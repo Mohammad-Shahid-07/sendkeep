@@ -28,6 +28,17 @@ fn open_file_in_folder(path: String) {
     }
 }
 
+#[tauri::command]
+fn open_downloads_folder() {
+    let dir = dirs::download_dir()
+        .unwrap_or_else(|| PathBuf::from("."))
+        .join("SendKeep");
+    let _ = std::fs::create_dir_all(&dir);
+    let _ = std::process::Command::new("explorer")
+        .arg(&dir)
+        .spawn();
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -35,6 +46,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             set_interactive,
             open_file_in_folder,
+            open_downloads_folder,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();

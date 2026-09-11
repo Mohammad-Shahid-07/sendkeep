@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SendKeep — Android Mobile UI Concept</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-workspace: #06070a;
+      --phone-bg: #090a0f;
+      --card-bg: rgba(255, 255, 255, 0.035);
+      --card-border: rgba(255, 255, 255, 0.06);
+      --card-hover: rgba(255, 255, 255, 0.065);
+      
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      
+      --accent: #6366f1;
+      --accent-glow: rgba(99, 102, 241, 0.25);
+      --emerald: #10b981;
+      
+      --font: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: var(--font);
+      background-color: var(--bg-workspace);
+      background-image: 
+        radial-gradient(at 20% 20%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),
+        radial-gradient(at 80% 80%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      gap: 40px;
+    }
+
+    /* Concept Description Sidebar */
+    .concept-panel {
+      max-width: 420px;
+    }
+
+    .concept-panel h1 {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.6px;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #ffffff 30%, #a5b4fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .concept-panel p {
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+    }
+
+    .feature-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .feature-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* Phone Bezel Frame */
+    .phone-mockup {
+      width: 360px;
+      height: 740px;
+      background: var(--phone-bg);
+      border-radius: 46px;
+      border: 8px solid #1c1e29;
+      box-shadow: 
+        0 0 0 2px rgba(255, 255, 255, 0.08),
+        0 30px 80px rgba(0, 0, 0, 0.85);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Phone Status Bar */
+    .phone-statusbar {
+      height: 38px;
+      padding: 0 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+      z-index: 10;
+    }
+
+    .status-icons {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* App Header */
+    .mobile-header {
+      padding: 10px 20px 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand-title {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      color: #fff;
+    }
+
+    .connected-device-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 8px var(--emerald);
+    }
+
+    /* Quick Beam Action Hub */
+    .action-grid {
+      padding: 4px 20px 16px 20px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .quick-action-tile {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 12px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .quick-action-tile:hover, .quick-action-tile:active {
+      background: var(--card-hover);
+      border-color: rgba(99, 102, 241, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .tile-icon-box {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tile-icon-box.photos {
+      background: rgba(139, 92, 246, 0.15);
+      color: #a78bfa;
+    }
+
+    .tile-icon-box.files {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+    }
+
+    .tile-icon-box.clipboard {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+    }
+
+    .tile-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+
+    /* Auto Sync Switch Banner */
+    .sync-banner {
+      margin: 0 20px 14px 20px;
+      background: rgba(99, 102, 241, 0.08);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sync-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sync-text {
+      font-size: 11.5px;
+      font-weight: 500;
+      color: #c7d2fe;
+    }
+
+    .toggle-switch {
+      width: 32px;
+      height: 18px;
+      background: var(--accent);
+      border-radius: 10px;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .toggle-knob {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #fff;
+      transition: all 0.2s ease;
+    }
+
+    /* Feed Header */
+    .feed-heading {
+      padding: 0 20px 8px 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Scrollable Timeline */
+    .mobile-stream {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 20px 70px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .mobile-stream::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Item Cards */
+    .stream-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .stream-card:active {
+      transform: scale(0.98);
+      background: var(--card-hover);
+    }
+
+    .card-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+    }
+
+    .card-thumb {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: #000;
+    }
+
+    .card-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .card-details {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .card-title {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 2px;
+    }
+
+    .card-meta {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .card-action-icon {
+      color: var(--text-muted);
+      padding: 4px;
+    }
+
+    /* Text Clip Box */
+    .text-card-body {
+      padding: 12px 14px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #e2e8f0;
+      background: rgba(0, 0, 0, 0.2);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      word-break: break-all;
+    }
+
+    .card-footer {
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 10.5px;
+      color: var(--text-muted);
+    }
+
+    /* Floating Compose Pill */
+    .floating-beam-input {
+      position: absolute;
+      bottom: 16px;
+      left: 18px;
+      right: 18px;
+      background: rgba(18, 20, 28, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 28px;
+      padding: 4px 6px 4px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(20px);
+    }
+
+    .mobile-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #fff;
+      font-size: 12px;
+      font-family: var(--font);
+    }
+
+    .mobile-send-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: none;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    /* Mobile Toast */
+    .mobile-toast {
+      position: absolute;
+      bottom: 64px;
+      left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: #1c1f2e;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 11.5px;
+      font-weight: 500;
+      color: #fff;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.2s ease;
+      z-index: 100;
+    }
+
+    .mobile-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Info Panel -->
+  <div class="concept-panel">
+    <h1>SendKeep Mobile</h1>
+    <p>
+      Jetpack Compose native UI companion for your Android phone. Zero confirmation dialogs, sub-second local Wi-Fi transfer, and minimal memory footprint (~10–15 MB RAM).
+    </p>
+
+    <div class="feature-list">
+      <div class="feature-item">
+        <div class="feature-icon">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+        </div>
+        <span><strong>1-Tap Quick Beam:</strong> Instant picker for Photos, Files, or Clipboard text straight to the PC shelf.</span>
+      </div>
+
+      <div class="feature-item">
+        <div class="feature-icon">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+        </div>
+        <span><strong>Zero-Prompt Inbound:</strong> Files beamed from your PC auto-save straight to your phone's storage.</span>
+      </div>
+
+      <div class="feature-item">
+        <div class="feature-icon">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+        </div>
+        <span><strong>Android Share Sheet:</strong> Appears as a direct 1-tap share target in Gallery, YouTube, and Chrome.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Android Phone Mockup Frame -->
+  <div class="phone-mockup">
+    
+    <!-- Phone Status Bar -->
+    <div class="phone-statusbar">
+      <span>11:48</span>
+      <div class="status-icons">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="7" width="16" height="10" rx="2" ry="2"/><line x1="22" y1="11" x2="22" y2="13"/></svg>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <header class="mobile-header">
+      <span class="brand-title">SendKeep</span>
+      <div class="connected-device-chip" title="Connected to PC">
+        <span class="pulse-dot"></span>
+        <span>Laptop-PC</span>
+      </div>
+    </header>
+
+    <!-- Quick Beam Tiles -->
+    <div class="action-grid">
+      <div class="quick-action-tile" onclick="triggerMobileToast('Opening Gallery to Beam...')">
+        <div class="tile-icon-box photos">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </div>
+        <span class="tile-label">Photos</span>
+      </div>
+
+      <div class="quick-action-tile" onclick="triggerMobileToast('Opening Files to Beam...')">
+        <div class="tile-icon-box files">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <span class="tile-label">Files</span>
+      </div>
+
+      <div class="quick-action-tile" onclick="beamClipboardDemo()">
+        <div class="tile-icon-box clipboard">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </div>
+        <span class="tile-label">Clipboard</span>
+      </div>
+    </div>
+
+    <!-- Clipboard Sync Toggle Banner -->
+    <div class="sync-banner">
+      <div class="sync-info">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+        <span class="sync-text">Auto-Sync Clipboard</span>
+      </div>
+      <div class="toggle-switch" onclick="toggleSync(this)">
+        <div class="toggle-knob"></div>
+      </div>
+    </div>
+
+    <!-- Feed Label -->
+    <div class="feed-heading">Recent Transfers</div>
+
+    <!-- Transfers Stream -->
+    <main class="mobile-stream" id="mobileFeed">
+      
+      <!-- Item 1: Beamed Screenshot -->
+      <article class="stream-card" onclick="triggerMobileToast('Opened Screenshot')">
+        <div class="card-row">
+          <div class="card-thumb">
+            <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=200&q=80" alt="Screenshot">
+          </div>
+          <div class="card-details">
+            <div class="card-title">Screenshot_20260911.jpg</div>
+            <div class="card-meta">146 KB • Beamed to PC</div>
+          </div>
+          <svg class="card-action-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </div>
+      </article>
+
+      <!-- Item 2: Document from PC -->
+      <article class="stream-card" onclick="triggerMobileToast('Opened PDF document')">
+        <div class="card-row">
+          <div class="tile-icon-box files" style="width: 44px; height: 44px; border-radius: 10px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div class="card-details">
+            <div class="card-title">project_specification.pdf</div>
+            <div class="card-meta">2.4 MB • Received from PC</div>
+          </div>
+          <svg class="card-action-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </div>
+      </article>
+
+      <!-- Item 3: Link Note -->
+      <article class="stream-card" onclick="triggerMobileToast('Copied text link')">
+        <div class="text-card-body">
+https://meet.google.com/xyz-sendkeep
+        </div>
+        <div class="card-footer">
+          <span>Beamed from PC</span>
+          <span>10m ago</span>
+        </div>
+      </article>
+
+    </main>
+
+    <!-- Bottom Beam Note Pill -->
+    <form class="floating-beam-input" onsubmit="handleMobileSend(event)">
+      <input type="text" class="mobile-input" id="mobileInput" placeholder="Beam note or link to PC..." autocomplete="off">
+      <button type="submit" class="mobile-send-btn" title="Send to PC">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+      </button>
+    </form>
+
+    <!-- In-App Toast -->
+    <div class="mobile-toast" id="mobileToast">Beamed to PC</div>
+
+  </div>
+
+  <script>
+    const mobileToast = document.getElementById('mobileToast');
+    const mobileFeed = document.getElementById('mobileFeed');
+    const mobileInput = document.getElementById('mobileInput');
+
+    function triggerMobileToast(msg) {
+      mobileToast.textContent = msg;
+      mobileToast.classList.add('show');
+      setTimeout(() => mobileToast.classList.remove('show'), 2000);
+    }
+
+    function toggleSync(el) {
+      const knob = el.querySelector('.toggle-knob');
+      if (knob.style.right === 'auto') {
+        knob.style.right = '2px';
+        knob.style.left = 'auto';
+        el.style.background = 'var(--accent)';
+        triggerMobileToast('Clipboard Sync enabled');
+      } else {
+        knob.style.right = 'auto';
+        knob.style.left = '2px';
+        el.style.background = 'rgba(255,255,255,0.15)';
+        triggerMobileToast('Clipboard Sync paused');
+      }
+    }
+
+    function handleMobileSend(e) {
+      e.preventDefault();
+      const val = mobileInput.value.trim();
+      if (!val) return;
+
+      const card = document.createElement('article');
+      card.className = 'stream-card';
+      card.onclick = () => triggerMobileToast('Copied note');
+      card.innerHTML = `
+        <div class="text-card-body">${escapeHtml(val)}</div>
+        <div class="card-footer">
+          <span>Beamed to PC</span>
+          <span>Just now</span>
+        </div>
+      `;
+      mobileFeed.insertBefore(card, mobileFeed.firstChild);
+      mobileInput.value = '';
+      triggerMobileToast('⚡ Beamed to PC Shelf');
+    }
+
+    function beamClipboardDemo() {
+      const card = document.createElement('article');
+      card.className = 'stream-card';
+      card.onclick = () => triggerMobileToast('Copied text');
+      card.innerHTML = `
+        <div class="text-card-body">Text copied from Android clipboard</div>
+        <div class="card-footer">
+          <span>Beamed to PC</span>
+          <span>Just now</span>
+        </div>
+      `;
+      mobileFeed.insertBefore(card, mobileFeed.firstChild);
+      triggerMobileToast('⚡ Beamed clipboard to PC');
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>'"]/g, 
+        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+      );
+    }
+  </script>
+</body>
+</html>

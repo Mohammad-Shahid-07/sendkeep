@@ -8,42 +8,44 @@ export interface SendKeepItem {
   fileType: string;
   sender: string;
   timestamp: number;
-  content?: string; // for text clips
+  content?: string; // for text clips or links
 }
+
+export type FilterCategory = 'all' | 'media' | 'files' | 'links' | 'notes';
 
 interface AppState {
   isOpen: boolean;
   items: SendKeepItem[];
-  activeFilter: 'all' | 'media' | 'text' | 'files';
+  activeFilter: FilterCategory;
+  connectedDevice: {
+    name: string;
+    ip: string;
+    status: string;
+  };
   setOpen: (open: boolean) => void;
   toggleOpen: () => void;
   addItem: (item: SendKeepItem) => void;
   removeItem: (id: string) => void;
   clearAll: () => void;
-  setFilter: (filter: 'all' | 'media' | 'text' | 'files') => void;
+  setFilter: (filter: FilterCategory) => void;
+  setConnectedDevice: (device: { name: string; ip: string; status: string }) => void;
 }
 
 export const useStore = create<AppState>((set) => ({
   isOpen: false,
-  items: [
-    {
-      id: 'demo-1',
-      name: 'SendKeep Initialized',
-      path: '',
-      size: 1024,
-      fileType: 'text/plain',
-      sender: 'System',
-      timestamp: Date.now(),
-      content: 'SendKeep is active and listening for your Android device on your local Wi-Fi.',
-    },
-  ],
+  items: [],
   activeFilter: 'all',
+  connectedDevice: {
+    name: 'Galaxy M13',
+    ip: '10.134.244.84',
+    status: 'connected',
+  },
   setOpen: (open) => set({ isOpen: open }),
   toggleOpen: () => set((state) => ({ isOpen: !state.isOpen })),
   addItem: (item) =>
     set((state) => ({
       items: [item, ...state.items.filter((i) => i.id !== item.id)],
-      isOpen: true, // auto-reveal shelf on incoming item!
+      isOpen: true, // auto-reveal shelf on incoming item
     })),
   removeItem: (id) =>
     set((state) => ({
@@ -51,4 +53,5 @@ export const useStore = create<AppState>((set) => ({
     })),
   clearAll: () => set({ items: [] }),
   setFilter: (filter) => set({ activeFilter: filter }),
+  setConnectedDevice: (device) => set({ connectedDevice: device }),
 }));
