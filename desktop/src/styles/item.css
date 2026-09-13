@@ -127,7 +127,7 @@
   width: 100%;
   box-sizing: border-box;
   padding: 3px 16px 8px 16px;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.28) 100%);
+  background: transparent;
   border: none;
   display: flex;
   align-items: center;
@@ -953,3 +953,77 @@
   background: linear-gradient(to bottom, transparent, #f97316, transparent);
   box-shadow: 0 0 24px rgba(249, 115, 22, 0.9), 0 0 40px rgba(249, 115, 22, 0.5);
 }
+
+/* ========================================================================= */
+/* TEXT FILE SNIPPET PREVIEW (<= 50 words)                                   */
+/* ========================================================================= */
+.txt-snippet-card {
+  width: 100%;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  padding: 10px 12px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.item:hover .txt-snippet-card {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.txt-snippet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.txt-snippet-title {
+  font-family: var(--font-ui);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.88);
+  letter-spacing: 0.01em;
+}
+
+.txt-snippet-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 1px 5px;
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.txt-snippet-body {
+  font-size: calc(12.5px * var(--font-scale, 1));
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.94);
+  font-weight: 400;
+  word-break: break-word;
+  white-space: pre-wrap;
+  max-height: 150px;
+  overflow-y: auto;
+  user-select: text;
+}
+
+.txt-snippet-body::-webkit-scrollbar {
+  width: 4px;
+}
+
+.txt-snippet-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+}
+
