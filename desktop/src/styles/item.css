@@ -15,6 +15,10 @@
   -webkit-user-select: none;
   transition: background 0.14s ease;
   overflow: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 /* Specular light-reflection 1px border.
@@ -626,46 +630,19 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 10px;
-  background: #141414;
-  border: none;
-  border-radius: 14px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 9px;
   cursor: grab;
   width: 100%;
-  transition: background 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background 0.15s ease, border-color 0.15s ease;
   overflow: hidden;
 }
 
 .fluid-card-row:hover {
-  background: #1c1c1c;
-}
-
-.fluid-card-row::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: 2;
-  transition: opacity 0.14s ease;
-  background: 
-    radial-gradient(
-      ellipse 70% 1px at 50% 0%,
-      rgba(255, 255, 255, 0.22) 0%,
-      rgba(255, 255, 255, 0.08) 45%,
-      transparent 80%
-    ) top / 100% 1px no-repeat,
-    linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.035) 20%,
-      rgba(255, 255, 255, 0.035) 80%,
-      transparent 100%
-    ) bottom / 100% 1px no-repeat;
-}
-
-.fluid-card-row:hover::before {
-  opacity: 1.2;
+  background: rgba(255, 255, 255, 0.065) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 .fluid-card-row:active {
@@ -726,17 +703,16 @@
   gap: 4px;
   opacity: 0;
   pointer-events: none;
-  background: #141414;
+  background: #18181d;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   padding: 3px 4px;
   border-radius: 8px;
-  border: none;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.75);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.85);
   transition: opacity 0.15s ease, transform 0.15s ease;
   z-index: 5;
 }
 
-.fluid-card-row:hover .fluid-row-actions,
-.fluid-card-row:focus-within .fluid-row-actions {
+.fluid-card-row:hover .fluid-row-actions {
   opacity: 1;
   pointer-events: auto;
 }

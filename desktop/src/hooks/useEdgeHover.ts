@@ -51,39 +51,25 @@ export function useEdgeHover() {
         // Check if user enabled edge trigger in settings
         const isEdgeTriggerEnabled = Boolean(state.settings?.edgeTriggerEnabled ?? true);
 
-        // Proximity detection (within 36px of left screen edge)
-        const isNearEdge = x <= 36;
-        if (state.isNearEdge !== isNearEdge) {
-          useStore.getState().setIsNearEdge(isNearEdge);
+        // Direct edge detection only (cursor within 2-3px of left screen edge)
+        const isAtEdge = x <= 3;
+        if (state.isNearEdge !== isAtEdge) {
+          useStore.getState().setIsNearEdge(isAtEdge);
         }
 
-        if (isEdgeTriggerEnabled && x <= 28) {
-          // Immediately make window interactive and focus
+        if (isEdgeTriggerEnabled && isAtEdge) {
+          // Immediately make window interactive and open
           if (!isInteractive.current) {
             invoke('set_interactive', { interactive: true });
             isInteractive.current = true;
           }
 
-          // Direct edge contact (x <= 28px): open immediately with zero delay
           if (dwellTimer.current) {
             clearTimeout(dwellTimer.current);
             dwellTimer.current = null;
           }
           useStore.getState().setOpen(true);
           useStore.getState().setIsNearEdge(false);
-        } else if (isEdgeTriggerEnabled && x <= 44) {
-          if (!isInteractive.current) {
-            invoke('set_interactive', { interactive: true });
-            isInteractive.current = true;
-          }
-          if (!dwellTimer.current) {
-            // Approaching border: open after 30ms dwell
-            dwellTimer.current = window.setTimeout(() => {
-              useStore.getState().setOpen(true);
-              useStore.getState().setIsNearEdge(false);
-              dwellTimer.current = null;
-            }, 30);
-          }
         } else {
           if (dwellTimer.current) {
             clearTimeout(dwellTimer.current);
@@ -124,10 +110,14 @@ export function useEdgeHover() {
             }, GRACE_MS);
           }
         } else {
-          // Inside panel: cancel any pending close
+          // Inside panel: cancel any pending close and guarantee interactive is true!
           if (graceTimer.current) {
             clearTimeout(graceTimer.current);
             graceTimer.current = null;
+          }
+          if (!isInteractive.current) {
+            invoke('set_interactive', { interactive: true });
+            isInteractive.current = true;
           }
         }
       }

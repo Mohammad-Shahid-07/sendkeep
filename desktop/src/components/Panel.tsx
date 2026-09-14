@@ -179,7 +179,7 @@ export const Panel: React.FC = () => {
   };
 
   return (
-    <div className="root fixed inset-0 pointer-events-none select-none overflow-hidden">
+    <div className="root fixed inset-0 w-full h-screen pointer-events-none select-none overflow-hidden">
       {/* Screen Edge Copy Indicator Curve */}
       <CopyIndicatorCurve />
 
@@ -200,31 +200,41 @@ export const Panel: React.FC = () => {
               useStore.getState().setOpen(true);
               invoke('set_interactive', { interactive: true });
             }}
-            className="absolute left-0 top-1/2 -translate-y-1/2 py-8 pl-0 pr-4 flex items-center group cursor-pointer pointer-events-auto z-30 select-none"
+            className="absolute left-0 top-1/2 -translate-y-1/2 w-[2.5px] flex items-center group cursor-pointer pointer-events-auto z-30 select-none"
             title="Click or hover edge to open SendKeep"
           >
-            <div className="w-[2.5px] h-12 rounded-r-full bg-white/35 border-r border-y border-white/25 backdrop-blur-sm transition-all duration-150 ease-out group-hover:w-[5px] group-hover:h-16 group-hover:bg-white/90 group-hover:shadow-[0_0_10px_rgba(255,255,255,0.35)]" />
+            <div className="w-[2.5px] h-12 rounded-r-full bg-white/35 border-r border-y border-white/25 backdrop-blur-sm transition-all duration-150 ease-out group-hover:w-[3px] group-hover:bg-white/90 group-hover:shadow-[0_0_8px_rgba(255,255,255,0.35)]" />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Full-Height SendKeep Sidebar Panel (Entire Sidebar Droppable) */}
+      {/* Full-Height SendKeep Sidebar Panel (100vh, DirectComposition GPU Accelerated) */}
       <motion.aside
         initial={false}
         animate={{
           x: isOpen ? 0 : -350,
         }}
         transition={{
-          type: 'spring',
-          damping: 30,
-          stiffness: 340,
-          mass: 0.8,
+          duration: 0.22,
+          ease: [0.16, 1, 0.3, 1],
+        }}
+        style={{
+          willChange: 'transform',
+          transform: 'translateZ(0)',
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
+        }}
+        onMouseEnter={() => {
+          invoke('set_interactive', { interactive: true }).catch(() => {});
+        }}
+        onPointerDown={() => {
+          invoke('set_interactive', { interactive: true }).catch(() => {});
         }}
         onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className="fixed top-0 left-0 w-[350px] h-full bg-[#090a0e] border-r border-white/[0.06] shadow-2xl shadow-black flex flex-col pointer-events-auto relative overflow-hidden z-20"
+        className="fixed top-0 left-0 w-[350px] h-screen bg-[#090a0e] border-r border-white/[0.06] shadow-[8px_0_24px_rgba(0,0,0,0.5)] flex flex-col pointer-events-auto relative overflow-hidden z-20 will-change-transform transform-gpu"
       >
         {/* Full-Sidebar Ambient Drag Overlay */}
         <AnimatePresence>

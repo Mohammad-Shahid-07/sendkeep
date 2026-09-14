@@ -207,6 +207,7 @@ fn read_image_base64(path: String) -> Result<String, String> {
         .unwrap_or("png")
         .to_lowercase();
     let mime = match ext.as_str() {
+        "svg" => "image/svg+xml",
         "bmp" => "image/bmp",
         "jpg" | "jpeg" => "image/jpeg",
         "png" => "image/png",
@@ -497,7 +498,7 @@ fn stage_drag_text(content: String, name: Option<String>) -> Result<String, Stri
 }
 
 #[tauri::command]
-fn start_drag(app: AppHandle, paths: Vec<String>) -> Result<(), String> {
+fn start_drag(app: AppHandle, paths: Vec<String>, preview_path: Option<String>) -> Result<(), String> {
     if let Some(window) = app.get_webview_window("main") {
         let file_paths: Vec<std::path::PathBuf> = paths
             .iter()
@@ -511,8 +512,29 @@ fn start_drag(app: AppHandle, paths: Vec<String>) -> Result<(), String> {
 
         let handle = app.clone();
         let _ = app.run_on_main_thread(move || {
-            let item = drag::DragItem::Files(file_paths);
-            let image = drag::Image::Raw(vec![]);
+            let item = drag::DragItem::Files(file_paths.clone());
+            
+            // Resolve drag image for Windows OLE drag:
+            // 1. Explicit preview_path if provided and valid
+            // 2. If first file is an image, drag its thumbnail directly
+            let image = if let Some(ref p) = preview_path {
+                let pb = std::path::PathBuf::from(p);
+                if pb.exists() {
+                    drag::Image::File(pb)
+                } else {
+                    drag::Image::Raw(vec![])
+                }
+            } else if let Some(first) = file_paths.first() {
+                let ext = first.extension().and_then(|e| e.to_str()).unwrap_or("").to_lowercase();
+                if matches!(ext.as_str(), "png" | "jpg" | "jpeg" | "webp" | "bmp" | "gif" | "ico") {
+                    drag::Image::File(first.clone())
+                } else {
+                    drag::Image::Raw(vec![])
+                }
+            } else {
+                drag::Image::Raw(vec![])
+            };
+
             let _ = drag::start_drag(
                 &window,
                 item,
@@ -929,6 +951,7 @@ pub fn run() {
             collect_folder_files,
             paste::simulate_paste,
             paste::copy_item_native,
+            paste::copy_files_native,
             paste::paste_item_directly,
             discovery::send_pair_request,
             discovery::probe_peer,
@@ -1028,25 +1051,24 @@ pub fn run() {
                 #[cfg(target_os = "windows")]
                 {
                     if let Ok(hwnd) = window.hwnd() {
-                        if let Some((rc_monitor, rc_work)) = window_hooks::get_monitor_and_work_rect(hwnd.0 as isize) {
+                        if let Some((rc_monitor, _rc_work)) = window_hooks::get_monitor_and_work_rect(hwnd.0 as isize) {
                             let scale = window.scale_factor().unwrap_or(1.0);
                             let mon_h = (rc_monitor.bottom - rc_monitor.top) as f64;
-                            let work_h = (rc_work.bottom - rc_work.top) as f64;
 
-                            // In Win32 GDI, GetMonitorInfoW returns physical device coordinates.
+                            // 100vh: Spans the full height of the display monitor
                             let (phys_width, phys_height, phys_x, phys_y) = if mon_h >= 1000.0 {
                                 (
                                     (350.0 * scale).round() as u32,
-                                    work_h.round() as u32,
-                                    rc_work.left,
-                                    rc_work.top,
+                                    mon_h.round() as u32,
+                                    rc_monitor.left,
+                                    rc_monitor.top,
                                 )
                             } else {
                                 (
                                     (350.0 * scale).round() as u32,
-                                    (work_h * scale).round() as u32,
-                                    (rc_work.left as f64 * scale).round() as i32,
-                                    (rc_work.top as f64 * scale).round() as i32,
+                                    (mon_h * scale).round() as u32,
+                                    (rc_monitor.left as f64 * scale).round() as i32,
+                                    (rc_monitor.top as f64 * scale).round() as i32,
                                 )
                             };
 

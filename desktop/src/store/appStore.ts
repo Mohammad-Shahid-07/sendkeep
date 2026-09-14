@@ -11,6 +11,11 @@ const debouncedSave = (items: SendKeepItem[]) => {
   }, 400);
 };
 
+let lastInternalCopyTime = 0;
+export const markInternalCopy = () => {
+  lastInternalCopyTime = Date.now();
+};
+
 export interface SendKeepItem {
   id: string;
   name: string;
@@ -221,6 +226,19 @@ interface AppState {
   pickSaveDirectory: () => Promise<string | null>;
   setIncomingPairRequest: (req: IncomingPairRequest | null) => void;
   respondPairRequest: (requestId: string, accept: boolean) => Promise<void>;
+  isSelectMode: boolean;
+  selectedItemIds: string[];
+  toggleSelectMode: () => void;
+  setSelectMode: (open: boolean) => void;
+  toggleSelectItem: (id: string) => void;
+  selectAllItems: () => void;
+  clearSelection: () => void;
+  bundleSelectedItems: () => void;
+  copySelectedItems: () => Promise<boolean>;
+  deleteSelectedItems: () => void;
+  beamSelectedItems: () => Promise<void>;
+  ungroupBundle: (bundleId: string) => void;
+  markInternalCopy: () => void;
   probeAllTrusted: () => Promise<void>;
   pairDeviceByIp: (ip: string, port?: number) => Promise<TrustedDevice | null>;
 }
@@ -374,8 +392,18 @@ export const useStore = create<AppState>((set, get) => ({
     incognito: false,
     autoDeleteHours: 0,
   },
-  setOpen: (open) => set({ isOpen: open }),
-  toggleOpen: () => set((state) => ({ isOpen: !state.isOpen })),
+  setOpen: (open) => {
+    set({ isOpen: open });
+    if (open) {
+      invoke('set_interactive', { interactive: true }).catch(() => {});
+    } else if (!get().isSettingsOpen && !get().isPairModalOpen && !get().isWebShareOpen) {
+      invoke('set_interactive', { interactive: false }).catch(() => {});
+    }
+  },
+  toggleOpen: () => {
+    const next = !get().isOpen;
+    get().setOpen(next);
+  },
   setActiveSource: (source) => set({ activeSource: source }),
   setFilter: (filter) => set({ activeFilter: filter }),
   setSearchQuery: (query) => set({ searchQuery: query }),
@@ -390,7 +418,37 @@ export const useStore = create<AppState>((set, get) => ({
         ...item,
         source: normalizedSource,
       };
-      const updated = [normalizedItem, ...state.items.filter((i) => i.id !== item.id)];
+
+      // Check for deduplication against existing items
+      const isRecentInternalCopy = Date.now() - lastInternalCopyTime < 2500;
+      const existingIndex = state.items.findIndex((existing) => {
+        if (existing.id === item.id) return true;
+        if (item.path && existing.path && item.path.toLowerCase() === existing.path.toLowerCase()) return true;
+        if (item.content && existing.content && item.content.trim() === existing.content.trim()) return true;
+        if (item.name && existing.name === item.name && item.size && existing.size === item.size) return true;
+        return false;
+      });
+
+      if (existingIndex !== -1) {
+        // Bump existing item and update timestamp without creating a duplicate card
+        const existing = state.items[existingIndex];
+        const updatedExisting: SendKeepItem = {
+          ...existing,
+          timestamp: Date.now(),
+          hitCount: (existing.hitCount || 1) + 1,
+        };
+        const rest = state.items.filter((_, idx) => idx !== existingIndex);
+        const updated = [updatedExisting, ...rest];
+        debouncedSave(updated);
+        return { items: updated };
+      }
+
+      // If it's within internal copy window and was not matched, skip duplicate capture of SendKeep's own emission
+      if (isRecentInternalCopy && item.source === 'clipboard') {
+        return state;
+      }
+
+      const updated = [normalizedItem, ...state.items];
       debouncedSave(updated);
 
       return {
@@ -428,25 +486,202 @@ export const useStore = create<AppState>((set, get) => ({
       const remainingSubItems = stack.bundleItems.filter((s) => s.id !== subItemId);
 
       let updatedItems: SendKeepItem[];
+      const extracted: SendKeepItem = {
+        ...subItem,
+        isStack: false,
+        isExpanded: false,
+      };
+
       if (remainingSubItems.length <= 1 && remainingSubItems[0]) {
+        const lastRemaining: SendKeepItem = {
+          ...remainingSubItems[0],
+          isStack: false,
+          isExpanded: false,
+        };
         updatedItems = state.items
           .filter((i) => i.id !== stackId)
-          .concat([subItem, remainingSubItems[0]]);
+          .concat([extracted, lastRemaining]);
       } else {
+        const newTotalSize = remainingSubItems.reduce((acc, it) => acc + (it.size || 0), 0);
         updatedItems = state.items.map((i) =>
           i.id === stackId
             ? {
                 ...i,
                 bundleItems: remainingSubItems,
+                size: newTotalSize,
                 name: `Bundle (${remainingSubItems.length} items)`,
               }
             : i
         );
+        updatedItems = [extracted, ...updatedItems];
       }
 
       debouncedSave(updatedItems);
       return { items: updatedItems };
     }),
+
+  ungroupBundle: (bundleId) =>
+    set((state) => {
+      const bundle = state.items.find((i) => i.id === bundleId);
+      if (!bundle || !bundle.bundleItems || bundle.bundleItems.length === 0) return state;
+
+      const unpacked = bundle.bundleItems.map((item) => ({
+        ...item,
+        isStack: false,
+        isExpanded: false,
+      }));
+
+      const updated = state.items.flatMap((i) => (i.id === bundleId ? unpacked : [i]));
+      debouncedSave(updated);
+      return { items: updated };
+    }),
+
+  isSelectMode: false,
+  selectedItemIds: [],
+  toggleSelectMode: () =>
+    set((state) => ({
+      isSelectMode: !state.isSelectMode,
+      selectedItemIds: !state.isSelectMode ? state.selectedItemIds : [],
+    })),
+  setSelectMode: (open: boolean) =>
+    set({
+      isSelectMode: open,
+      selectedItemIds: open ? get().selectedItemIds : [],
+    }),
+  toggleSelectItem: (id: string) =>
+    set((state) => {
+      const exists = state.selectedItemIds.includes(id);
+      const updated = exists
+        ? state.selectedItemIds.filter((x) => x !== id)
+        : [...state.selectedItemIds, id];
+      return {
+        selectedItemIds: updated,
+        isSelectMode: updated.length > 0 ? true : state.isSelectMode,
+      };
+    }),
+  selectAllItems: () =>
+    set((state) => ({
+      selectedItemIds: state.items.map((i) => i.id),
+      isSelectMode: true,
+    })),
+  clearSelection: () =>
+    set({
+      selectedItemIds: [],
+      isSelectMode: false,
+    }),
+  bundleSelectedItems: () => {
+    const { items, selectedItemIds } = get();
+    if (selectedItemIds.length < 2) return;
+
+    const selected = items.filter((i) => selectedItemIds.includes(i.id));
+    const remaining = items.filter((i) => !selectedItemIds.includes(i.id));
+
+    const flattened: SendKeepItem[] = [];
+    for (const it of selected) {
+      if (it.isStack && it.bundleItems) {
+        flattened.push(...it.bundleItems);
+      } else {
+        flattened.push(it);
+      }
+    }
+
+    const totalSize = flattened.reduce((acc, it) => acc + (it.size || 0), 0);
+    const bundleCard: SendKeepItem = {
+      id: `bundle-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      name: `Files Bundle (${flattened.length} items)`,
+      path: flattened[0]?.path || '',
+      size: totalSize,
+      fileType: 'bundle/stack',
+      sender: 'Bundle',
+      source: 'device',
+      timestamp: Date.now(),
+      isStack: true,
+      isExpanded: true,
+      bundleItems: flattened,
+      pinned: selected.some((i) => i.pinned),
+    };
+
+    const updated = [bundleCard, ...remaining];
+    debouncedSave(updated);
+    set({
+      items: updated,
+      selectedItemIds: [],
+      isSelectMode: false,
+    });
+  },
+  copySelectedItems: async () => {
+    const { items, selectedItemIds } = get();
+    if (selectedItemIds.length === 0) return false;
+
+    const selected = items.filter((i) => selectedItemIds.includes(i.id));
+    const allPaths: string[] = [];
+    const textPieces: string[] = [];
+
+    for (const item of selected) {
+      if (item.isStack && item.bundleItems) {
+        for (const sub of item.bundleItems) {
+          if (sub.path) allPaths.push(sub.path);
+          else if (sub.content) textPieces.push(sub.content);
+        }
+      } else {
+        if (item.path) allPaths.push(item.path);
+        else if (item.content) textPieces.push(item.content);
+      }
+    }
+
+    markInternalCopy();
+
+    let copied = false;
+    if (allPaths.length > 0) {
+      try {
+        await invoke('copy_files_native', { paths: allPaths });
+        copied = true;
+      } catch (err) {
+        console.warn('Native copy files failed:', err);
+      }
+    }
+
+    if (textPieces.length > 0) {
+      try {
+        await navigator.clipboard.writeText(textPieces.join('\n\n'));
+        copied = true;
+      } catch (err) {
+        console.warn('Clipboard writeText failed:', err);
+      }
+    }
+
+    return copied;
+  },
+  deleteSelectedItems: () => {
+    const { selectedItemIds } = get();
+    if (selectedItemIds.length === 0) return;
+    set((state) => {
+      const updated = state.items.filter((i) => !selectedItemIds.includes(i.id));
+      debouncedSave(updated);
+      return {
+        items: updated,
+        selectedItemIds: [],
+        isSelectMode: false,
+      };
+    });
+  },
+  beamSelectedItems: async () => {
+    const { items, selectedItemIds, beamItemToDevice } = get();
+    const selected = items.filter((i) => selectedItemIds.includes(i.id));
+    for (const it of selected) {
+      if (it.isStack && it.bundleItems) {
+        for (const sub of it.bundleItems) {
+          await beamItemToDevice(sub);
+        }
+      } else {
+        await beamItemToDevice(it);
+      }
+    }
+    set({ selectedItemIds: [], isSelectMode: false });
+  },
+  markInternalCopy: () => {
+    markInternalCopy();
+  },
 
   mergeItems: (sourceId, targetId) =>
     set((state) => {

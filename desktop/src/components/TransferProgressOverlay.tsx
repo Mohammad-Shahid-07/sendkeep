@@ -6,7 +6,6 @@ import {
   Check,
   X,
   FolderOpen,
-  Zap,
   AlertCircle,
 } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
@@ -70,32 +69,6 @@ export const TransferProgressOverlay: React.FC = () => {
 
   const percent = Math.round(progressFrac * 100);
 
-  const remainingSec =
-    activeTransfer.speedBytesPerSec > 0 && activeTransfer.bytesTotal > activeTransfer.bytesCurrent
-      ? Math.round((activeTransfer.bytesTotal - activeTransfer.bytesCurrent) / activeTransfer.speedBytesPerSec)
-      : 0;
-
-  const etaString = isCompleted
-    ? 'Finished'
-    : isCancelled
-    ? 'Cancelled'
-    : isFailed
-    ? 'Failed'
-    : remainingSec <= 0
-    ? 'Calculating...'
-    : remainingSec < 60
-    ? `~${remainingSec}s left`
-    : `~${Math.floor(remainingSec / 60)}m ${remainingSec % 60}s left`;
-
-  const accentGradient = isCompleted
-    ? 'from-emerald-500 to-teal-400'
-    : isCancelled
-    ? 'from-amber-500 to-orange-500'
-    : isFailed
-    ? 'from-red-500 to-rose-400'
-    : isReceive
-    ? 'from-cyan-500 to-indigo-500'
-    : 'from-indigo-500 to-emerald-400';
 
   const handleOpenFolder = () => {
     if (activeTransfer.localFilePath) {
@@ -110,50 +83,47 @@ export const TransferProgressOverlay: React.FC = () => {
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0, y: 30, scale: 0.95 }}
+        initial={{ opacity: 0, y: 24, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 20, scale: 0.95 }}
-        transition={{ type: 'spring', damping: 22, stiffness: 280 }}
+        exit={{ opacity: 0, y: 16, scale: 0.96 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 350 }}
         onMouseEnter={() => {
           invoke('set_interactive', { interactive: true }).catch(() => {});
         }}
-        className="fixed bottom-3 right-3 z-[9999] pointer-events-auto select-none w-[380px]"
+        className="fixed bottom-3 left-3 right-3 z-[9999] pointer-events-auto select-none max-w-[326px] mx-auto"
       >
-        <div className="relative rounded-2xl bg-[#12131a]/95 backdrop-blur-xl border border-white/[0.1] shadow-[0_12px_40px_rgba(0,0,0,0.7)] p-3.5 flex flex-col gap-2.5 overflow-hidden">
-          {/* Subtle ambient glow top bar */}
-          <div
-            className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r ${accentGradient} opacity-70`}
-          />
-
-          {/* Header Row: Fixed height h-8 to prevent any vertical jump */}
-          <div className="flex items-center justify-between gap-2 h-8">
+        <div className="relative rounded-2xl bg-[#131419]/96 backdrop-blur-2xl border border-white/[0.08] shadow-[0_12px_36px_rgba(0,0,0,0.8)] p-3 flex flex-col gap-2.5 overflow-hidden">
+          {/* Top Row: Device/Status + Action Controls */}
+          <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0 flex-1">
               <div
-                className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border border-white/[0.1] ${
+                className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
                   isCompleted
-                    ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20'
+                    ? 'bg-emerald-500/15 text-emerald-400'
                     : isCancelled
-                    ? 'bg-amber-500/15 text-amber-400 border-amber-500/20'
+                    ? 'bg-amber-500/15 text-amber-400'
                     : isFailed
-                    ? 'bg-red-500/15 text-red-400 border-red-500/20'
-                    : 'bg-white/[0.08] text-white/80'
+                    ? 'bg-rose-500/15 text-rose-400'
+                    : isReceive
+                    ? 'bg-sky-500/15 text-sky-400'
+                    : 'bg-indigo-500/15 text-indigo-400'
                 }`}
               >
                 {isCompleted ? (
-                  <Check className="w-3.5 h-3.5" />
+                  <Check className="w-3.5 h-3.5 stroke-[2.5]" />
                 ) : isCancelled ? (
                   <X className="w-3.5 h-3.5" />
                 ) : isFailed ? (
                   <AlertCircle className="w-3.5 h-3.5" />
                 ) : isReceive ? (
-                  <ArrowDown className="w-3.5 h-3.5" />
+                  <ArrowDown className="w-3.5 h-3.5 animate-pulse" />
                 ) : (
-                  <ArrowUp className="w-3.5 h-3.5" />
+                  <ArrowUp className="w-3.5 h-3.5 animate-pulse" />
                 )}
               </div>
 
-              <div className="flex flex-col min-w-0 flex-1">
-                <span className="text-xs font-semibold text-white truncate">
+              <div className="flex flex-col min-w-0">
+                <span className="text-xs font-semibold text-white/95 truncate">
                   {isCompleted
                     ? isReceive
                       ? `Received from ${activeTransfer.peerAlias || 'Device'}`
@@ -166,27 +136,18 @@ export const TransferProgressOverlay: React.FC = () => {
                     ? `Receiving from ${activeTransfer.peerAlias || 'Device'}`
                     : `Sending to ${activeTransfer.peerAlias || 'Device'}`}
                 </span>
-                <span className="text-[10px] text-white/50 truncate">
-                  {isCompleted
-                    ? isReceive
-                      ? 'Finished • Saved to Downloads/SendKeep'
-                      : `Finished • Delivered to ${activeTransfer.peerAlias || 'device'}`
-                    : isCancelled
-                    ? 'Stopped by user'
-                    : etaString}
-                </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5 shrink-0">
+            <div className="flex items-center gap-1 shrink-0">
               {isCompleted && (
                 <button
                   onClick={handleOpenFolder}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.08] hover:bg-white/[0.15] text-[11px] font-medium text-white transition-colors cursor-pointer"
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-[11px] font-medium text-white/80 hover:text-white transition-colors cursor-pointer"
                   title="Show file in folder"
                 >
-                  <FolderOpen className="w-3 h-3 text-white/70" />
-                  <span>Show in Folder</span>
+                  <FolderOpen className="w-3 h-3 text-white/60" />
+                  <span>Open</span>
                 </button>
               )}
 
@@ -197,11 +158,10 @@ export const TransferProgressOverlay: React.FC = () => {
                     cancelTransfer(activeTransfer.sessionId);
                     setActiveTransfer(null);
                   }}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-[11px] font-medium text-red-300 hover:text-red-200 transition-colors cursor-pointer"
+                  className="px-2 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-[11px] font-medium text-rose-300 transition-colors cursor-pointer"
                   title="Cancel transfer"
                 >
-                  <X className="w-3 h-3 text-red-400" />
-                  <span>Cancel</span>
+                  Cancel
                 </button>
               )}
 
@@ -213,55 +173,56 @@ export const TransferProgressOverlay: React.FC = () => {
                   }
                   setActiveTransfer(null);
                 }}
-                className="p-1 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-                title={isInProgress ? 'Cancel transfer' : 'Dismiss'}
+                className="p-1 rounded-lg text-white/35 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                title="Dismiss"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
 
-          {/* File & Speed Row: Fixed height h-12 to prevent any vertical jump */}
-          <div className="flex items-center justify-between gap-3 bg-white/[0.03] border border-white/[0.06] rounded-xl p-2.5 h-12">
-            <div className="flex items-center gap-2.5 min-w-0 flex-1">
-              <div className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center shrink-0 text-white/70">
-                <CustomFileIcon
-                  path={activeTransfer.localFilePath}
-                  ext={extOf(activeTransfer.fileName || activeTransfer.localFilePath || '')}
-                  width={22}
-                  height={22}
-                />
-              </div>
-              <div className="flex flex-col min-w-0 flex-1">
-                <span className="text-xs font-medium text-white/95 truncate" title={activeTransfer.fileName}>
-                  {activeTransfer.fileName}
-                </span>
-                <span className="text-[10px] text-white/50 truncate">
-                  {formatBytes(activeTransfer.bytesCurrent)} / {formatBytes(activeTransfer.bytesTotal)} ({percent}%)
-                </span>
-              </div>
+          {/* File & Progress Row */}
+          <div className="flex items-center gap-2.5 px-2 py-1.5 rounded-xl bg-white/[0.03] border border-white/[0.04]">
+            <div className="w-6 h-6 rounded-md bg-black/40 flex items-center justify-center shrink-0">
+              <CustomFileIcon
+                path={activeTransfer.localFilePath}
+                ext={extOf(activeTransfer.fileName || activeTransfer.localFilePath || '')}
+                width={18}
+                height={18}
+              />
             </div>
-
-            <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-white/[0.06] border border-white/[0.08] text-[11px] font-medium text-white/90 shrink-0">
-              {isCompleted ? (
-                <>
-                  <Zap className="w-3 h-3 text-white/80" />
-                  <span className="font-medium text-white">Delivered</span>
-                </>
-              ) : isCancelled ? (
-                <span className="text-amber-400 font-medium">Cancelled</span>
-              ) : isFailed ? (
-                <span className="text-red-400 font-medium">Failed</span>
-              ) : (
-                <span className="font-mono">{formatSpeed(activeTransfer.speedBytesPerSec)}</span>
-              )}
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className="text-[11.5px] font-medium text-white/90 truncate" title={activeTransfer.fileName}>
+                {activeTransfer.fileName}
+              </span>
+              <span className="text-[10px] text-white/45 font-mono truncate">
+                {formatBytes(activeTransfer.bytesCurrent)} / {formatBytes(activeTransfer.bytesTotal)}
+                {!isCompleted && !isCancelled && !isFailed && activeTransfer.speedBytesPerSec > 0
+                  ? ` · ${formatSpeed(activeTransfer.speedBytesPerSec)}`
+                  : isCompleted
+                  ? ' · Delivered'
+                  : ''}
+              </span>
             </div>
+            {isInProgress && (
+              <span className="text-[10.5px] font-bold text-white/60 font-mono shrink-0">
+                {percent}%
+              </span>
+            )}
           </div>
 
-          {/* Progress Bar */}
-          <div className="w-full h-1.5 bg-white/[0.06] rounded-full overflow-hidden relative">
+          {/* Sleek Minimal Progress Track */}
+          <div className="w-full h-[2px] bg-white/[0.06] rounded-full overflow-hidden relative">
             <motion.div
-              className={`h-full bg-gradient-to-r ${accentGradient} rounded-full`}
+              className={`h-full rounded-full ${
+                isCompleted
+                  ? 'bg-emerald-400'
+                  : isCancelled
+                  ? 'bg-amber-400'
+                  : isFailed
+                  ? 'bg-rose-400'
+                  : 'bg-indigo-500'
+              }`}
               initial={{ width: 0 }}
               animate={{ width: `${percent}%` }}
               transition={{ duration: 0.15 }}
@@ -272,3 +233,4 @@ export const TransferProgressOverlay: React.FC = () => {
     </AnimatePresence>
   );
 };
+

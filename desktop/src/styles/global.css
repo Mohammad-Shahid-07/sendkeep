@@ -128,6 +128,31 @@ input {
   background: rgba(255, 255, 255, 0.22);
 }
 
+/* Refined narrow custom scrollbar for feed and drawers */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+  overscroll-behavior-y: contain;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  transition: background 0.15s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
 /* Respect OS reduced-motion when the user opts in via settings. */
 :root[data-motion='reduce'] * {
   transition-duration: 0.01ms !important;

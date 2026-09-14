@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, FolderOpen, Globe, Settings, Smartphone, Layers, Check, Plus, PanelLeftClose } from 'lucide-react';
 import { useStore, FilterCategory } from '../store/appStore';
 import { ClearMenu } from './ClearMenu';
@@ -60,31 +61,42 @@ export const Header: React.FC = () => {
             className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.06] hover:border-white/[0.12] transition-all cursor-pointer"
             title="Switch stream source or device"
           >
-            <span className="flex items-center justify-center shrink-0">
-              {activeSource === 'clipboard' ? (
-                /* Windows 11 4-tile Logo */
-                <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none">
-                  <rect x="1" y="1" width="6.2" height="6.2" rx="0.8" fill="#0078D4" />
-                  <rect x="8.8" y="1" width="6.2" height="6.2" rx="0.8" fill="#0078D4" />
-                  <rect x="1" y="8.8" width="6.2" height="6.2" rx="0.8" fill="#0078D4" />
-                  <rect x="8.8" y="8.8" width="6.2" height="6.2" rx="0.8" fill="#0078D4" />
-                </svg>
-              ) : activeSource === 'device' ? (
-                <div className="relative flex items-center justify-center">
-                  <Smartphone className="w-3.5 h-3.5 text-white" />
-                  <span className="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                </div>
-              ) : (
-                <Layers className="w-3.5 h-3.5 text-white/80" />
-              )}
-            </span>
-            <span className="text-xs font-semibold text-white tracking-tight max-w-[150px] truncate">
-              {activeSource === 'clipboard'
-                ? 'Windows Clipboard'
-                : activeSource === 'device'
-                ? connectedDevice?.name || 'Mobile Device'
-                : 'Unified Stream'}
-            </span>
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.span
+                key={activeSource + (activeSource === 'device' ? connectedDevice?.id : '')}
+                initial={{ opacity: 0, y: 2 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -2 }}
+                transition={{ duration: 0.12 }}
+                className="flex items-center gap-2 min-w-0"
+              >
+                <span className="flex items-center justify-center shrink-0">
+                  {activeSource === 'clipboard' ? (
+                    /* Windows 11 4-tile Logo */
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none">
+                      <rect x="1" y="1" width="6.2" height="6.2" rx="0.8" fill="#0078D4" />
+                      <rect x="8.8" y="1" width="6.2" height="6.2" rx="0.8" fill="#0078D4" />
+                      <rect x="1" y="8.8" width="6.2" height="6.2" rx="0.8" fill="#0078D4" />
+                      <rect x="8.8" y="8.8" width="6.2" height="6.2" rx="0.8" fill="#0078D4" />
+                    </svg>
+                  ) : activeSource === 'device' ? (
+                    <div className="relative flex items-center justify-center">
+                      <Smartphone className="w-3.5 h-3.5 text-white" />
+                      <span className="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    </div>
+                  ) : (
+                    <Layers className="w-3.5 h-3.5 text-white/80" />
+                  )}
+                </span>
+                <span className="text-xs font-semibold text-white tracking-tight max-w-[150px] truncate">
+                  {activeSource === 'clipboard'
+                    ? 'Windows Clipboard'
+                    : activeSource === 'device'
+                    ? connectedDevice?.name || 'Mobile Device'
+                    : 'Unified Stream'}
+                </span>
+              </motion.span>
+            </AnimatePresence>
             <ChevronDown
               className={`w-3 h-3 text-white/40 transition-transform duration-150 ${
                 showPopover ? 'rotate-180' : ''
@@ -93,8 +105,15 @@ export const Header: React.FC = () => {
           </button>
 
           {/* Source & Device Popover Dropdown */}
-          {showPopover && (
-            <div className="absolute top-9 left-0 w-64 bg-[#111219]/98 border border-white/[0.08] rounded-xl p-1.5 shadow-2xl z-50 flex flex-col gap-0.5 backdrop-blur-xl select-none text-xs">
+          <AnimatePresence>
+            {showPopover && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: -6 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -6 }}
+                transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
+                className="absolute top-9 left-0 w-64 bg-[#111219]/98 border border-white/[0.08] rounded-xl p-1.5 shadow-2xl z-50 flex flex-col gap-0.5 backdrop-blur-xl select-none text-xs"
+              >
               <div className="px-2 pt-1 pb-0.5 text-[10px] font-semibold text-white/40 uppercase tracking-wider">
                 Stream Sources
               </div>
@@ -211,8 +230,9 @@ export const Header: React.FC = () => {
                 <Plus className="w-3.5 h-3.5 text-white/40" />
                 <span>Add Device via IP...</span>
               </button>
-            </div>
+            </motion.div>
           )}
+          </AnimatePresence>
         </div>
 
         {/* Header Action Icons: Web Share, Downloads, Settings, Clear History */}
@@ -268,7 +288,7 @@ export const Header: React.FC = () => {
         </div>
       </header>
 
-      {/* 2. Category Filter Tabs (Squircle Segmented Bar) */}
+      {/* 2. Category Filter Tabs (Squircle Segmented Bar with Gliding Active Pill) */}
       <div className="px-3.5 pb-2.5">
         <nav className="flex items-center p-1 rounded-xl bg-white/[0.03] border border-white/[0.06] gap-1">
           {tabs.map((tab) => {
@@ -277,13 +297,20 @@ export const Header: React.FC = () => {
               <button
                 key={tab.key}
                 onClick={() => setFilter(tab.key)}
-                className={`filter-tab-btn flex-1 py-1.5 px-2 text-center text-[11.5px] font-medium rounded-lg transition-all cursor-pointer ${
+                className={`filter-tab-btn relative flex-1 py-1.5 px-2 text-center text-[11.5px] font-medium rounded-lg transition-colors cursor-pointer select-none ${
                   isActive
-                    ? 'bg-white/10 text-white font-semibold shadow-sm'
-                    : 'text-white/40 hover:text-white/70 hover:bg-white/[0.04]'
+                    ? 'text-white font-semibold'
+                    : 'text-white/40 hover:text-white/70'
                 }`}
               >
-                {tab.label}
+                {isActive && (
+                  <motion.div
+                    layoutId="activeFilterTab"
+                    className="absolute inset-0 bg-white/10 rounded-lg shadow-sm"
+                    transition={{ type: 'spring', damping: 30, stiffness: 450 }}
+                  />
+                )}
+                <span className="relative z-10">{tab.label}</span>
               </button>
             );
           })}

@@ -1,7 +1,18 @@
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::{AppHandle, Emitter};
+
+static PAUSE_UNTIL_MS: AtomicU64 = AtomicU64::new(0);
+
+pub fn pause_clipboard_watcher(duration_ms: u64) {
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis() as u64;
+    PAUSE_UNTIL_MS.store(now + duration_ms, Ordering::SeqCst);
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -353,9 +364,18 @@ pub fn start_clipboard_watcher(app_handle: AppHandle) {
 
             loop {
                 interval.tick().await;
+                let now = SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_millis() as u64;
+
                 let seq = unsafe { win32::GetClipboardSequenceNumber() };
                 if seq != last_seq && seq != 0 {
                     last_seq = seq;
+                    if now < PAUSE_UNTIL_MS.load(Ordering::SeqCst) {
+                        // Suppress self-copy from SendKeep UI
+                        continue;
+                    }
                     if let Some(item) = check_clipboard(&clips_dir, &mut last_hash) {
                         println!("[SendKeep Clipboard] Captured: {} ({})", item.name, item.file_type);
                         let _ = app_handle.emit("sendkeep:clipboard-item", item);

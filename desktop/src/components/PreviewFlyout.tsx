@@ -24,8 +24,14 @@ export const PreviewFlyout: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [pasted, setPasted] = useState(false);
   const [imgDimensions, setImgDimensions] = useState<{ w: number; h: number } | null>(null);
+  const [imgLoadFailed, setImgLoadFailed] = useState(false);
 
   const item: SendKeepItem | undefined = items.find((i) => i.id === previewItemId);
+
+  useEffect(() => {
+    setImgLoadFailed(false);
+    setImgDimensions(null);
+  }, [previewItemId]);
 
   // Close on Escape key
   useEffect(() => {
@@ -193,19 +199,32 @@ export const PreviewFlyout: React.FC = () => {
             </div>
 
             {/* 1. Image Preview */}
-            {isImage && imgSrc && (
+            {isImage && (
               <div className="flex flex-col items-center gap-3 select-none">
-                <div className="relative rounded-xl overflow-hidden border border-white/[0.1] bg-black/50 flex items-center justify-center max-h-[46vh] w-full shadow-lg">
-                  <img
-                    src={imgSrc}
-                    alt={item.name}
-                    className="max-h-[46vh] max-w-full object-contain rounded-lg"
-                    onLoad={(e) => {
-                      const img = e.currentTarget;
-                      setImgDimensions({ w: img.naturalWidth, h: img.naturalHeight });
-                    }}
-                  />
-                </div>
+                {imgLoadFailed || !imgSrc ? (
+                  <div className="flex flex-col items-center justify-center p-8 gap-3 rounded-xl bg-white/[0.03] border border-white/[0.08] w-full">
+                    <CustomFileIcon
+                      path={item.path}
+                      ext={extOf(item.name || item.path || 'png')}
+                      width={64}
+                      height={64}
+                    />
+                    <span className="text-xs font-medium text-white/70 max-w-full truncate">{item.name}</span>
+                  </div>
+                ) : (
+                  <div className="relative rounded-xl overflow-hidden border border-white/[0.1] bg-black/50 flex items-center justify-center max-h-[46vh] w-full shadow-lg">
+                    <img
+                      src={imgSrc}
+                      alt=""
+                      className="max-h-[46vh] max-w-full object-contain rounded-lg"
+                      onLoad={(e) => {
+                        const img = e.currentTarget;
+                        setImgDimensions({ w: img.naturalWidth, h: img.naturalHeight });
+                      }}
+                      onError={() => setImgLoadFailed(true)}
+                    />
+                  </div>
+                )}
                 {imgDimensions && (
                   <div className="flex items-center gap-2.5 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.06] text-[11px] font-mono text-white/60">
                     <span>

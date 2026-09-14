@@ -7,8 +7,8 @@ use windows::Win32::Graphics::Gdi::{
 #[cfg(target_os = "windows")]
 use windows::Win32::UI::WindowsAndMessaging::{
     GetCursorPos, GetWindowLongW, SetForegroundWindow, SetWindowLongW,
-    SetWindowPos, SystemParametersInfoW, GWL_EXSTYLE, HWND_TOPMOST, SPI_GETWORKAREA,
-    SWP_FRAMECHANGED, SWP_NOMOVE, SWP_NOSIZE, SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS,
+    SetWindowPos, GWL_EXSTYLE, HWND_TOPMOST,
+    SWP_NOMOVE, SWP_NOSIZE, SWP_NOACTIVATE,
     WS_EX_LAYERED, WS_EX_NOACTIVATE, WS_EX_TRANSPARENT,
 };
 
@@ -26,17 +26,19 @@ pub fn set_window_interactive(hwnd: isize, interactive: bool) {
             ex_style | (WS_EX_TRANSPARENT.0 as i32) | (WS_EX_LAYERED.0 as i32) | (WS_EX_NOACTIVATE.0 as i32)
         };
 
-        SetWindowLongW(hwnd_val, GWL_EXSTYLE, new_style);
-        // Always retain HWND_TOPMOST so SendKeep never gets buried behind other windows
-        let _ = SetWindowPos(
-            hwnd_val,
-            HWND_TOPMOST,
-            0,
-            0,
-            0,
-            0,
-            SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED,
-        );
+        if ex_style != new_style {
+            SetWindowLongW(hwnd_val, GWL_EXSTYLE, new_style);
+            // Always retain HWND_TOPMOST so SendKeep never gets buried behind other windows
+            let _ = SetWindowPos(
+                hwnd_val,
+                HWND_TOPMOST,
+                0,
+                0,
+                0,
+                0,
+                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE,
+            );
+        }
         if interactive {
             let _ = SetForegroundWindow(hwnd_val);
         }
