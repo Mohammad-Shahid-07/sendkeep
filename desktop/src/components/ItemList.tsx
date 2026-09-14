@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useStore, SendKeepItem } from '../store/appStore';
 import { ClipboardItem } from './ClipboardItem';
-import { Pin, ChevronDown, Smartphone, Clipboard, Plus } from 'lucide-react';
+import { Pin, ChevronDown, Smartphone, Clipboard, Plus, Layers, Copy, Check, Trash2, X } from 'lucide-react';
 import { isImagePath } from '../lib/format';
 
 export const ItemList: React.FC = () => {
@@ -13,9 +13,35 @@ export const ItemList: React.FC = () => {
     searchQuery,
     connectedDevice,
     setPairModalOpen,
+    selectedItemIds,
+    clearSelection,
+    bundleSelectedItems,
+    copySelectedItems,
+    deleteSelectedItems,
+    beamSelectedItems,
   } = useStore();
   const [pinnedCollapsed, setPinnedCollapsed] = useState(false);
+  const [batchCopied, setBatchCopied] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleBatchCopy = async () => {
+    const success = await copySelectedItems();
+    if (success) {
+      setBatchCopied(true);
+      setTimeout(() => setBatchCopied(false), 1200);
+    }
+  };
+
+  // Keyboard shortcut: Escape to clear selection
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && selectedItemIds.length > 0) {
+        clearSelection();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedItemIds, clearSelection]);
 
   // Buttery-smooth physics-based momentum wheel scrolling
   useEffect(() => {
@@ -207,7 +233,9 @@ export const ItemList: React.FC = () => {
       {/* Scrollable Item Feed */}
       <div
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto px-3.5 py-3 custom-scrollbar select-none relative"
+        className={`flex-1 overflow-y-auto px-3.5 py-3 custom-scrollbar select-none relative transition-all ${
+          selectedItemIds.length > 0 ? 'pb-16' : ''
+        }`}
       >
         <div className="min-h-full">
           {categoryFiltered.length === 0 ? (
@@ -329,6 +357,83 @@ export const ItemList: React.FC = () => {
         </div>
       </div>
 
+      {/* Floating Bottom Batch Action Bar */}
+      <AnimatePresence>
+        {selectedItemIds.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 15, scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+            className="absolute bottom-3 left-3 right-3 z-40 px-3 py-2 rounded-xl bg-[#121216]/95 backdrop-blur-xl border border-white/[0.12] shadow-[0_12px_32px_rgba(0,0,0,0.85),0_0_0_1px_rgba(99,102,241,0.3)] flex items-center justify-between select-none"
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="w-5 h-5 rounded-full bg-indigo-500 text-[10px] font-bold text-white flex items-center justify-center shrink-0">
+                {selectedItemIds.length}
+              </span>
+              <span className="text-xs font-semibold text-white/90 truncate">
+                {selectedItemIds.length === 1 ? 'item selected' : 'items selected'}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1 shrink-0">
+              {/* Bundle / Stack Button (if >= 2 items selected) */}
+              {selectedItemIds.length >= 2 && (
+                <button
+                  onClick={bundleSelectedItems}
+                  title="Stack into single 3D bundle"
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400 hover:text-indigo-300 border border-indigo-500/30 text-xs font-medium transition-colors cursor-pointer"
+                >
+                  <Layers className="w-3.5 h-3.5" />
+                  <span>Stack</span>
+                </button>
+              )}
+
+              {/* Copy All Button */}
+              <button
+                onClick={handleBatchCopy}
+                title="Copy all selected items to clipboard"
+                className="p-1.5 rounded-lg text-white/65 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                {batchCopied ? (
+                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                ) : (
+                  <Copy className="w-3.5 h-3.5" />
+                )}
+              </button>
+
+              {/* Beam All Button (if connected to device) */}
+              {isDeviceConnected && (
+                <button
+                  onClick={beamSelectedItems}
+                  title={`Beam selected items to ${connectedDevice?.name}`}
+                  className="p-1.5 rounded-lg text-white/65 hover:text-emerald-400 hover:bg-emerald-500/15 transition-colors cursor-pointer"
+                >
+                  <Smartphone className="w-3.5 h-3.5" />
+                </button>
+              )}
+
+              {/* Delete All Button */}
+              <button
+                onClick={deleteSelectedItems}
+                title="Delete selected items"
+                className="p-1.5 rounded-lg text-white/65 hover:text-rose-400 hover:bg-rose-500/15 transition-colors cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Clear / Close Selection */}
+              <button
+                onClick={clearSelection}
+                title="Deselect all (Esc)"
+                className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors cursor-pointer ml-0.5"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

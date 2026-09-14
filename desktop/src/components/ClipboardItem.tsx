@@ -324,7 +324,12 @@ export const ClipboardItem: React.FC<Props> = ({ item }) => {
     setActiveDraggingId,
     beamItemToDevice,
     markInternalCopy,
+    isSelectMode,
+    selectedItemIds,
+    toggleSelectItem,
   } = useStore();
+
+  const isSelected = selectedItemIds.includes(item.id);
 
   const [copied, setCopied] = useState(false);
   const [copiedSubId, setCopiedSubId] = useState<string | null>(null);
@@ -543,13 +548,29 @@ export const ClipboardItem: React.FC<Props> = ({ item }) => {
 
   const handleCardClick = useCallback(
     (e: React.MouseEvent) => {
+      // Ctrl+Click or Cmd+Click toggles selection directly without copying
+      if (e.ctrlKey || e.metaKey) {
+        e.stopPropagation();
+        e.preventDefault();
+        toggleSelectItem(item.id);
+        return;
+      }
+
+      // When in select mode, clicking anywhere on the card toggles its selection
+      if (isSelectMode) {
+        e.stopPropagation();
+        e.preventDefault();
+        toggleSelectItem(item.id);
+        return;
+      }
+
       if (isBundle && !item.isExpanded) {
         handleToggleExpand(e);
       } else {
         handleCopy(e);
       }
     },
-    [isBundle, item.isExpanded, handleToggleExpand, handleCopy]
+    [isSelectMode, toggleSelectItem, item.id, isBundle, item.isExpanded, handleToggleExpand, handleCopy]
   );
 
   // -------------------------------------------------------------------------
@@ -634,7 +655,11 @@ export const ClipboardItem: React.FC<Props> = ({ item }) => {
     <motion.article
       data-item-id={item.id}
       className={`item group relative rounded-[16px] bg-[#161619] hover:bg-[#1a1a1f] border border-white/[0.04] hover:border-white/[0.08] transition-all overflow-hidden ${
-        item.pinned ? 'ring-1 ring-amber-400/30' : ''
+        isSelected
+          ? 'ring-2 ring-indigo-500 !border-indigo-500/60 !bg-indigo-500/[0.06]'
+          : item.pinned
+          ? 'ring-1 ring-amber-400/30'
+          : ''
       }${
         activeDraggingId === item.id ? ' opacity-40 scale-[0.98] border-dashed ring-1 ring-indigo-500/40 cursor-grabbing' : ''
       }${
@@ -648,6 +673,24 @@ export const ClipboardItem: React.FC<Props> = ({ item }) => {
       onDrop={handleCardDrop}
       onDragEnd={() => setActiveDraggingId(null)}
     >
+      {/* Multi-Select Checkbox Circle */}
+      <div
+        onClick={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          toggleSelectItem(item.id);
+        }}
+        className={`absolute top-2.5 left-2.5 z-30 w-5 h-5 rounded-full border flex items-center justify-center transition-all cursor-pointer ${
+          isSelected
+            ? 'bg-indigo-500 border-indigo-400 text-white opacity-100 scale-100 shadow-md shadow-indigo-500/40'
+            : isSelectMode
+            ? 'bg-black/60 border-white/30 text-transparent opacity-85 hover:border-indigo-400 hover:bg-indigo-500/20 scale-95'
+            : 'bg-black/50 border-white/20 text-transparent opacity-0 group-hover:opacity-100 hover:border-white/50 hover:bg-black/80 scale-90'
+        }`}
+        title={isSelected ? 'Deselect item' : 'Select item (or Ctrl+Click)'}
+      >
+        <Check className={`w-3 h-3 stroke-[2.5] ${isSelected ? 'opacity-100' : 'opacity-0'}`} />
+      </div>
       <div
         className="item-main w-full flex flex-col cursor-pointer select-none"
         draggable={!isBundle || !item.isExpanded}
