@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { invoke } from '@tauri-apps/api/core';
 import { useStore } from '../store/appStore';
 import { Header } from './Header';
 import { ItemList } from './ItemList';
@@ -9,29 +10,104 @@ import { PreviewFlyout } from './PreviewFlyout';
 import { PairRequestToast } from './PairRequestToast';
 import { SettingsModal } from './SettingsModal';
 import { WebShareModal } from './WebShareModal';
-import { Smartphone, Clipboard } from 'lucide-react';
+import { PairDeviceModal } from './PairDeviceModal';
 import { playBeam } from '../lib/soundEffects';
 
 export const Panel: React.FC = () => {
-  const { isOpen, addItem, connectedDevice, activeSource, beamItemToDevice } = useStore();
+  const {
+    isOpen,
+    addItem,
+    connectedDevice,
+    activeSource,
+    beamItemToDevice,
+    isPairModalOpen,
+    setPairModalOpen,
+    settings,
+  } = useStore();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        const state = useStore.getState();
+        if (state.isWebShareOpen) {
+          state.setWebShareOpen(false);
+          return;
+        }
+        if (state.isSettingsOpen) {
+          state.setSettingsOpen(false);
+          return;
+        }
+        if (state.isPairModalOpen) {
+          state.setPairModalOpen(false);
+          return;
+        }
+        if (state.previewItemId !== null) {
+          state.setPreviewItemId(null);
+          return;
+        }
+        state.setOpen(false);
+        invoke('set_interactive', { interactive: false });
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
+
   const [isWindowDragOver, setIsWindowDragOver] = useState(false);
+  const dragCounterRef = useRef(0);
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    dragCounterRef.current += 1;
+    if (dragCounterRef.current === 1) {
+      setIsWindowDragOver(true);
+    }
+  };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    setIsWindowDragOver(true);
+    e.dataTransfer.dropEffect = 'copy';
+    if (!isWindowDragOver) setIsWindowDragOver(true);
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
-    if (e.clientX > 20 && e.clientX < 340) {
+    e.preventDefault();
+    dragCounterRef.current = Math.max(0, dragCounterRef.current - 1);
+    if (dragCounterRef.current === 0) {
       setIsWindowDragOver(false);
     }
   };
 
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current = 0;
     setIsWindowDragOver(false);
+
     const files = e.dataTransfer.files;
-    if (!files || files.length === 0) return;
+    if (!files || files.length === 0) {
+      const text = e.dataTransfer.getData('text/plain') || e.dataTransfer.getData('text');
+      if (text) {
+        const isPhoneMode = activeSource === 'device';
+        const isLink = text.startsWith('http://') || text.startsWith('https://');
+        const clipItem = {
+          id: 'drop-text-' + Date.now(),
+          name: isLink ? 'Web Link' : 'Dropped Note',
+          path: '',
+          size: text.length,
+          fileType: 'text/plain',
+          sender: 'You',
+          source: isPhoneMode ? ('device' as const) : ('clipboard' as const),
+          timestamp: Date.now(),
+          content: text,
+        };
+        addItem(clipItem);
+        if (isPhoneMode) {
+          beamItemToDevice(clipItem).catch(() => {});
+        }
+      }
+      return;
+    }
 
     playBeam();
     const isPhoneMode = activeSource === 'device';
@@ -102,29 +178,37 @@ export const Panel: React.FC = () => {
     }
   };
 
-  const isPhoneMode = activeSource === 'device';
-
   return (
-    <div
-      className="root fixed inset-0 pointer-events-none select-none overflow-hidden"
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-    >
+    <div className="root fixed inset-0 pointer-events-none select-none overflow-hidden">
       {/* Screen Edge Copy Indicator Curve */}
       <CopyIndicatorCurve />
 
-      {/* Edge Handle Glow Beacon when shelf is retracted */}
-      {!isOpen && (
-        <motion.div
-          initial={{ opacity: 0, x: -4 }}
-          animate={{ opacity: 0.85, x: 0 }}
-          transition={{ duration: 0.25 }}
-          className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-20 rounded-r-full bg-gradient-to-b from-indigo-500 via-purple-500 to-emerald-500 shadow-[0_0_16px_rgba(99,102,241,0.7)] pointer-events-none"
-        />
-      )}
+      {/* Refined Minimalist Screen Edge Affordance (2.5px Frosted Glass Hairline, Zero Neon) */}
+      <AnimatePresence>
+        {!isOpen && settings.showEdgeHandle !== false && (
+          <motion.div
+            key="edge-notch"
+            initial={{ opacity: 0, x: -4 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -4 }}
+            transition={{ duration: 0.15 }}
+            onClick={() => {
+              useStore.getState().setOpen(true);
+              invoke('set_interactive', { interactive: true });
+            }}
+            onMouseEnter={() => {
+              useStore.getState().setOpen(true);
+              invoke('set_interactive', { interactive: true });
+            }}
+            className="absolute left-0 top-1/2 -translate-y-1/2 py-8 pl-0 pr-4 flex items-center group cursor-pointer pointer-events-auto z-30 select-none"
+            title="Click or hover edge to open SendKeep"
+          >
+            <div className="w-[2.5px] h-12 rounded-r-full bg-white/35 border-r border-y border-white/25 backdrop-blur-sm transition-all duration-150 ease-out group-hover:w-[5px] group-hover:h-16 group-hover:bg-white/90 group-hover:shadow-[0_0_10px_rgba(255,255,255,0.35)]" />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Full-Height SendKeep Sidebar Panel */}
+      {/* Full-Height SendKeep Sidebar Panel (Entire Sidebar Droppable) */}
       <motion.aside
         initial={false}
         animate={{
@@ -136,38 +220,50 @@ export const Panel: React.FC = () => {
           stiffness: 340,
           mass: 0.8,
         }}
-        className="fixed top-0 left-0 w-[350px] h-screen bg-[#090a0e] border-r border-white/[0.06] shadow-2xl shadow-black flex flex-col pointer-events-auto relative overflow-hidden z-20"
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className="fixed top-0 left-0 w-[350px] h-full bg-[#090a0e] border-r border-white/[0.06] shadow-2xl shadow-black flex flex-col pointer-events-auto relative overflow-hidden z-20"
       >
-        {/* Full Window Ambient Drag Overlay */}
+        {/* Full-Sidebar Ambient Drag Overlay */}
         <AnimatePresence>
           {isWindowDragOver && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.97 }}
+              initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.97 }}
+              exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.15 }}
-              className={`absolute inset-2 z-50 flex flex-col items-center justify-center gap-2 pointer-events-none rounded-2xl border-2 border-dashed shadow-2xl backdrop-blur-md ${
-                isPhoneMode
-                  ? 'bg-[#090a0e]/96 border-emerald-500 shadow-[inset_0_0_40px_rgba(16,185,129,0.3)]'
-                  : 'bg-[#090a0e]/96 border-indigo-500 shadow-[inset_0_0_40px_rgba(99,102,241,0.3)]'
-              }`}
+              className="absolute inset-2.5 z-50 flex flex-col items-center justify-center gap-2.5 pointer-events-none rounded-2xl border border-dashed border-white/25 bg-[#090a0e]/95 backdrop-blur-xl shadow-2xl transition-all select-none"
             >
-              <div
-                className={`w-12 h-12 rounded-full border flex items-center justify-center animate-bounce ${
-                  isPhoneMode
-                    ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400'
-                    : 'bg-indigo-500/15 border-indigo-500/30 text-indigo-400'
-                }`}
-              >
-                {isPhoneMode ? <Smartphone className="w-6 h-6" /> : <Clipboard className="w-6 h-6" />}
+              <div className="w-12 h-12 rounded-2xl bg-white/[0.06] border border-white/15 flex items-center justify-center text-white/90 shadow-sm">
+                <svg
+                  className="w-6 h-6"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M12 3v12" />
+                  <path d="m8 11 4 4 4-4" />
+                  <path d="M4 20h16" />
+                </svg>
               </div>
-              <div className="text-sm font-semibold text-white">
-                {isPhoneMode && connectedDevice
-                  ? `Drop to beam to ${connectedDevice.name}`
-                  : 'Drop files to stage on shelf'}
-              </div>
-              <div className="text-[11px] text-white/50">
-                {isPhoneMode ? 'Direct P2P Wi-Fi transfer (0 clicks)' : 'Instant staging on desktop shelf'}
+              <div className="flex flex-col items-center gap-0.5 text-center px-4">
+                <div className="text-sm font-semibold text-white tracking-tight">
+                  {activeSource === 'device'
+                    ? 'Drop anywhere to beam'
+                    : activeSource === 'clipboard'
+                    ? 'Drop anywhere to stage'
+                    : 'Drop anywhere to beam or stage'}
+                </div>
+                <div className="text-xs text-white/50">
+                  {activeSource === 'device' && connectedDevice
+                    ? `Direct Wi-Fi transfer to ${connectedDevice.name}`
+                    : activeSource === 'clipboard'
+                    ? 'Staged on Windows shelf'
+                    : 'Release anywhere on the sidebar'}
+                </div>
               </div>
             </motion.div>
           )}
@@ -187,11 +283,16 @@ export const Panel: React.FC = () => {
 
         {/* 4. Interactive Rich Preview Flyout */}
         <PreviewFlyout />
-      </motion.aside>
 
-      {/* 5. Settings & Web Share Modals */}
-      <SettingsModal />
-      <WebShareModal />
+        {/* 5. In-Shelf Slide-Over Modals */}
+        <SettingsModal />
+        <WebShareModal />
+        <PairDeviceModal
+          isOpen={isPairModalOpen}
+          onClose={() => setPairModalOpen(false)}
+        />
+      </motion.aside>
     </div>
   );
 };
+

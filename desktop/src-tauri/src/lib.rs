@@ -22,6 +22,9 @@ fn set_interactive(app: AppHandle, interactive: bool) {
     if let Some(window) = app.get_webview_window("main") {
         if let Ok(hwnd) = window.hwnd() {
             window_hooks::set_window_interactive(hwnd.0 as isize, interactive);
+            if interactive {
+                let _ = window.set_focus();
+            }
         }
     }
 }
@@ -1020,8 +1023,44 @@ pub fn run() {
             // 4. Start Real Windows Clipboard Watcher
             clipboard::start_clipboard_watcher(app_handle.clone());
 
-            // Set initial click-through state
+            // Set initial click-through state and fit to work area (excluding taskbar)
             if let Some(window) = app.get_webview_window("main") {
+                #[cfg(target_os = "windows")]
+                {
+                    if let Ok(hwnd) = window.hwnd() {
+                        if let Some((rc_monitor, rc_work)) = window_hooks::get_monitor_and_work_rect(hwnd.0 as isize) {
+                            let scale = window.scale_factor().unwrap_or(1.0);
+                            let mon_h = (rc_monitor.bottom - rc_monitor.top) as f64;
+                            let work_h = (rc_work.bottom - rc_work.top) as f64;
+
+                            // In Win32 GDI, GetMonitorInfoW returns physical device coordinates.
+                            let (phys_width, phys_height, phys_x, phys_y) = if mon_h >= 1000.0 {
+                                (
+                                    (350.0 * scale).round() as u32,
+                                    work_h.round() as u32,
+                                    rc_work.left,
+                                    rc_work.top,
+                                )
+                            } else {
+                                (
+                                    (350.0 * scale).round() as u32,
+                                    (work_h * scale).round() as u32,
+                                    (rc_work.left as f64 * scale).round() as i32,
+                                    (rc_work.top as f64 * scale).round() as i32,
+                                )
+                            };
+
+                            let _ = window.set_size(tauri::Size::Physical(tauri::PhysicalSize {
+                                width: phys_width,
+                                height: phys_height,
+                            }));
+                            let _ = window.set_position(tauri::Position::Physical(tauri::PhysicalPosition {
+                                x: phys_x,
+                                y: phys_y,
+                            }));
+                        }
+                    }
+                }
                 if let Ok(hwnd) = window.hwnd() {
                     window_hooks::set_window_interactive(hwnd.0 as isize, false);
                 }

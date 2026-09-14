@@ -117,7 +117,7 @@ export const TransferProgressOverlay: React.FC = () => {
         onMouseEnter={() => {
           invoke('set_interactive', { interactive: true }).catch(() => {});
         }}
-        className="fixed bottom-3 right-3 left-3 z-[9999] pointer-events-auto select-none"
+        className="fixed bottom-3 right-3 z-[9999] pointer-events-auto select-none w-[380px]"
       >
         <div className="relative rounded-2xl bg-[#12131a]/95 backdrop-blur-xl border border-white/[0.1] shadow-[0_12px_40px_rgba(0,0,0,0.7)] p-3.5 flex flex-col gap-2.5 overflow-hidden">
           {/* Subtle ambient glow top bar */}
@@ -125,20 +125,18 @@ export const TransferProgressOverlay: React.FC = () => {
             className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r ${accentGradient} opacity-70`}
           />
 
-          {/* Header Row */}
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
+          {/* Header Row: Fixed height h-8 to prevent any vertical jump */}
+          <div className="flex items-center justify-between gap-2 h-8">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
               <div
-                className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
+                className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border border-white/[0.1] ${
                   isCompleted
-                    ? 'bg-emerald-500/20 text-emerald-400'
+                    ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20'
                     : isCancelled
-                    ? 'bg-amber-500/20 text-amber-400'
+                    ? 'bg-amber-500/15 text-amber-400 border-amber-500/20'
                     : isFailed
-                    ? 'bg-red-500/20 text-red-400'
-                    : isReceive
-                    ? 'bg-cyan-500/20 text-cyan-400'
-                    : 'bg-indigo-500/20 text-indigo-400'
+                    ? 'bg-red-500/15 text-red-400 border-red-500/20'
+                    : 'bg-white/[0.08] text-white/80'
                 }`}
               >
                 {isCompleted ? (
@@ -148,31 +146,31 @@ export const TransferProgressOverlay: React.FC = () => {
                 ) : isFailed ? (
                   <AlertCircle className="w-3.5 h-3.5" />
                 ) : isReceive ? (
-                  <ArrowDown className="w-3.5 h-3.5 animate-bounce" />
+                  <ArrowDown className="w-3.5 h-3.5" />
                 ) : (
-                  <ArrowUp className="w-3.5 h-3.5 animate-bounce" />
+                  <ArrowUp className="w-3.5 h-3.5" />
                 )}
               </div>
 
-              <div className="flex flex-col min-w-0">
+              <div className="flex flex-col min-w-0 flex-1">
                 <span className="text-xs font-semibold text-white truncate">
                   {isCompleted
                     ? isReceive
-                      ? 'File Received'
-                      : 'File Sent'
+                      ? `Received from ${activeTransfer.peerAlias || 'Device'}`
+                      : `Sent to ${activeTransfer.peerAlias || 'Device'}`
                     : isCancelled
                     ? 'Transfer Cancelled'
                     : isFailed
                     ? 'Transfer Failed'
                     : isReceive
-                    ? `Downloading from ${activeTransfer.peerAlias}`
-                    : `Sending to ${activeTransfer.peerAlias}`}
+                    ? `Receiving from ${activeTransfer.peerAlias || 'Device'}`
+                    : `Sending to ${activeTransfer.peerAlias || 'Device'}`}
                 </span>
                 <span className="text-[10px] text-white/50 truncate">
                   {isCompleted
                     ? isReceive
-                      ? 'Saved to Downloads/SendKeep'
-                      : `Delivered to ${activeTransfer.peerAlias || 'device'}`
+                      ? 'Finished • Saved to Downloads/SendKeep'
+                      : `Finished • Delivered to ${activeTransfer.peerAlias || 'device'}`
                     : isCancelled
                     ? 'Stopped by user'
                     : etaString}
@@ -184,10 +182,10 @@ export const TransferProgressOverlay: React.FC = () => {
               {isCompleted && (
                 <button
                   onClick={handleOpenFolder}
-                  className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/[0.08] hover:bg-white/[0.15] text-[11px] font-medium text-white/90 hover:text-white transition-colors cursor-pointer"
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.08] hover:bg-white/[0.15] text-[11px] font-medium text-white transition-colors cursor-pointer"
                   title="Show file in folder"
                 >
-                  <FolderOpen className="w-3 h-3 text-emerald-400" />
+                  <FolderOpen className="w-3 h-3 text-white/70" />
                   <span>Show in Folder</span>
                 </button>
               )}
@@ -199,7 +197,7 @@ export const TransferProgressOverlay: React.FC = () => {
                     cancelTransfer(activeTransfer.sessionId);
                     setActiveTransfer(null);
                   }}
-                  className="flex items-center gap-1 px-2 py-1 rounded-lg bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-[11px] font-medium text-red-300 hover:text-red-200 transition-colors cursor-pointer"
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-[11px] font-medium text-red-300 hover:text-red-200 transition-colors cursor-pointer"
                   title="Cancel transfer"
                 >
                   <X className="w-3 h-3 text-red-400" />
@@ -215,41 +213,49 @@ export const TransferProgressOverlay: React.FC = () => {
                   }
                   setActiveTransfer(null);
                 }}
-                className="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                className="p-1 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                 title={isInProgress ? 'Cancel transfer' : 'Dismiss'}
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
 
-          {/* File & Speed Row */}
-          <div className="flex items-center justify-between gap-3 bg-white/[0.03] border border-white/[0.04] rounded-xl p-2.5">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-white/[0.04] flex items-center justify-center shrink-0">
+          {/* File & Speed Row: Fixed height h-12 to prevent any vertical jump */}
+          <div className="flex items-center justify-between gap-3 bg-white/[0.03] border border-white/[0.06] rounded-xl p-2.5 h-12">
+            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+              <div className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center shrink-0 text-white/70">
                 <CustomFileIcon
                   path={activeTransfer.localFilePath}
                   ext={extOf(activeTransfer.fileName || activeTransfer.localFilePath || '')}
-                  width={26}
-                  height={26}
+                  width={22}
+                  height={22}
                 />
               </div>
-              <div className="flex flex-col min-w-0">
+              <div className="flex flex-col min-w-0 flex-1">
                 <span className="text-xs font-medium text-white/95 truncate" title={activeTransfer.fileName}>
                   {activeTransfer.fileName}
                 </span>
-                <span className="text-[10px] text-white/50">
+                <span className="text-[10px] text-white/50 truncate">
                   {formatBytes(activeTransfer.bytesCurrent)} / {formatBytes(activeTransfer.bytesTotal)} ({percent}%)
                 </span>
               </div>
             </div>
 
-            {!isCompleted && !isFailed && (
-              <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-white/[0.06] border border-white/[0.08] text-[11px] font-bold text-white shrink-0">
-                <Zap className="w-3 h-3 text-amber-400 animate-pulse" />
-                <span>{formatSpeed(activeTransfer.speedBytesPerSec)}</span>
-              </div>
-            )}
+            <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-white/[0.06] border border-white/[0.08] text-[11px] font-medium text-white/90 shrink-0">
+              {isCompleted ? (
+                <>
+                  <Zap className="w-3 h-3 text-white/80" />
+                  <span className="font-medium text-white">Delivered</span>
+                </>
+              ) : isCancelled ? (
+                <span className="text-amber-400 font-medium">Cancelled</span>
+              ) : isFailed ? (
+                <span className="text-red-400 font-medium">Failed</span>
+              ) : (
+                <span className="font-mono">{formatSpeed(activeTransfer.speedBytesPerSec)}</span>
+              )}
+            </div>
           </div>
 
           {/* Progress Bar */}
@@ -258,7 +264,7 @@ export const TransferProgressOverlay: React.FC = () => {
               className={`h-full bg-gradient-to-r ${accentGradient} rounded-full`}
               initial={{ width: 0 }}
               animate={{ width: `${percent}%` }}
-              transition={{ ease: 'easeOut', duration: 0.15 }}
+              transition={{ duration: 0.15 }}
             />
           </div>
         </div>

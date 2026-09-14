@@ -4,10 +4,8 @@ import { invoke } from '@tauri-apps/api/core';
 import { useStore, SendKeepItem, TransferProgress } from '../store/appStore';
 import { playCopy, playPop } from '../lib/soundEffects';
 
-const TRIGGER_PX = 4;
-const DWELL_MS = 60;
 const GRACE_MS = 300;
-const PANEL_WIDTH = 360; // 340px visual + 20px dead band
+const PANEL_WIDTH = 350;
 
 export function useEdgeHover() {
   const dwellTimer = useRef<number | null>(null);
@@ -17,7 +15,11 @@ export function useEdgeHover() {
   useEffect(() => {
     // 1. Listen for cursor position from Rust background tracker
     const unlistenCursorPromise = listen<[number, number]>('sendkeep:cursor-pos', (event) => {
-      const [x, y] = event.payload;
+      const [rawX, rawY] = event.payload;
+      const dpr = window.devicePixelRatio || 1;
+      const x = rawX / dpr;
+      const y = rawY / dpr;
+
       const state = useStore.getState();
       const isModalActive = Boolean(
         state.isWebShareOpen ||
@@ -46,39 +48,72 @@ export function useEdgeHover() {
       const isOpen = state.isOpen;
 
       if (!isOpen) {
-        // Closed state: check if cursor enters the trigger strip within middle hot zone (20% to 80% screen height)
-        const isWithinHotZone = y >= window.innerHeight * 0.20 && y <= window.innerHeight * 0.80;
-        if (x <= TRIGGER_PX && isWithinHotZone) {
-          if (!dwellTimer.current) {
-            dwellTimer.current = window.setTimeout(async () => {
-              // Fullscreen Game / Presentation suppression
-              try {
-                const isFs = await invoke<boolean>('check_fullscreen');
-                if (isFs) {
-                  dwellTimer.current = null;
-                  return;
-                }
-              } catch {}
+        // Check if user enabled edge trigger in settings
+        const isEdgeTriggerEnabled = Boolean(state.settings?.edgeTriggerEnabled ?? true);
 
+        // Proximity detection (within 36px of left screen edge)
+        const isNearEdge = x <= 36;
+        if (state.isNearEdge !== isNearEdge) {
+          useStore.getState().setIsNearEdge(isNearEdge);
+        }
+
+        if (isEdgeTriggerEnabled && x <= 28) {
+          // Immediately make window interactive and focus
+          if (!isInteractive.current) {
+            invoke('set_interactive', { interactive: true });
+            isInteractive.current = true;
+          }
+
+          // Direct edge contact (x <= 28px): open immediately with zero delay
+          if (dwellTimer.current) {
+            clearTimeout(dwellTimer.current);
+            dwellTimer.current = null;
+          }
+          useStore.getState().setOpen(true);
+          useStore.getState().setIsNearEdge(false);
+        } else if (isEdgeTriggerEnabled && x <= 44) {
+          if (!isInteractive.current) {
+            invoke('set_interactive', { interactive: true });
+            isInteractive.current = true;
+          }
+          if (!dwellTimer.current) {
+            // Approaching border: open after 30ms dwell
+            dwellTimer.current = window.setTimeout(() => {
               useStore.getState().setOpen(true);
-              if (!isInteractive.current) {
-                invoke('set_interactive', { interactive: true });
-                isInteractive.current = true;
-              }
+              useStore.getState().setIsNearEdge(false);
               dwellTimer.current = null;
-            }, DWELL_MS);
+            }, 30);
           }
         } else {
           if (dwellTimer.current) {
             clearTimeout(dwellTimer.current);
             dwellTimer.current = null;
           }
+          // If cursor left edge and shelf is still closed, return to click-through
+          if (isInteractive.current && !useStore.getState().isOpen) {
+            invoke('set_interactive', { interactive: false });
+            isInteractive.current = false;
+          }
         }
       } else {
+        if (state.isNearEdge) {
+          useStore.getState().setIsNearEdge(false);
+        }
         // Open state: keep open if inside panel, start close timer if moved away
         if (x > PANEL_WIDTH) {
           if (!graceTimer.current) {
             graceTimer.current = window.setTimeout(() => {
+              const curState = useStore.getState();
+              if (
+                curState.isWebShareOpen ||
+                curState.isSettingsOpen ||
+                curState.isPairModalOpen ||
+                curState.previewItemId !== null
+              ) {
+                graceTimer.current = null;
+                return;
+              }
+
               useStore.getState().setOpen(false);
               useStore.getState().setPreviewItemId(null);
               if (isInteractive.current) {
@@ -108,7 +143,7 @@ export function useEdgeHover() {
       };
       useStore.getState().addItem(item);
 
-      if (!isInteractive.current) {
+      if (useStore.getState().isOpen && !isInteractive.current) {
         invoke('set_interactive', { interactive: true });
         isInteractive.current = true;
       }

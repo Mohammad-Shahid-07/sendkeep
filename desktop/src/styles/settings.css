@@ -19,15 +19,15 @@
   display: none;
 }
 
-/* ── Segmented Tab Bar ─────────────────────────────────────────────────── */
+/* ── Segmented Tab Bar (Consistent Squircle Styling) ──────────────────── */
 .settings-tab-bar {
   display: flex;
   position: relative;
   width: 100%;
-  background: transparent;
-  border: none;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px;
-  padding: 0;
+  padding: 4px;
   gap: 4px;
   flex-shrink: 0;
   box-shadow: none;
@@ -40,40 +40,40 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 7px 2px;
-  min-height: 34px;
-  border-radius: 999px;
+  padding: 6px 2px;
+  min-height: 30px;
+  border-radius: 8px;
   font-size: calc(11.5px * var(--font-scale, 1));
   font-weight: 500;
   line-height: 1.25;
-  color: rgba(255, 255, 255, 0.72);
-  background: #141414;
+  color: rgba(255, 255, 255, 0.45);
+  background: transparent;
   border: none;
   cursor: pointer;
   outline: none;
-  transition: color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+  transition: color 0.15s ease, background-color 0.15s ease;
   letter-spacing: 0;
   white-space: nowrap;
   overflow: hidden;
 }
 
 .settings-tab-btn:hover:not(.active) {
-  color: #ffffff;
-  background: #141414;
+  color: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .settings-tab-btn.active {
-  color: #000000;
+  color: #ffffff;
   font-weight: 600;
-  background: #ffffff;
-  box-shadow: none;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .settings-tab-indicator {
   position: absolute;
   inset: 0;
-  border-radius: 999px;
-  background: #ffffff;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
   box-shadow: none;
   z-index: 0;
   pointer-events: none;
@@ -361,49 +361,54 @@
   opacity: 0.7;
 }
 
-/* Modern Flat Toggle Switch */
+/* Modern Precision Toggle Switch */
 .setting-toggle {
   flex-shrink: 0;
   width: 36px;
   height: 20px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.12);
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   position: relative;
   cursor: pointer;
   padding: 0;
   outline: none;
-  transition: background 0.18s ease, opacity 0.18s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   box-shadow: none;
 }
 
 .setting-toggle:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.22);
 }
 
 .toggle-thumb {
   position: absolute;
-  top: 3px;
-  left: 0;
+  top: 2px;
+  left: 2px;
   width: 14px;
   height: 14px;
   border-radius: 50%;
   background: #ffffff;
-  box-shadow: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
   pointer-events: none;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
 }
 
 .setting-toggle.checked {
-  background: #ffffff;
-  border: none;
+  background: #6366f1;
+  border-color: #818cf8;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.35);
 }
 
 .setting-toggle.checked:hover:not(:disabled) {
-  background: #ffffff;
+  background: #4f46e5;
+  border-color: #a5b4fc;
 }
 
 .setting-toggle.checked .toggle-thumb {
-  background: #000000;
+  transform: translateX(16px);
+  background: #ffffff;
 }
 
 /* Update Prompt Banner (Monochrome Glassmorphic Glow) */

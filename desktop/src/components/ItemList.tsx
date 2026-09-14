@@ -1,8 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useStore, SendKeepItem } from '../store/appStore';
 import { ClipboardItem } from './ClipboardItem';
-import { Pin, ChevronDown, ChevronUp, Smartphone, Clipboard, Plus } from 'lucide-react';
+import { Pin, ChevronDown, Smartphone, Clipboard, Plus } from 'lucide-react';
 import { isImagePath } from '../lib/format';
 
 export const ItemList: React.FC = () => {
@@ -15,18 +15,6 @@ export const ItemList: React.FC = () => {
     setPairModalOpen,
   } = useStore();
   const [pinnedCollapsed, setPinnedCollapsed] = useState(false);
-  const [showScrollTop, setShowScrollTop] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  const handleScroll = () => {
-    if (scrollRef.current) {
-      setShowScrollTop(scrollRef.current.scrollTop > 80);
-    }
-  };
-
-  const scrollToTop = () => {
-    scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-  };
 
   // 1. Filter by Active Source (Phone vs Clipboard vs Unified)
   let sourceFiltered = items;
@@ -86,11 +74,7 @@ export const ItemList: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[#090a0e] overflow-hidden relative">
       {/* Scrollable Item Feed */}
-      <div
-        ref={scrollRef}
-        onScroll={handleScroll}
-        className="flex-1 overflow-y-auto px-3.5 py-3 space-y-2.5 custom-scrollbar select-none"
-      >
+      <div className="flex-1 overflow-y-auto px-3.5 py-3 space-y-2.5 custom-scrollbar select-none">
         {/* Empty State */}
         {categoryFiltered.length === 0 && (() => {
           const isDeviceConnected = Boolean(
@@ -209,22 +193,6 @@ export const ItemList: React.FC = () => {
           </section>
         )}
       </div>
-
-      {/* Floating Scroll-to-Top Pill */}
-      <AnimatePresence>
-        {showScrollTop && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            onClick={scrollToTop}
-            className="absolute bottom-3 right-4 w-7 h-7 rounded-full bg-[#161824] border border-white/10 hover:border-white/20 text-white/70 hover:text-white flex items-center justify-center transition-colors cursor-pointer shadow-lg z-20"
-            title="Scroll to top"
-          >
-            <ChevronUp className="w-3.5 h-3.5" />
-          </motion.button>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

@@ -214,6 +214,8 @@ interface AppState {
   webShareInfo: { ip: string; port: number; url: string; alias: string } | null;
   fetchWebShareInfo: () => Promise<{ ip: string; port: number; url: string; alias: string }>;
   syncWebShareItems: () => Promise<void>;
+  isNearEdge: boolean;
+  setIsNearEdge: (near: boolean) => void;
   settings: DesktopSettingsState;
   updateSettings: (partial: Partial<DesktopSettingsState>) => Promise<void>;
   pickSaveDirectory: () => Promise<string | null>;
@@ -232,6 +234,8 @@ export interface DesktopSettingsState {
   requirePin: boolean;
   securityPin?: string;
   contextMenuEnabled?: boolean;
+  edgeTriggerEnabled?: boolean;
+  showEdgeHandle?: boolean;
 }
 
 const INITIAL_ITEMS: SendKeepItem[] = [];
@@ -294,6 +298,8 @@ export const useStore = create<AppState>((set, get) => ({
       console.warn('Failed to sync web share files:', e);
     }
   },
+  isNearEdge: false,
+  setIsNearEdge: (near: boolean) => set({ isNearEdge: near }),
   settings: {
     saveDirectory: '',
     deviceAlias: '',
@@ -303,6 +309,8 @@ export const useStore = create<AppState>((set, get) => ({
     requirePin: false,
     securityPin: '',
     contextMenuEnabled: false,
+    edgeTriggerEnabled: true,
+    showEdgeHandle: true,
   },
   updateSettings: async (partial) => {
     const updated = { ...get().settings, ...partial };
@@ -387,7 +395,6 @@ export const useStore = create<AppState>((set, get) => ({
 
       return {
         items: updated,
-        isOpen: true,
       };
     }),
 

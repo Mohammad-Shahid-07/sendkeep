@@ -1,9 +1,15 @@
 #[cfg(target_os = "windows")]
-use windows::Win32::Foundation::{HWND, POINT};
+use windows::Win32::Foundation::{HWND, POINT, RECT};
+#[cfg(target_os = "windows")]
+use windows::Win32::Graphics::Gdi::{
+    GetMonitorInfoW, MonitorFromWindow, MONITORINFO, MONITOR_DEFAULTTOPRIMARY,
+};
 #[cfg(target_os = "windows")]
 use windows::Win32::UI::WindowsAndMessaging::{
-    GetCursorPos, GetWindowLongW, SetWindowLongW, GWL_EXSTYLE, WS_EX_LAYERED, WS_EX_NOACTIVATE,
-    WS_EX_TRANSPARENT,
+    GetCursorPos, GetWindowLongW, SetForegroundWindow, SetWindowLongW,
+    SetWindowPos, SystemParametersInfoW, GWL_EXSTYLE, HWND_TOPMOST, SPI_GETWORKAREA,
+    SWP_FRAMECHANGED, SWP_NOMOVE, SWP_NOSIZE, SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS,
+    WS_EX_LAYERED, WS_EX_NOACTIVATE, WS_EX_TRANSPARENT,
 };
 
 #[cfg(target_os = "windows")]
@@ -21,7 +27,42 @@ pub fn set_window_interactive(hwnd: isize, interactive: bool) {
         };
 
         SetWindowLongW(hwnd_val, GWL_EXSTYLE, new_style);
+        // Always retain HWND_TOPMOST so SendKeep never gets buried behind other windows
+        let _ = SetWindowPos(
+            hwnd_val,
+            HWND_TOPMOST,
+            0,
+            0,
+            0,
+            0,
+            SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED,
+        );
+        if interactive {
+            let _ = SetForegroundWindow(hwnd_val);
+        }
     }
+}
+
+#[cfg(target_os = "windows")]
+pub fn get_monitor_and_work_rect(hwnd: isize) -> Option<(RECT, RECT)> {
+    unsafe {
+        let hwnd_val = HWND(hwnd as *mut std::ffi::c_void);
+        let hmon = MonitorFromWindow(hwnd_val, MONITOR_DEFAULTTOPRIMARY);
+        let mut mi = MONITORINFO {
+            cbSize: std::mem::size_of::<MONITORINFO>() as u32,
+            ..Default::default()
+        };
+        if GetMonitorInfoW(hmon, &mut mi).as_bool() {
+            Some((mi.rcMonitor, mi.rcWork))
+        } else {
+            None
+        }
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+pub fn get_monitor_and_work_rect(_hwnd: isize) -> Option<()> {
+    None
 }
 
 #[cfg(not(target_os = "windows"))]

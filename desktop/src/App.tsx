@@ -10,7 +10,7 @@ export function App() {
   useEdgeHover();
 
   return (
-    <main className="w-screen h-screen overflow-hidden bg-transparent">
+    <main className="w-full h-full overflow-hidden bg-transparent">
       <Panel />
       <TransferProgressOverlay />
     </main>

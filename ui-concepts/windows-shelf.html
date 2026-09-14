@@ -91,7 +91,7 @@
       display: flex;
       flex-direction: column;
       background: var(--bg-card);
-      border: 1px solid rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
       border-radius: var(--radius-card);
       user-select: none;
       -webkit-user-select: none;
@@ -125,7 +125,7 @@
 
     .item:hover {
       background: var(--bg-card-hover);
-      border-color: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.12);
     }
 
     .item:hover::before {
@@ -303,24 +303,38 @@
       display: none;
     }
 
-    /* ── Apple/Linear-Grade Settings Layout ──────────────────────────────────── */
+    /* ── Edge-Drop Inspired Clean Settings Architecture ────────────────── */
     .settings-fixed-header {
       flex-shrink: 0;
-      padding: 12px 14px 10px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      background: rgba(12, 13, 18, 0.85);
-      backdrop-filter: blur(12px);
+      padding: 10px 14px 6px;
+      background: transparent;
+      z-index: 10;
     }
 
+    .settings-scroll-list {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 4px 14px 28px;
+      scrollbar-width: none;
+    }
+
+    .settings-scroll-list::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* ── Segmented Tab Bar (Squircle Geometry) ─────────────────────────── */
     .settings-tab-bar {
       display: flex;
       position: relative;
       width: 100%;
-      background: rgba(255, 255, 255, 0.04);
+      background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 9px;
-      padding: 2.5px;
-      gap: 2px;
+      border-radius: 12px;
+      padding: 3px;
+      gap: 3px;
       flex-shrink: 0;
     }
 
@@ -331,84 +345,57 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 5px 0;
-      min-height: 28px;
-      border-radius: 7px;
-      font-size: 11px;
+      padding: 6px 2px;
+      min-height: 30px;
+      border-radius: 9px;
+      font-size: 11.5px;
       font-weight: 500;
-      color: rgba(255, 255, 255, 0.48);
+      line-height: 1.25;
+      color: rgba(255, 255, 255, 0.65);
       background: transparent;
       border: none;
       cursor: pointer;
       outline: none;
-      transition: all 0.15s ease;
+      transition: color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+      letter-spacing: 0;
       white-space: nowrap;
+      overflow: hidden;
     }
 
     .settings-tab-btn:hover:not(.active) {
-      color: rgba(255, 255, 255, 0.85);
-      background: rgba(255, 255, 255, 0.03);
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.06);
     }
 
     .settings-tab-btn.active {
-      color: #ffffff;
+      color: #000000;
       font-weight: 600;
-      background: rgba(255, 255, 255, 0.12);
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+      background: #ffffff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
     }
 
     .settings-tab-text {
+      position: relative;
+      z-index: 1;
       display: inline-block;
       line-height: 1.2;
+      padding: 1px 0;
       white-space: nowrap;
     }
 
-    /* Section Groups (Unified Cohesive Containers) */
-    .setting-group-label {
-      font-size: 10px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: rgba(255, 255, 255, 0.38);
-      padding: 0 4px;
-      margin-top: 10px;
-      margin-bottom: 5px;
-      user-select: none;
-    }
-
-    .setting-group-label:first-of-type {
-      margin-top: 0;
-    }
-
-    .setting-group {
-      background: rgba(255, 255, 255, 0.025);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 12px;
-      overflow: hidden;
-      margin-bottom: 12px;
-    }
-
+    /* ── Flat Breathable Rows & Hairline Dividers (No nested boxes) ────── */
     .setting-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
-      padding: 10px 12px;
-      transition: background 0.12s ease;
-    }
-
-    .setting-row + .setting-row {
-      border-top: 1px solid rgba(255, 255, 255, 0.04);
-    }
-
-    .setting-row:hover {
-      background: rgba(255, 255, 255, 0.015);
+      gap: 16px;
+      padding: 13px 4px;
     }
 
     .setting-row.vertical {
       flex-direction: column;
-      align-items: stretch;
-      gap: 8px;
+      align-items: flex-start;
+      gap: 10px;
     }
 
     .setting-info {
@@ -416,37 +403,59 @@
       min-width: 0;
       display: flex;
       flex-direction: column;
-      gap: 1.5px;
+      gap: 3px;
+      margin-right: 8px;
     }
 
     .setting-title {
-      font-size: 12.5px;
-      font-weight: 500;
-      color: rgba(255, 255, 255, 0.92);
-      letter-spacing: -0.01em;
-      line-height: 1.3;
-    }
-
-    .setting-desc {
-      font-size: 11px;
-      font-weight: 400;
-      color: rgba(255, 255, 255, 0.42);
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #ffffff;
+      letter-spacing: 0.01em;
       line-height: 1.35;
     }
 
-    /* Precision Hardware Toggle Switch */
+    .setting-desc {
+      font-size: 12px;
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.68);
+      line-height: 1.45;
+    }
+
+    .setting-divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.08);
+      margin: 2px 4px;
+      flex-shrink: 0;
+    }
+
+    .setting-group-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: rgba(255, 255, 255, 0.88);
+      margin: 16px 4px 6px;
+      user-select: none;
+    }
+
+    .setting-group-label:first-of-type {
+      margin-top: 6px;
+    }
+
+    /* ── Precision Modern Toggle Switch ────────────────────────────────── */
     .setting-toggle {
-      width: 32px;
-      height: 18px;
+      flex-shrink: 0;
+      width: 36px;
+      height: 20px;
       border-radius: 999px;
       background: rgba(255, 255, 255, 0.12);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border: none;
       position: relative;
       cursor: pointer;
       padding: 0;
       outline: none;
-      flex-shrink: 0;
-      transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+      transition: background 0.18s ease;
     }
 
     .setting-toggle:hover {
@@ -454,47 +463,48 @@
     }
 
     .setting-toggle.checked {
-      background: #ffffff;
-      border-color: #ffffff;
+      background: #6366f1;
+      border: 1px solid #818cf8;
+      box-shadow: 0 0 12px rgba(99, 102, 241, 0.35);
     }
 
-    .toggle-thumb {
+    .setting-toggle .toggle-thumb {
       position: absolute;
-      top: 1.5px;
-      left: 1.5px;
-      width: 13px;
-      height: 13px;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.75);
+      background: #ffffff;
+      transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.18s ease;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
       pointer-events: none;
-      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     }
 
     .setting-toggle.checked .toggle-thumb {
-      transform: translateX(14px);
-      background: #090a0e;
+      transform: translateX(16px);
+      background: #ffffff;
     }
 
-    /* Segmented Sub-Pills */
+    /* ── Minimalist Squircle Pill Selector ─────────────────────────────── */
     .setting-pills {
       display: flex;
       width: 100%;
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      border-radius: 8px;
-      padding: 2px;
-      gap: 2px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      padding: 3px;
+      gap: 3px;
     }
 
     .pill {
       flex: 1;
       min-width: 0;
-      padding: 4px 6px;
-      border-radius: 6px;
-      font-size: 11px;
+      padding: 6px 4px;
+      border-radius: 7px;
+      font-size: 11.5px;
       font-weight: 500;
-      color: rgba(255, 255, 255, 0.5);
+      color: rgba(255, 255, 255, 0.65);
       background: transparent;
       border: none;
       cursor: pointer;
@@ -504,33 +514,189 @@
     }
 
     .pill:hover:not(.active) {
-      color: rgba(255, 255, 255, 0.85);
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.06);
     }
 
     .pill.active {
-      background: rgba(255, 255, 255, 0.12);
-      color: #ffffff;
+      background: #ffffff;
+      color: #000000;
       font-weight: 600;
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
     }
 
-    /* Inline editable input */
+    /* ── Inline Editable Input ─────────────────────────────────────────── */
     .setting-inline-input {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 7px;
-      padding: 4px 8px;
-      font-size: 11.5px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      padding: 5px 10px;
+      font-size: 12px;
       color: #ffffff;
       outline: none;
       transition: all 0.15s ease;
     }
 
     .setting-inline-input:focus {
-      background: rgba(0, 0, 0, 0.6);
-      border-color: rgba(255, 255, 255, 0.25);
-      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+      background: #000000;
+      border-color: rgba(255, 255, 255, 0.35);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
     }
+
+    /* ── Support & GitHub Promo Footer Card (Edge Drop Exact) ──────────── */
+    .support-promo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 14px 14px;
+      background: #141414;
+      border: none;
+      border-radius: 16px;
+      margin: 16px 4px 8px 4px;
+      text-align: center;
+      box-shadow: none;
+    }
+
+    .support-promo-title {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.68);
+      line-height: 1.48;
+      font-weight: 450;
+      max-width: 100%;
+      padding: 0 4px;
+    }
+
+    .support-buttons-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+      max-width: 100%;
+      margin-top: 2px;
+    }
+
+    .kofi-support-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      height: 38px;
+      padding: 0 16px;
+      border-radius: 11px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #000000;
+      background: #ffffff;
+      border: none;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .kofi-support-btn:hover {
+      background: rgba(255, 255, 255, 0.92);
+      transform: translateY(-1px);
+    }
+
+    .kofi-support-btn:active {
+      transform: scale(0.98);
+    }
+
+    .github-promo-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      height: 38px;
+      padding: 0 16px;
+      border-radius: 11px;
+      font-size: 12.5px;
+      font-weight: 550;
+      color: rgba(255, 255, 255, 0.9);
+      background: #1c1c1c;
+      border: none;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .github-promo-btn:hover {
+      background: #252525;
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    .github-promo-btn:active {
+      transform: scale(0.98);
+    }
+
+    .app-version-footer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.38);
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      margin-top: 4px;
+      user-select: none;
+    }
+
+    .version-separator {
+      opacity: 0.35;
+    }
+
+    .version-changelog-link {
+      background: transparent;
+      border: none;
+      color: rgba(255, 255, 255, 0.45);
+      font: inherit;
+      font-size: 11px;
+      cursor: pointer;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      transition: color 0.15s ease;
+    }
+
+    .version-changelog-link:hover {
+      color: #ffffff;
+    }
+
+    .subtle-quit-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 30px;
+      padding: 0 14px;
+      border-radius: 8px;
+      font-size: 11.5px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.5);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .subtle-quit-btn:hover {
+      background: rgba(255, 80, 80, 0.12);
+      color: #ff6b6b;
+    }
+
+    .subtle-quit-btn:active {
+      transform: scale(0.96);
+    }
+
+    /* ── Clean Drop Dock Drag-Over State ──────────────────────────────── */
+    .dock-dragover {
+      background: rgba(255, 255, 255, 0.05) !important;
     }
   </style>
 </head>
@@ -577,16 +743,18 @@
     id="bladeAside"
     class="fixed top-0 left-0 w-[350px] h-screen bg-[#090a0e] border-r border-white/[0.06] shadow-2xl shadow-black flex flex-col pointer-events-auto relative overflow-hidden z-20 transition-transform duration-300"
   >
-    <!-- Full-Window Ambient Drag-Over Overlay (desktop/src/components/Panel.tsx lines 143-174) -->
+    <!-- Full-Sidebar Drag & Drop Overlay (Makes entire sidebar droppable) -->
     <div 
       id="ambientDragOverlay"
-      class="hidden absolute inset-2 z-50 flex-col items-center justify-center gap-2 pointer-events-none rounded-2xl border-2 border-dashed shadow-2xl backdrop-blur-md bg-[#090a0e]/96 border-white/25 shadow-[inset_0_0_40px_rgba(255,255,255,0.05)] transition-all"
+      class="hidden absolute inset-2.5 z-50 flex-col items-center justify-center gap-2.5 pointer-events-none rounded-2xl border border-dashed border-white/25 bg-[#090a0e]/95 backdrop-blur-xl shadow-2xl transition-all select-none"
     >
-      <div id="ambientDragIconWrap" class="w-12 h-12 rounded-full border flex items-center justify-center animate-bounce bg-white/[0.08] border-white/[0.15] text-white">
-        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+      <div id="ambientDragIconWrap" class="w-12 h-12 rounded-2xl bg-white/[0.06] border border-white/15 flex items-center justify-center text-white/90 shadow-sm">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M4 20h16"/></svg>
       </div>
-      <div id="ambientDragTitle" class="text-sm font-semibold text-white">Drop files to stage on shelf</div>
-      <div id="ambientDragSub" class="text-[11px] text-white/50">Instant staging on desktop shelf</div>
+      <div class="flex flex-col items-center gap-0.5 text-center px-4">
+        <div id="ambientDragTitle" class="text-sm font-semibold text-white tracking-tight">Drop anywhere to stage</div>
+        <div id="ambientDragSub" class="text-xs text-white/50">Release anywhere on the sidebar</div>
+      </div>
     </div>
 
     <!-- Pair Request Toast Notification (desktop/src/components/PairRequestToast.tsx) -->
@@ -629,17 +797,24 @@
     <!-- =======================================================================
          1. EXACT HEADER COMPONENT (desktop/src/components/Header.tsx)
          ======================================================================= -->
-    <div class="flex flex-col relative select-none shrink-0 border-b border-white/[0.05] bg-[#090a0e] z-30">
+    <div class="flex flex-col relative select-none shrink-0 border-b border-white/[0.06] bg-[#090a0e] z-30">
       <header class="flex items-center justify-between px-3.5 py-2.5">
-        
-        <!-- Stream / Device Switcher Pill -->
+        <!-- Stream / Device Switcher -->
         <div class="relative" id="popoverContainer">
           <button
             onclick="toggleSourcePopover()"
-            class="flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.07] hover:border-white/[0.14] transition-all cursor-pointer"
+            class="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.06] hover:border-white/[0.12] transition-all cursor-pointer"
             title="Switch stream source or device"
           >
-            <span id="headerDot" class="w-1.5 h-1.5 rounded-full bg-white/60"></span>
+            <span id="headerIconWrap" class="flex items-center justify-center shrink-0">
+              <!-- Windows 11 4-tile Logo -->
+              <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none">
+                <rect x="1" y="1" width="6.2" height="6.2" rx="0.8" fill="#0078D4"/>
+                <rect x="8.8" y="1" width="6.2" height="6.2" rx="0.8" fill="#0078D4"/>
+                <rect x="1" y="8.8" width="6.2" height="6.2" rx="0.8" fill="#0078D4"/>
+                <rect x="8.8" y="8.8" width="6.2" height="6.2" rx="0.8" fill="#0078D4"/>
+              </svg>
+            </span>
             <span id="headerTitle" class="text-xs font-semibold text-white tracking-tight max-w-[150px] truncate">
               Windows Clipboard
             </span>
@@ -648,119 +823,92 @@
             </svg>
           </button>
 
-          <!-- Source & Device Popover Dropdown (Header.tsx lines 153-382) -->
+          <!-- Source & Device Popover Dropdown (Clean Native Menu) -->
           <div
             id="sourcePopover"
-            class="hidden absolute top-9 left-0 w-80 bg-[#111219] border border-white/10 rounded-2xl p-2.5 shadow-2xl z-50 flex flex-col gap-2.5 backdrop-blur-xl max-h-[85vh] overflow-y-auto custom-scrollbar"
+            class="hidden absolute top-9 left-0 w-64 bg-[#111219]/98 border border-white/[0.08] rounded-xl p-1.5 shadow-2xl z-50 flex flex-col gap-0.5 backdrop-blur-xl select-none"
           >
-            <!-- Stream Sources -->
-            <div>
-              <div class="text-[10px] font-semibold text-white/40 uppercase tracking-wider px-1.5 pb-1">
-                Stream Sources
-              </div>
-              <div class="flex flex-col gap-1">
-                <!-- Windows Clipboard -->
-                <button
-                  onclick="selectActiveSource('clipboard')"
-                  id="optClipboard"
-                  class="flex items-center justify-between p-2 rounded-xl border text-left transition-all cursor-pointer bg-white/[0.08] border-white/[0.14]"
-                >
-                  <div class="flex items-center gap-2.5 min-w-0">
-                    <div id="iconWrapClipboard" class="w-7 h-7 rounded-lg bg-white/[0.12] text-white flex items-center justify-center shrink-0 border border-white/[0.16]">
-                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
-                    </div>
-                    <div class="min-w-0">
-                      <div class="text-xs font-semibold text-white truncate">Windows Clipboard</div>
-                      <div class="text-[10px] text-white/40 truncate">Snipping Tool & local PC captures</div>
-                    </div>
-                  </div>
-                  <svg id="chkClipboard" class="w-3.5 h-3.5 text-white/90 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                </button>
-
-                <!-- Unified Stream -->
-                <button
-                  onclick="selectActiveSource('unified')"
-                  id="optUnified"
-                  class="flex items-center justify-between p-2 rounded-xl border text-left transition-all cursor-pointer bg-white/[0.02] hover:bg-white/[0.06] border-white/[0.04]"
-                >
-                  <div class="flex items-center gap-2.5 min-w-0">
-                    <div id="iconWrapUnified" class="w-7 h-7 rounded-lg bg-white/[0.05] text-white/70 flex items-center justify-center shrink-0 border border-white/[0.08]">
-                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
-                    </div>
-                    <div class="min-w-0">
-                      <div class="text-xs font-semibold text-white truncate">Unified Stream</div>
-                      <div class="text-[10px] text-white/40 truncate">Phone transfers + PC clips combined</div>
-                    </div>
-                  </div>
-                  <svg id="chkUnified" class="w-3.5 h-3.5 text-white/90 shrink-0 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                </button>
-              </div>
+            <!-- Section: Stream Sources -->
+            <div class="px-2 pt-1 pb-0.5 text-[10px] font-semibold text-white/40 uppercase tracking-wider">
+              Stream Sources
             </div>
 
-            <div class="border-t border-white/[0.06]"></div>
-
-            <!-- Trusted Devices -->
-            <div>
-              <div class="text-[10px] font-semibold text-white/40 uppercase tracking-wider px-1.5 pb-1">
-                Trusted Devices (1)
+            <!-- Option: Windows Clipboard -->
+            <button
+              onclick="selectActiveSource('clipboard')"
+              id="optClipboard"
+              class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-colors cursor-pointer bg-white/[0.08] text-white"
+            >
+              <div class="flex items-center gap-2.5 min-w-0">
+                <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 16 16" fill="none">
+                  <rect x="1" y="1" width="6.2" height="6.2" rx="0.8" fill="#0078D4"/>
+                  <rect x="8.8" y="1" width="6.2" height="6.2" rx="0.8" fill="#0078D4"/>
+                  <rect x="1" y="8.8" width="6.2" height="6.2" rx="0.8" fill="#0078D4"/>
+                  <rect x="8.8" y="8.8" width="6.2" height="6.2" rx="0.8" fill="#0078D4"/>
+                </svg>
+                <span class="text-xs font-medium text-white truncate">Windows Clipboard</span>
               </div>
-              <div class="flex flex-col gap-1">
-                <div
-                  onclick="selectActiveSource('device')"
-                  id="optDevice"
-                  class="group flex items-center justify-between p-2 rounded-xl border text-left transition-all cursor-pointer bg-white/[0.02] hover:bg-white/[0.06] border-white/[0.04]"
-                >
-                  <div class="flex items-center gap-2.5 min-w-0">
-                    <div id="iconWrapDevice" class="relative w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border bg-white/[0.05] text-white/70 border-white/[0.08]">
-                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
-                      <span class="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border border-[#111219]"></span>
-                    </div>
-                    <div class="min-w-0">
-                      <div class="flex items-center gap-1.5">
-                        <span class="text-xs font-semibold text-white truncate">Galaxy M13</span>
-                        <span class="text-[9px] px-1.5 py-0.5 rounded bg-white/[0.08] text-white/70 border border-white/[0.08] font-medium">Online</span>
-                      </div>
-                      <div class="text-[10px] text-white/40 truncate font-mono">192.168.1.42:53317</div>
-                    </div>
-                  </div>
-                  <svg id="chkDevice" class="w-3.5 h-3.5 text-white/90 shrink-0 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg id="chkClipboard" class="w-3.5 h-3.5 text-white/90 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            </button>
+
+            <!-- Option: Unified Stream -->
+            <button
+              onclick="selectActiveSource('unified')"
+              id="optUnified"
+              class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-colors cursor-pointer text-white/70 hover:text-white hover:bg-white/[0.06]"
+            >
+              <div class="flex items-center gap-2.5 min-w-0">
+                <svg class="w-3.5 h-3.5 text-white/60 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                <span class="text-xs font-medium truncate">Unified Stream</span>
+              </div>
+              <svg id="chkUnified" class="w-3.5 h-3.5 text-white/90 shrink-0 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            </button>
+
+            <div class="h-px bg-white/[0.06] my-1"></div>
+
+            <!-- Section: Trusted Devices -->
+            <div class="px-2 pt-1 pb-0.5 text-[10px] font-semibold text-white/40 uppercase tracking-wider">
+              Devices
+            </div>
+
+            <!-- Option: Galaxy M13 -->
+            <button
+              onclick="selectActiveSource('device')"
+              id="optDevice"
+              class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-colors cursor-pointer text-white/70 hover:text-white hover:bg-white/[0.06]"
+            >
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div class="relative shrink-0 flex items-center justify-center">
+                  <svg class="w-3.5 h-3.5 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+                  <span class="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                 </div>
+                <span class="text-xs font-medium truncate">Galaxy M13</span>
+                <span class="text-[9px] px-1.5 py-0.2 rounded-md bg-emerald-500/15 text-emerald-400 font-medium">Online</span>
               </div>
-            </div>
+              <svg id="chkDevice" class="w-3.5 h-3.5 text-white/90 shrink-0 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            </button>
 
-            <div class="border-t border-white/[0.06]"></div>
-
-            <!-- Nearby Discovered -->
-            <div>
-              <div class="text-[10px] font-semibold text-white/40 uppercase tracking-wider px-1.5 pb-1">
-                Discovered on Wi-Fi (1)
+            <!-- Option: Pixel 8 Pro (Nearby) -->
+            <div class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-white/60">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <svg class="w-3.5 h-3.5 text-white/40 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+                <span class="text-xs truncate">Pixel 8 Pro</span>
               </div>
-              <div class="flex items-center justify-between p-2 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:bg-white/[0.04]">
-                <div class="flex items-center gap-2.5 min-w-0">
-                  <div class="w-7 h-7 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white/70 flex items-center justify-center shrink-0">
-                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
-                  </div>
-                  <div class="min-w-0">
-                    <div class="text-xs text-white font-medium truncate">Pixel 8 Pro</div>
-                    <div class="text-[10px] text-white/40 font-mono truncate">192.168.1.88:53317</div>
-                  </div>
-                </div>
-                <button onclick="toast('Pairing request sent to Pixel 8 Pro'); selectActiveSource('clipboard')" class="px-2.5 py-1 rounded-lg bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.1] text-[11px] font-medium text-white transition-colors cursor-pointer shrink-0">
-                  + Pair
-                </button>
-              </div>
-            </div>
-
-            <!-- Footer: Add via IP -->
-            <div class="border-t border-white/[0.06] pt-1">
-              <button
-                onclick="toggleSourcePopover(); openPairModal();"
-                class="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-white/[0.14] text-xs font-medium text-white/80 hover:text-white transition-all cursor-pointer"
-              >
-                <svg class="w-3.5 h-3.5 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                <span>Add Device via IP</span>
+              <button onclick="toast('Pairing request sent to Pixel 8 Pro'); selectActiveSource('clipboard')" class="px-2 py-0.5 rounded-md bg-white/[0.08] hover:bg-white/[0.14] text-[10px] font-medium text-white transition-colors cursor-pointer shrink-0">
+                + Pair
               </button>
             </div>
+
+            <div class="h-px bg-white/[0.06] my-1"></div>
+
+            <!-- Action: Add Device via IP -->
+            <button
+              onclick="toggleSourcePopover(); openPairModal();"
+              class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/[0.06] text-xs transition-colors cursor-pointer"
+            >
+              <svg class="w-3.5 h-3.5 text-white/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>Add Device via IP...</span>
+            </button>
           </div>
         </div>
 
@@ -835,22 +983,22 @@
         </div>
       </header>
 
-      <!-- Category Filter Tabs (Header.tsx lines 421-445) -->
-      <div class="px-3.5 pb-2">
-        <nav class="flex items-center p-0.5 rounded-lg bg-white/[0.03] border border-white/[0.05]">
-          <button data-cat="all" onclick="setFilterCategory('all')" class="filter-tab-btn flex-1 py-1 text-center text-[11px] font-medium rounded-md transition-all cursor-pointer bg-white/10 text-white font-semibold shadow-sm">
+      <!-- Category Filter Tabs (Squircle Segmented Bar) -->
+      <div class="px-3.5 pb-2.5">
+        <nav class="flex items-center p-1 rounded-xl bg-white/[0.03] border border-white/[0.06] gap-1">
+          <button data-cat="all" onclick="setFilterCategory('all')" class="filter-tab-btn flex-1 py-1.5 px-2 text-center text-[11.5px] font-medium rounded-lg transition-all cursor-pointer bg-white/10 text-white font-semibold shadow-sm">
             All
           </button>
-          <button data-cat="media" onclick="setFilterCategory('media')" class="filter-tab-btn flex-1 py-1 text-center text-[11px] font-medium rounded-md transition-all cursor-pointer text-white/40 hover:text-white/70">
+          <button data-cat="media" onclick="setFilterCategory('media')" class="filter-tab-btn flex-1 py-1.5 px-2 text-center text-[11.5px] font-medium rounded-lg transition-all cursor-pointer text-white/40 hover:text-white/70 hover:bg-white/[0.04]">
             Media
           </button>
-          <button data-cat="files" onclick="setFilterCategory('files')" class="filter-tab-btn flex-1 py-1 text-center text-[11px] font-medium rounded-md transition-all cursor-pointer text-white/40 hover:text-white/70">
+          <button data-cat="files" onclick="setFilterCategory('files')" class="filter-tab-btn flex-1 py-1.5 px-2 text-center text-[11.5px] font-medium rounded-lg transition-all cursor-pointer text-white/40 hover:text-white/70 hover:bg-white/[0.04]">
             Files
           </button>
-          <button data-cat="links" onclick="setFilterCategory('links')" class="filter-tab-btn flex-1 py-1 text-center text-[11px] font-medium rounded-md transition-all cursor-pointer text-white/40 hover:text-white/70">
+          <button data-cat="links" onclick="setFilterCategory('links')" class="filter-tab-btn flex-1 py-1.5 px-2 text-center text-[11.5px] font-medium rounded-lg transition-all cursor-pointer text-white/40 hover:text-white/70 hover:bg-white/[0.04]">
             Links
           </button>
-          <button data-cat="notes" onclick="setFilterCategory('notes')" class="filter-tab-btn flex-1 py-1 text-center text-[11px] font-medium rounded-md transition-all cursor-pointer text-white/40 hover:text-white/70">
+          <button data-cat="notes" onclick="setFilterCategory('notes')" class="filter-tab-btn flex-1 py-1.5 px-2 text-center text-[11.5px] font-medium rounded-lg transition-all cursor-pointer text-white/40 hover:text-white/70 hover:bg-white/[0.04]">
             Notes
           </button>
         </nav>
@@ -871,7 +1019,7 @@
         <article 
           data-cat="media"
           onclick="copyItem('Clean UI Dribbble Snapshot')"
-          class="item group relative rounded-[16px] bg-[#161619] hover:bg-[#1a1a1f] border border-white/[0.04] hover:border-white/[0.08] transition-all overflow-hidden"
+          class="item group relative rounded-2xl bg-[#161619] hover:bg-[#1a1a1f] border border-white/[0.06] hover:border-white/[0.12] transition-all overflow-hidden"
         >
           <div class="item-main w-full flex flex-col cursor-pointer select-none">
             <div class="body w-full flex flex-col p-3.5 pb-2.5">
@@ -888,7 +1036,7 @@
 
               <div class="item-footer flex items-center justify-between pt-2 mt-1 text-[11px] text-white/40 select-none">
                 <div class="meta flex items-center gap-1.5">
-                  <span class="px-1.5 py-0.5 rounded bg-white/[0.06] text-[10px] font-medium text-white/60">image</span>
+                  <span class="px-1.5 py-0.5 rounded-md bg-white/[0.05] border border-white/[0.06] text-[10px] font-medium text-white/70">image</span>
                   <span>· 926.4 KB</span>
                 </div>
                 <span class="meta-time text-[10px] text-white/40">2h ago</span>
@@ -896,23 +1044,23 @@
             </div>
 
             <!-- Card Actions -->
-            <div class="actions absolute top-2 right-2 flex items-center gap-1 bg-[#111114]/95 border border-white/[0.1] rounded-full p-1 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-20" onclick="event.stopPropagation()">
-              <button class="p-1 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Direct paste" onclick="toast('Pasted directly (Ctrl+V)')">
+            <div class="actions absolute top-2 right-2 flex items-center gap-0.5 bg-[#111114]/95 backdrop-blur-md border border-white/[0.08] rounded-xl p-1 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity z-20" onclick="event.stopPropagation()">
+              <button class="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Direct paste" onclick="toast('Pasted directly (Ctrl+V)')">
                 <svg class="w-3.5 h-3.5 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg>
               </button>
-              <button class="p-1 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Beam to Galaxy M13" onclick="toast('⚡ Beamed image to Galaxy M13')">
+              <button class="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Beam to Galaxy M13" onclick="toast('⚡ Beamed image to Galaxy M13')">
                 <svg class="w-3.5 h-3.5 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
               </button>
-              <button class="p-1 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Inspect" onclick="openFlyout('Clean UI Snapshot', 'image', 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80', '926.4 KB')">
+              <button class="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Inspect" onclick="openFlyout('Clean UI Snapshot', 'image', 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80', '926.4 KB')">
                 <svg class="w-3.5 h-3.5 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
               </button>
-              <button class="p-1 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Copy" onclick="copyItem('Clean UI Snapshot')">
+              <button class="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Copy" onclick="copyItem('Clean UI Snapshot')">
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
               </button>
-              <button class="p-1 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Pin" onclick="togglePinCard(this)">
+              <button class="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Pin" onclick="togglePinCard(this)">
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>
               </button>
-              <button class="p-1 rounded-full text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer" title="Delete" onclick="deleteCard(this)">
+              <button class="p-1 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer" title="Delete" onclick="deleteCard(this)">
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
               </button>
             </div>
@@ -923,7 +1071,7 @@
         <article 
           data-cat="links"
           onclick="copyItem('https://dribbble.com/tags/clean-ui')"
-          class="item group relative rounded-[16px] bg-[#161619] hover:bg-[#1a1a1f] border border-white/[0.04] hover:border-white/[0.08] transition-all overflow-hidden"
+          class="item group relative rounded-2xl bg-[#161619] hover:bg-[#1a1a1f] border border-white/[0.06] hover:border-white/[0.12] transition-all overflow-hidden"
         >
           <div class="item-main w-full flex flex-col cursor-pointer select-none">
             <div class="body w-full flex flex-col p-3.5 pb-2.5">
@@ -945,30 +1093,30 @@
 
               <div class="item-footer flex items-center justify-between pt-2 mt-1 text-[11px] text-white/40 select-none">
                 <div class="meta flex items-center gap-1.5">
-                  <span class="px-1.5 py-0.5 rounded bg-white/[0.06] text-[10px] font-medium text-white/60">link</span>
+                  <span class="px-1.5 py-0.5 rounded-md bg-white/[0.05] border border-white/[0.06] text-[10px] font-medium text-white/70">link</span>
                 </div>
                 <span class="meta-time text-[10px] text-white/40">2h ago</span>
               </div>
             </div>
 
             <!-- Card Actions -->
-            <div class="actions absolute top-2 right-2 flex items-center gap-1 bg-[#111114]/95 border border-white/[0.1] rounded-full p-1 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-20" onclick="event.stopPropagation()">
-              <button class="p-1 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Direct paste" onclick="toast('Pasted directly')">
+            <div class="actions absolute top-2 right-2 flex items-center gap-0.5 bg-[#111114]/95 backdrop-blur-md border border-white/[0.08] rounded-xl p-1 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity z-20" onclick="event.stopPropagation()">
+              <button class="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Direct paste" onclick="toast('Pasted directly')">
                 <svg class="w-3.5 h-3.5 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg>
               </button>
-              <button class="p-1 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Beam to Galaxy M13" onclick="toast('⚡ Beamed link to Galaxy M13')">
+              <button class="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Beam to Galaxy M13" onclick="toast('⚡ Beamed link to Galaxy M13')">
                 <svg class="w-3.5 h-3.5 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
               </button>
-              <button class="p-1 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Open in browser" onclick="window.open('https://dribbble.com/tags/clean-ui', '_blank')">
+              <button class="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Open in browser" onclick="window.open('https://dribbble.com/tags/clean-ui', '_blank')">
                 <svg class="w-3.5 h-3.5 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
               </button>
-              <button class="p-1 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Copy" onclick="copyItem('https://dribbble.com/tags/clean-ui')">
+              <button class="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Copy" onclick="copyItem('https://dribbble.com/tags/clean-ui')">
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
               </button>
-              <button class="p-1 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Pin" onclick="togglePinCard(this)">
+              <button class="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Pin" onclick="togglePinCard(this)">
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>
               </button>
-              <button class="p-1 rounded-full text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer" title="Delete" onclick="deleteCard(this)">
+              <button class="p-1 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer" title="Delete" onclick="deleteCard(this)">
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
               </button>
             </div>
@@ -979,7 +1127,7 @@
         <article 
           data-cat="notes"
           onclick="copyItem('const beam = async (item) => {\n  await invoke(\'send_file\', { path: item.path });\n};')"
-          class="item group relative rounded-[16px] bg-[#161619] hover:bg-[#1a1a1f] border border-white/[0.04] hover:border-white/[0.08] transition-all overflow-hidden"
+          class="item group relative rounded-2xl bg-[#161619] hover:bg-[#1a1a1f] border border-white/[0.06] hover:border-white/[0.12] transition-all overflow-hidden"
         >
           <div class="item-main w-full flex flex-col cursor-pointer select-none">
             <div class="body w-full flex flex-col p-3.5 pb-2.5">
@@ -991,7 +1139,7 @@
                   </div>
                   <span class="text-[10px] font-mono text-white/40">3 lines</span>
                 </div>
-                <div class="font-mono text-[11px] text-zinc-300 bg-black/40 p-2 rounded-lg border border-white/5 space-y-0.5 overflow-hidden">
+                <div class="font-mono text-[11px] text-zinc-300 bg-black/40 p-2.5 rounded-xl border border-white/[0.06] space-y-0.5 overflow-hidden">
                   <div class="text-zinc-400"><span class="text-white/30 mr-2">1</span><span class="text-zinc-200">const</span> beam = <span class="text-zinc-200">async</span> (item) =&gt; {</div>
                   <div class="text-zinc-300"><span class="text-white/30 mr-2">2</span>  <span class="text-zinc-200">await</span> invoke(<span class="text-white/80">'send_file'</span>, { path: item.path });</div>
                   <div class="text-zinc-400"><span class="text-white/30 mr-2">3</span>};</div>
@@ -1000,26 +1148,26 @@
 
               <div class="item-footer flex items-center justify-between pt-2 mt-1 text-[11px] text-white/40 select-none">
                 <div class="meta flex items-center gap-1.5">
-                  <span class="px-1.5 py-0.5 rounded bg-white/[0.06] text-[10px] font-medium text-white/60 font-mono">typescript</span>
+                  <span class="px-1.5 py-0.5 rounded-md bg-white/[0.05] border border-white/[0.06] text-[10px] font-medium text-white/70 font-mono">typescript</span>
                 </div>
                 <span class="meta-time text-[10px] text-white/40">10m ago</span>
               </div>
             </div>
 
-            <div class="actions absolute top-2 right-2 flex items-center gap-1 bg-[#111114]/95 border border-white/[0.1] rounded-full p-1 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-20" onclick="event.stopPropagation()">
-              <button class="p-1 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Direct paste" onclick="toast('Pasted code snippet')">
+            <div class="actions absolute top-2 right-2 flex items-center gap-0.5 bg-[#111114]/95 backdrop-blur-md border border-white/[0.08] rounded-xl p-1 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity z-20" onclick="event.stopPropagation()">
+              <button class="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Direct paste" onclick="toast('Pasted code snippet')">
                 <svg class="w-3.5 h-3.5 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg>
               </button>
-              <button class="p-1 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Inspect" onclick="openFlyout('beamToDevice.ts', 'code', 'const beam = async (item) => {\n  await invoke(\'send_file\', { path: item.path });\n};', '3 lines')">
+              <button class="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Inspect" onclick="openFlyout('beamToDevice.ts', 'code', 'const beam = async (item) => {\n  await invoke(\'send_file\', { path: item.path });\n};', '3 lines')">
                 <svg class="w-3.5 h-3.5 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
               </button>
-              <button class="p-1 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Copy" onclick="copyItem('const beam = async (item) => {\n  await invoke(\'send_file\', { path: item.path });\n};')">
+              <button class="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Copy" onclick="copyItem('const beam = async (item) => {\n  await invoke(\'send_file\', { path: item.path });\n};')">
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
               </button>
-              <button class="p-1 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Pin" onclick="togglePinCard(this)">
+              <button class="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Pin" onclick="togglePinCard(this)">
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>
               </button>
-              <button class="p-1 rounded-full text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer" title="Delete" onclick="deleteCard(this)">
+              <button class="p-1 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer" title="Delete" onclick="deleteCard(this)">
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
               </button>
             </div>
@@ -1030,7 +1178,7 @@
         <article 
           data-cat="files"
           onclick="copyItem('C:\\Users\\Tofik\\Documents\\AFFIDAVIT.docx')"
-          class="item group relative rounded-[16px] bg-[#161619] hover:bg-[#1a1a1f] border border-white/[0.04] hover:border-white/[0.08] transition-all overflow-hidden"
+          class="item group relative rounded-2xl bg-[#161619] hover:bg-[#1a1a1f] border border-white/[0.06] hover:border-white/[0.12] transition-all overflow-hidden"
         >
           <div class="item-main w-full flex flex-col cursor-pointer select-none">
             <div class="body w-full flex flex-col p-3.5 pb-2.5">
@@ -1067,30 +1215,30 @@
 
               <div class="item-footer flex items-center justify-between pt-2 mt-1 text-[11px] text-white/40 select-none">
                 <div class="meta flex items-center gap-1.5">
-                  <span class="px-1.5 py-0.5 rounded bg-white/[0.06] text-[10px] font-medium text-white/60">document</span>
+                  <span class="px-1.5 py-0.5 rounded-md bg-white/[0.05] border border-white/[0.06] text-[10px] font-medium text-white/70">document</span>
                   <span>· 16.8 KB</span>
                 </div>
                 <span class="meta-time text-[10px] text-white/40">2h ago</span>
               </div>
             </div>
 
-            <div class="actions absolute top-2 right-2 flex items-center gap-1 bg-[#111114]/95 border border-white/[0.1] rounded-full p-1 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-20" onclick="event.stopPropagation()">
-              <button class="p-1 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Direct paste" onclick="toast('Pasted directly')">
+            <div class="actions absolute top-2 right-2 flex items-center gap-0.5 bg-[#111114]/95 backdrop-blur-md border border-white/[0.08] rounded-xl p-1 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity z-20" onclick="event.stopPropagation()">
+              <button class="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Direct paste" onclick="toast('Pasted directly')">
                 <svg class="w-3.5 h-3.5 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg>
               </button>
-              <button class="p-1 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Beam to Galaxy M13" onclick="toast('⚡ Beamed AFFIDAVIT.docx to Galaxy M13')">
+              <button class="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Beam to Galaxy M13" onclick="toast('⚡ Beamed AFFIDAVIT.docx to Galaxy M13')">
                 <svg class="w-3.5 h-3.5 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
               </button>
-              <button class="p-1 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Inspect" onclick="openFlyout('AFFIDAVIT.docx', 'file', '', '16.8 KB')">
+              <button class="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Inspect" onclick="openFlyout('AFFIDAVIT.docx', 'file', '', '16.8 KB')">
                 <svg class="w-3.5 h-3.5 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
               </button>
-              <button class="p-1 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Copy path" onclick="copyItem('C:\\Users\\Tofik\\Documents\\AFFIDAVIT.docx')">
+              <button class="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Copy path" onclick="copyItem('C:\\Users\\Tofik\\Documents\\AFFIDAVIT.docx')">
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
               </button>
-              <button class="p-1 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Pin" onclick="togglePinCard(this)">
+              <button class="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Pin" onclick="togglePinCard(this)">
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>
               </button>
-              <button class="p-1 rounded-full text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer" title="Delete" onclick="deleteCard(this)">
+              <button class="p-1 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer" title="Delete" onclick="deleteCard(this)">
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
               </button>
             </div>
@@ -1100,7 +1248,7 @@
         <!-- ITEM 5: BUNDLE / MULTI-FILE STACK (ClipboardItem.tsx) -->
         <article 
           data-cat="files"
-          class="item group relative rounded-[16px] bg-[#161619] hover:bg-[#1a1a1f] border border-white/[0.04] hover:border-white/[0.08] transition-all overflow-hidden"
+          class="item group relative rounded-2xl bg-[#161619] hover:bg-[#1a1a1f] border border-white/[0.06] hover:border-white/[0.12] transition-all overflow-hidden"
         >
           <div class="item-main w-full flex flex-col cursor-pointer select-none" onclick="toggleStackExpand('stackSubfiles')">
             <div class="body w-full flex flex-col p-3.5 pb-2.5">
@@ -1112,7 +1260,7 @@
                   <div class="flex flex-col min-w-0 flex-1">
                     <div class="flex items-center justify-between">
                       <span class="text-xs font-semibold text-white truncate">Dropped Collection</span>
-                      <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-white/[0.08] text-white/70 font-mono font-medium">3 files</span>
+                      <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-white/[0.06] border border-white/[0.08] text-white/70 font-mono font-medium">3 files</span>
                     </div>
                     <span class="text-[11px] text-white/40">Total 4.2 MB · Click to expand</span>
                   </div>
@@ -1137,21 +1285,21 @@
 
               <div class="item-footer flex items-center justify-between pt-2 mt-1 text-[11px] text-white/40 select-none">
                 <div class="meta flex items-center gap-1.5">
-                  <span class="px-1.5 py-0.5 rounded bg-white/[0.06] text-white/60 text-[10px] font-medium">bundle</span>
+                  <span class="px-1.5 py-0.5 rounded-md bg-white/[0.05] border border-white/[0.06] text-white/70 text-[10px] font-medium">bundle</span>
                   <span>· 3 items</span>
                 </div>
                 <span class="meta-time text-[10px] text-white/40">1h ago</span>
               </div>
             </div>
 
-            <div class="actions absolute top-2 right-2 flex items-center gap-1 bg-[#111114]/95 border border-white/[0.1] rounded-full p-1 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-20" onclick="event.stopPropagation()">
-              <button class="p-1 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Beam bundle to Galaxy M13" onclick="toast('⚡ Beaming 3 files to Galaxy M13')">
+            <div class="actions absolute top-2 right-2 flex items-center gap-0.5 bg-[#111114]/95 backdrop-blur-md border border-white/[0.08] rounded-xl p-1 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity z-20" onclick="event.stopPropagation()">
+              <button class="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Beam bundle to Galaxy M13" onclick="toast('⚡ Beaming 3 files to Galaxy M13')">
                 <svg class="w-3.5 h-3.5 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
               </button>
-              <button class="p-1 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Pin" onclick="togglePinCard(this)">
+              <button class="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Pin" onclick="togglePinCard(this)">
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>
               </button>
-              <button class="p-1 rounded-full text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer" title="Delete" onclick="deleteCard(this)">
+              <button class="p-1 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer" title="Delete" onclick="deleteCard(this)">
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
               </button>
             </div>
@@ -1164,7 +1312,7 @@
       <button
         id="scrollTopBtn"
         onclick="scrollToTopFeed()"
-        class="absolute bottom-3 right-4 w-7 h-7 rounded-full bg-[#161824] border border-white/10 hover:border-white/20 text-white/70 hover:text-white flex items-center justify-center transition-colors cursor-pointer shadow-lg z-20"
+        class="absolute bottom-3 right-4 w-8 h-8 rounded-xl bg-[#161824]/90 backdrop-blur-md border border-white/[0.08] hover:border-white/[0.16] hover:bg-[#1a1c2b] text-white/70 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-lg z-20"
         title="Scroll to top"
       >
         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg>
@@ -1172,51 +1320,57 @@
     </div>
 
     <!-- =======================================================================
-         3. EXACT DROP DOCK COMPONENT (desktop/src/components/DropDock.tsx)
+         3. FULL-WIDTH SEAMLESS DROP DOCK (desktop/src/components/DropDock.tsx)
          ======================================================================= -->
-    <div class="p-3 bg-[#090a0e] border-t border-white/[0.06] flex flex-col gap-2 shrink-0 select-none">
+    <div class="w-full shrink-0 select-none flex flex-col border-t border-dashed border-white/15 bg-[#090a0e]" id="dropDockWrapper">
       <input type="file" id="filePickerHidden" multiple class="hidden" onchange="handleNativeFileSelect(this)">
 
+      <!-- Full-Width Seamless Drop Strip (No floating card, no box-inside-box) -->
       <div
         onclick="document.getElementById('filePickerHidden').click()"
-        class="border border-dashed rounded-xl p-2.5 flex items-center gap-2.5 cursor-pointer transition-all border-white/[0.08] bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04]"
+        class="w-full px-4 py-3 flex items-center gap-3 cursor-pointer transition-colors hover:bg-white/[0.03] group"
         id="dropDockTray"
+        title="Click to browse files or drag & drop directly"
       >
-        <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors bg-white/[0.05] border border-white/[0.08] text-white/70" id="dropDockIconWrap">
-          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+        <!-- Clean Downward Arrow Icon -->
+        <div class="w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-white/50 group-hover:text-white/80 group-hover:bg-white/[0.08] transition-all shrink-0" id="dropDockIconWrap">
+          <svg class="w-4 h-4 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M4 20h16"/></svg>
         </div>
 
+        <!-- Clean Titles (No useless stats or slop) -->
         <div class="min-w-0 flex-1">
-          <div class="text-xs font-semibold text-white truncate" id="dockTitle">
+          <div class="text-xs font-semibold text-white tracking-tight truncate" id="dockTitle">
             Drop files to stage on shelf
           </div>
-          <div class="text-[10px] text-white/40 truncate" id="dockSubtitle">
-            Instant stage for desktop drag & drop
+          <div class="text-[11px] text-white/40 truncate mt-0.5" id="dockSubtitle">
+            Click to browse · or drag files
           </div>
         </div>
 
+        <!-- Quick Note Pen Button -->
         <button
+          type="button"
           onclick="event.stopPropagation(); toggleNoteDrawer();"
           title="Compose quick note or link"
           id="dockPenBtn"
-          class="p-1.5 rounded-lg border transition-colors cursor-pointer border-white/10 text-white/40 hover:text-white hover:bg-white/[0.06]"
+          class="w-7 h-7 rounded-lg text-white/40 hover:text-white hover:bg-white/[0.08] flex items-center justify-center transition-colors cursor-pointer shrink-0"
         >
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
         </button>
       </div>
 
-      <!-- Note / URL Drawer (DropDock.tsx lines 318-370) -->
-      <div id="noteDrawer" class="hidden flex-col gap-2 pt-1 transition-all">
+      <!-- Expandable Note Drawer -->
+      <div id="noteDrawer" class="hidden flex-col gap-2 p-3 pt-0 border-t border-white/[0.06] transition-all">
         <textarea
           id="noteTextArea"
-          placeholder="Type note or snippet to stage on shelf... (Ctrl+Enter)"
-          class="w-full h-16 bg-[#131520] border border-white/15 focus:border-white/30 rounded-xl p-2 text-xs text-white placeholder:text-white/30 font-mono resize-none outline-none transition-colors"
+          placeholder="Type note or snippet... (Ctrl+Enter)"
+          class="w-full h-16 bg-[#12141d] border border-white/10 focus:border-white/25 rounded-xl p-2.5 text-xs text-white placeholder:text-white/30 font-mono resize-none outline-none transition-colors"
           onkeydown="if(event.key === 'Enter' && (event.ctrlKey || event.metaKey)) submitQuickNote()"
         ></textarea>
         <div class="flex items-center justify-between">
           <span class="text-[10px] text-white/30 font-mono">Press Ctrl+Enter</span>
           <div class="flex items-center gap-1.5">
-            <button onclick="toggleNoteDrawer()" class="px-2 py-1 text-[11px] text-white/40 hover:text-white cursor-pointer">
+            <button onclick="toggleNoteDrawer()" class="px-2.5 py-1 rounded-lg text-[11px] text-white/40 hover:text-white transition-colors cursor-pointer">
               Cancel
             </button>
             <button onclick="submitQuickNote()" class="px-3 py-1 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-all cursor-pointer bg-white text-black hover:bg-white/90 shadow-sm">
@@ -1283,418 +1437,572 @@
     </div>
 
     <!-- =======================================================================
-         5. EXACT SETTINGS MODAL (desktop/src/components/SettingsModal.tsx)
-         Stuck inside the 350px sidebar exactly matching the desktop app
+         5. CLEAN IN-SHELF SETTINGS VIEW (Edge-Drop Architecture)
+         Seamlessly takes over the shelf canvas with native header, tabs & breathable rows
          ======================================================================= -->
     <div 
       id="settingsModal" 
-      class="hidden absolute inset-0 z-50 flex items-center justify-center p-3 bg-black/75 backdrop-blur-md pointer-events-auto select-none"
+      class="hidden absolute inset-0 z-50 flex flex-col bg-[#090a0e] pointer-events-auto select-none overflow-hidden"
     >
-      <!-- Full Backdrop Click Dismiss -->
-      <div class="absolute inset-0 cursor-pointer" onclick="closeSettingsModal()"></div>
+      <!-- 1. Native Top Header: Back Navigation & Close -->
+      <div class="flex items-center justify-between px-3.5 h-10 border-b border-white/[0.06] shrink-0 bg-[#090a0e]">
+        <button
+          onclick="closeSettingsModal()"
+          class="flex items-center gap-1.5 text-xs font-semibold text-white/70 hover:text-white transition-colors cursor-pointer py-1 px-2 -ml-1.5 rounded-lg hover:bg-white/[0.06]"
+          title="Back to Shelf (Esc)"
+        >
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m15 18-6-6 6-6"/>
+          </svg>
+          <span>Back</span>
+        </button>
+        <span class="text-xs font-semibold text-white/50 tracking-tight">Settings</span>
+        <button
+          onclick="closeSettingsModal()"
+          class="w-7 h-7 rounded-lg hover:bg-white/[0.08] text-white/40 hover:text-white flex items-center justify-center transition-colors cursor-pointer -mr-1"
+          title="Close (Esc)"
+        >
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+          </svg>
+        </button>
+      </div>
 
-      <div class="relative z-10 w-full max-w-[326px] max-h-[92vh] bg-[#0c0d12] border border-white/[0.1] rounded-2xl shadow-2xl flex flex-col overflow-hidden text-white select-none pointer-events-auto">
-        <!-- 1. Minimal Header -->
-        <div class="settings-fixed-header flex items-center justify-between">
-          <h2 class="text-[13px] font-semibold tracking-tight text-white/90">Settings</h2>
+      <!-- 2. Stationary Fixed Header: Segmented Pill Tab Bar (Edge Drop Exact Style) -->
+      <div class="settings-fixed-header">
+        <div class="settings-tab-bar">
           <button
-            onclick="closeSettingsModal()"
-            class="w-6 h-6 rounded-md hover:bg-white/[0.08] text-white/40 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
-            title="Close (Esc)"
+            id="tabBtnGeneral"
+            onclick="switchSettingsTab('general')"
+            class="settings-tab-btn active"
           >
-            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
-            </svg>
+            <span class="settings-tab-text">General</span>
+          </button>
+          <button
+            id="tabBtnStorage"
+            onclick="switchSettingsTab('storage')"
+            class="settings-tab-btn"
+          >
+            <span class="settings-tab-text">Storage</span>
+          </button>
+          <button
+            id="tabBtnTransfer"
+            onclick="switchSettingsTab('transfer')"
+            class="settings-tab-btn"
+          >
+            <span class="settings-tab-text">Transfer</span>
+          </button>
+          <button
+            id="tabBtnAbout"
+            onclick="switchSettingsTab('about')"
+            class="settings-tab-btn"
+          >
+            <span class="settings-tab-text">About</span>
           </button>
         </div>
+      </div>
 
-        <!-- 2. Sleek Segmented Tab Bar -->
-        <div class="px-3.5 pt-2.5 pb-1">
-          <div class="settings-tab-bar">
-            <button
-              id="tabBtnGeneral"
-              onclick="switchSettingsTab('general')"
-              class="settings-tab-btn capitalize active"
-            >
-              <span class="settings-tab-text">General</span>
-            </button>
-            <button
-              id="tabBtnStorage"
-              onclick="switchSettingsTab('storage')"
-              class="settings-tab-btn capitalize"
-            >
-              <span class="settings-tab-text">Storage</span>
-            </button>
-            <button
-              id="tabBtnTransfer"
-              onclick="switchSettingsTab('transfer')"
-              class="settings-tab-btn capitalize"
-            >
-              <span class="settings-tab-text">Transfer</span>
-            </button>
-            <button
-              id="tabBtnAbout"
-              onclick="switchSettingsTab('about')"
-              class="settings-tab-btn capitalize"
-            >
-              <span class="settings-tab-text">About</span>
-            </button>
-          </div>
-        </div>
+      <!-- 3. Scrollable Settings Content (Flat Breathable Rows & Hairline Dividers) -->
+      <div class="settings-scroll-list">
+        <!-- ──── GENERAL TAB ──── -->
+        <div id="tabContentGeneral">
+          <div class="setting-group-label">Device & System</div>
 
-        <!-- 3. Grouped Content List -->
-        <div class="settings-scroll-list px-3.5 py-2.5 space-y-1 overflow-y-auto custom-scrollbar">
-          <!-- ──── GENERAL TAB ──── -->
-          <div id="tabContentGeneral">
-            <div class="setting-group-label">Device & System</div>
-            <div class="setting-group">
-              <!-- Device Alias -->
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-title">Device Name</div>
-                  <div class="setting-desc">Visible on nearby radar</div>
-                </div>
-                <div class="flex items-center gap-1.5 shrink-0">
-                  <input
-                    type="text"
-                    id="aliasDraftInput"
-                    value="DESKTOP-D601B97"
-                    placeholder="Device name"
-                    class="setting-inline-input w-36 text-right font-mono text-[11px]"
-                    onkeydown="if(event.key==='Enter')handleSaveAlias()"
-                    onblur="handleSaveAlias()"
-                  />
-                  <button
-                    id="saveAliasBtn"
-                    onclick="handleSaveAlias()"
-                    class="p-1 rounded-md text-white/40 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer shrink-0"
-                    title="Save name"
-                  >
-                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Sound Effects -->
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-title">Sound Effects</div>
-                  <div class="setting-desc">Chimes on drop, beam, and copy</div>
-                </div>
-                <button
-                  onclick="toggleSetting(this, 'soundEffects')"
-                  class="setting-toggle checked"
-                >
-                  <div class="toggle-thumb"></div>
-                </button>
-              </div>
-
-              <!-- Windows Explorer Integration -->
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-title">Explorer Context Menu</div>
-                  <div class="setting-desc">"Send with SendKeep" right-click action</div>
-                </div>
-                <button
-                  onclick="toggleSetting(this, 'contextMenu')"
-                  class="setting-toggle"
-                >
-                  <div class="toggle-thumb"></div>
-                </button>
-              </div>
-
-              <!-- Screen Edge Slide-Out -->
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-title">Edge Slide-Out</div>
-                  <div class="setting-desc">Glide cursor to screen border to reveal</div>
-                </div>
-                <button
-                  onclick="toggleSetting(this, 'edgeSlide')"
-                  class="setting-toggle checked"
-                >
-                  <div class="toggle-thumb"></div>
-                </button>
-              </div>
+          <!-- Device Name -->
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-title">Device Name</div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <input
+                type="text"
+                id="aliasDraftInput"
+                value="DESKTOP-D601B97"
+                placeholder="Device name"
+                class="setting-inline-input w-36 text-right font-mono text-[11px]"
+                onkeydown="if(event.key==='Enter')handleSaveAlias()"
+                onblur="handleSaveAlias()"
+              />
+              <button
+                id="saveAliasBtn"
+                onclick="handleSaveAlias()"
+                class="p-1 rounded-md text-white/40 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer shrink-0"
+                title="Save name"
+              >
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
             </div>
           </div>
 
-          <!-- ──── STORAGE TAB ──── -->
-          <div id="tabContentStorage" class="hidden">
-            <div class="setting-group-label">Save Destination</div>
-            <div class="setting-group">
-              <div class="setting-row vertical p-3">
-                <div class="flex items-center justify-between w-full">
-                  <div class="setting-info">
-                    <div class="setting-title">Incoming Transfers</div>
-                    <div class="setting-desc">Where received files and clips are stored</div>
-                  </div>
-                  <button
-                    onclick="toast('Opened Downloads in Explorer')"
-                    class="text-[11px] text-white/50 hover:text-white px-2 py-1 rounded-md hover:bg-white/[0.06] transition-colors cursor-pointer shrink-0"
-                  >
-                    Reveal
-                  </button>
-                </div>
-                <div class="flex items-center gap-2 w-full mt-1">
-                  <div class="flex-1 bg-black/40 border border-white/[0.06] rounded-lg px-2.5 py-1.5 font-mono text-[10.5px] text-white/70 truncate">
-                    %USERPROFILE%\Downloads\SendKeep
-                  </div>
-                  <button
-                    onclick="toast('Opened folder picker')"
-                    class="px-2.5 py-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] text-[11px] font-medium text-white/90 hover:text-white transition-all cursor-pointer shrink-0"
-                  >
-                    Change
-                  </button>
-                </div>
-              </div>
-            </div>
+          <div class="setting-divider"></div>
 
-            <div class="setting-group-label">Conflict Resolution</div>
-            <div class="setting-group">
-              <div class="setting-row vertical p-3">
-                <div class="setting-info mb-1.5">
-                  <div class="setting-title">Duplicate Name Handling</div>
-                  <div class="setting-desc">Strategy when a received filename already exists</div>
-                </div>
-                <div class="setting-pills">
-                  <button onclick="selectPill(this)" class="pill active">Auto-Rename</button>
-                  <button onclick="selectPill(this)" class="pill">Overwrite</button>
-                  <button onclick="selectPill(this)" class="pill">Skip</button>
-                </div>
-              </div>
+          <!-- Sound Effects -->
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-title">Sound Effects</div>
+              <div class="setting-desc">Audio feedback on drop, beam, and copy</div>
             </div>
+            <button
+              onclick="toggleSetting(this, 'soundEffects')"
+              class="setting-toggle checked"
+            >
+              <div class="toggle-thumb"></div>
+            </button>
           </div>
 
-          <!-- ──── TRANSFER TAB ──── -->
-          <div id="tabContentTransfer" class="hidden">
-            <div class="setting-group-label">Reception & Protocol</div>
-            <div class="setting-group">
-              <!-- Auto-Accept -->
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-title">Auto-Accept</div>
-                  <div class="setting-desc">Direct receipt from paired trusted devices</div>
-                </div>
-                <button
-                  onclick="toggleSetting(this, 'autoAccept')"
-                  class="setting-toggle checked"
-                >
-                  <div class="toggle-thumb"></div>
-                </button>
-              </div>
+          <div class="setting-divider"></div>
 
-              <!-- Local Transmission Port -->
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-title">Network Port</div>
-                  <div class="setting-desc">LocalSend transmission port</div>
-                </div>
-                <span class="font-mono text-[11px] font-medium px-2 py-0.5 rounded bg-white/[0.05] border border-white/[0.06] text-white/80">
-                  53317
-                </span>
-              </div>
+          <!-- Windows Explorer Context Menu -->
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-title">Explorer Context Menu</div>
+              <div class="setting-desc">"Send with SendKeep" Windows right-click action</div>
             </div>
-
-            <div class="setting-group-label">Security</div>
-            <div class="setting-group">
-              <!-- Require PIN -->
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-title">Require PIN</div>
-                  <div class="setting-desc">Require 4-digit code to accept transfers</div>
-                </div>
-                <button
-                  onclick="togglePinRow(this)"
-                  class="setting-toggle"
-                >
-                  <div class="toggle-thumb"></div>
-                </button>
-              </div>
-
-              <div id="pinRowWrap" class="hidden setting-row bg-black/20">
-                <div class="setting-info">
-                  <div class="setting-title">Security PIN</div>
-                  <div class="setting-desc">Share with sender</div>
-                </div>
-                <div class="flex items-center gap-1.5 shrink-0">
-                  <input
-                    id="pinInput"
-                    type="password"
-                    inputmode="numeric"
-                    maxlength="4"
-                    value="1234"
-                    class="w-16 text-center font-mono text-xs tracking-widest bg-black/50 border border-white/10 rounded-md py-1 text-white focus:outline-none focus:border-white/30"
-                  />
-                  <button
-                    type="button"
-                    onclick="togglePinVisibility()"
-                    class="p-1 rounded text-white/40 hover:text-white transition-colors cursor-pointer"
-                  >
-                    <svg id="pinEyeIcon" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div class="setting-group-label">Network Interface</div>
-            <div class="setting-group">
-              <div class="setting-row">
-                <div class="setting-info">
-                  <div class="setting-title">Wi-Fi 6 (Intel AX200)</div>
-                  <div class="setting-desc font-mono">192.168.1.15</div>
-                </div>
-                <div class="w-1.5 h-1.5 rounded-full bg-white/60"></div>
-              </div>
-            </div>
+            <button
+              onclick="toggleSetting(this, 'contextMenu')"
+              class="setting-toggle"
+            >
+              <div class="toggle-thumb"></div>
+            </button>
           </div>
 
-          <!-- ──── ABOUT TAB ──── -->
-          <div id="tabContentAbout" class="hidden">
-            <div class="flex flex-col items-center text-center py-3 px-2">
-              <div class="w-9 h-9 rounded-xl bg-white/[0.06] border border-white/[0.1] flex items-center justify-center text-white mb-2 shadow-sm">
-                <svg class="w-4 h-4 text-white/80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-              </div>
-              <div class="text-[13px] font-semibold text-white">SendKeep Desktop</div>
-              <div class="text-[11px] text-white/40 mt-0.5">Version 2.1.0 (Windows x64)</div>
-            </div>
+          <div class="setting-divider"></div>
 
-            <div class="setting-group">
-              <div class="setting-row">
-                <span class="text-[11.5px] text-white/50">Runtime</span>
-                <span class="text-[11.5px] text-white/90 font-mono">Tauri v2 • Rust</span>
-              </div>
-              <div class="setting-row">
-                <span class="text-[11.5px] text-white/50">Engine</span>
-                <span class="text-[11.5px] text-white/90 font-mono">Axum • Tokio</span>
-              </div>
-              <div class="setting-row">
-                <span class="text-[11.5px] text-white/50">License</span>
-                <span class="text-[11.5px] text-white/90">MIT Open Source</span>
-              </div>
+          <!-- Screen Edge Slide-Out -->
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-title">Edge Slide-Out</div>
+              <div class="setting-desc">Glide cursor to screen border to reveal shelf</div>
             </div>
+            <button
+              onclick="toggleSetting(this, 'edgeSlide')"
+              class="setting-toggle checked"
+            >
+              <div class="toggle-thumb"></div>
+            </button>
+          </div>
 
-            <div class="flex items-center justify-center gap-3 text-[11px] text-white/40 pt-1">
-              <button onclick="toast('Checking for updates... up to date')" class="hover:text-white transition-colors cursor-pointer">Check Updates</button>
-              <span>•</span>
-              <button onclick="toast('Opening GitHub')" class="hover:text-white transition-colors cursor-pointer">GitHub</button>
+          <div class="setting-divider"></div>
+
+          <!-- Launch at Login -->
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-title">Launch at Login</div>
+              <div class="setting-desc">Start minimized in system tray when Windows boots</div>
+            </div>
+            <button
+              onclick="toggleSetting(this, 'launchLogin')"
+              class="setting-toggle checked"
+            >
+              <div class="toggle-thumb"></div>
+            </button>
+          </div>
+
+          <div class="setting-divider"></div>
+
+          <!-- Unpinned Auto-Delete -->
+          <div class="setting-row vertical">
+            <div class="setting-info">
+              <div class="setting-title">Auto-Delete History</div>
+              <div class="setting-desc">Automatically purge unpinned items after duration</div>
+            </div>
+            <div class="setting-pills">
+              <button onclick="selectPill(this)" class="pill">Never</button>
+              <button onclick="selectPill(this)" class="pill">1h</button>
+              <button onclick="selectPill(this)" class="pill">6h</button>
+              <button onclick="selectPill(this)" class="pill active">24h</button>
+              <button onclick="selectPill(this)" class="pill">7d</button>
             </div>
           </div>
         </div>
 
-        <!-- 4. Minimal Footer -->
-        <div class="p-2.5 px-3.5 border-t border-white/[0.06] bg-[#0c0d12]/90 flex items-center justify-between">
-          <span class="text-[10px] text-white/30 font-mono">ESC to close</span>
-          <button
-            onclick="closeSettingsModal()"
-            class="px-3.5 py-1 rounded-lg bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.08] text-white text-xs font-medium transition-all cursor-pointer"
-          >
-            Done
-          </button>
+        <!-- ──── STORAGE TAB ──── -->
+        <div id="tabContentStorage" class="hidden">
+          <div class="setting-group-label">Save Destination</div>
+
+          <div class="setting-row vertical">
+            <div class="setting-info">
+              <div class="setting-title">Incoming Transfers</div>
+              <div class="setting-desc">Local directory where received files and clips are stored</div>
+            </div>
+            <div class="flex items-center gap-2 w-full mt-1">
+              <div class="flex-1 bg-black/40 border border-white/[0.08] rounded-xl px-3 py-2 font-mono text-[11px] text-white/70 truncate select-all">
+                %USERPROFILE%\Downloads\SendKeep
+              </div>
+              <button
+                onclick="toast('Opened folder picker')"
+                class="px-3 py-2 rounded-xl bg-[#141414] hover:bg-[#1c1c1c] border border-white/[0.08] text-xs font-semibold text-white/90 hover:text-white transition-all cursor-pointer shrink-0"
+              >
+                Change
+              </button>
+              <button
+                onclick="toast('Opened Downloads in Explorer')"
+                class="px-2.5 py-2 rounded-xl text-white/50 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer shrink-0 text-xs"
+                title="Reveal folder in Explorer"
+              >
+                Reveal
+              </button>
+            </div>
+          </div>
+
+          <div class="setting-divider"></div>
+
+          <div class="setting-group-label" style="margin-top: 20px;">Conflict Resolution</div>
+
+          <div class="setting-row vertical">
+            <div class="setting-info">
+              <div class="setting-title">Duplicate Filename Strategy</div>
+              <div class="setting-desc">Action taken when an incoming filename already exists</div>
+            </div>
+            <div class="setting-pills">
+              <button onclick="selectPill(this)" class="pill active">Auto-Rename</button>
+              <button onclick="selectPill(this)" class="pill">Overwrite</button>
+              <button onclick="selectPill(this)" class="pill">Skip</button>
+            </div>
+          </div>
+
+          <div class="setting-divider"></div>
+
+          <div class="setting-group-label" style="margin-top: 20px;">History Limit</div>
+
+          <div class="setting-row vertical">
+            <div class="setting-info">
+              <div class="setting-title">Maximum Cached Items</div>
+              <div class="setting-desc">Oldest unpinned items are pruned when limit is reached</div>
+            </div>
+            <div class="setting-pills">
+              <button onclick="selectPill(this)" class="pill">100</button>
+              <button onclick="selectPill(this)" class="pill active">250</button>
+              <button onclick="selectPill(this)" class="pill">500</button>
+              <button onclick="selectPill(this)" class="pill">1000</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ──── TRANSFER TAB ──── -->
+        <div id="tabContentTransfer" class="hidden">
+          <div class="setting-group-label">Reception & Protocol</div>
+
+          <!-- Auto-Accept -->
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-title">Auto-Accept</div>
+              <div class="setting-desc">Direct receipt without prompt from paired trusted devices</div>
+            </div>
+            <button
+              onclick="toggleSetting(this, 'autoAccept')"
+              class="setting-toggle checked"
+            >
+              <div class="toggle-thumb"></div>
+            </button>
+          </div>
+
+          <div class="setting-divider"></div>
+
+          <!-- Local Transmission Port -->
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-title">Network Port</div>
+              <div class="setting-desc">LocalSend transmission port for peer discovery</div>
+            </div>
+            <span class="font-mono text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-[#141414] border border-white/[0.08] text-white/90">
+              53317
+            </span>
+          </div>
+
+          <div class="setting-divider"></div>
+
+          <div class="setting-group-label" style="margin-top: 20px;">Security</div>
+
+          <!-- Require PIN -->
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-title">Require PIN</div>
+              <div class="setting-desc">Require 4-digit code to accept incoming transfers</div>
+            </div>
+            <button
+              onclick="togglePinRow(this)"
+              class="setting-toggle"
+            >
+              <div class="toggle-thumb"></div>
+            </button>
+          </div>
+
+          <div id="pinRowWrap" class="hidden setting-row" style="background: rgba(255, 255, 255, 0.02); border-radius: 8px; padding: 10px 8px;">
+            <div class="setting-info">
+              <div class="setting-title">Security PIN</div>
+              <div class="setting-desc">Share code with sender to authenticate transfer</div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <input
+                id="pinInput"
+                type="password"
+                inputmode="numeric"
+                maxlength="4"
+                value="1234"
+                class="w-16 text-center font-mono text-xs tracking-widest bg-black/60 border border-white/15 rounded-lg py-1.5 text-white focus:outline-none focus:border-white/40"
+              />
+              <button
+                type="button"
+                onclick="togglePinVisibility()"
+                class="p-1.5 rounded-lg text-white/40 hover:text-white transition-colors cursor-pointer hover:bg-white/[0.08]"
+              >
+                <svg id="pinEyeIcon" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="setting-divider"></div>
+
+          <div class="setting-group-label" style="margin-top: 20px;">Active Network Interface</div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-title">Wi-Fi 6 (Intel AX200)</div>
+              <div class="setting-desc font-mono">192.168.1.15</div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]"></span>
+              <span class="text-[11px] font-medium text-emerald-400">Connected</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ──── ABOUT TAB (Edge Drop Inspired Clean Architecture) ──── -->
+        <div id="tabContentAbout" class="hidden">
+          <div class="flex flex-col items-center text-center pt-2 pb-3 px-2">
+            <div class="w-11 h-11 rounded-2xl bg-[#141414] border border-white/[0.08] flex items-center justify-center text-white mb-2.5 shadow-md">
+              <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <div class="text-sm font-semibold text-white tracking-tight">SendKeep Desktop</div>
+            <div class="text-xs text-white/50 mt-0.5">Version 2.1.0 (Windows x64)</div>
+          </div>
+
+          <div class="setting-divider"></div>
+
+          <div class="setting-group-label">Architecture</div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-title">Runtime</div>
+              <div class="setting-desc">Native desktop wrapper & OS hooks</div>
+            </div>
+            <span class="font-mono text-xs font-semibold text-white/90">Tauri v2 (Rust)</span>
+          </div>
+
+          <div class="setting-divider"></div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-title">Engine</div>
+              <div class="setting-desc">Asynchronous P2P network stack</div>
+            </div>
+            <span class="font-mono text-xs font-semibold text-white/90">Axum • Tokio</span>
+          </div>
+
+          <div class="setting-divider"></div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-title">License</div>
+              <div class="setting-desc">Free and community supported</div>
+            </div>
+            <span class="text-xs font-semibold text-white/90">MIT Open Source</span>
+          </div>
+
+          <div class="setting-divider" style="margin-top: 16px;"></div>
+
+          <!-- Edge Drop Exact Support & Promo Card -->
+          <div class="support-promo">
+            <div class="support-promo-title">
+              SendKeep is free and open-source. If it saves you time, consider supporting development.
+            </div>
+            <div class="support-buttons-group">
+              <!-- Primary Action: Ko-fi / Support -->
+              <button
+                class="kofi-support-btn"
+                onclick="toast('Thank you for supporting SendKeep!')"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#ff4757" stroke="none" style="flex-shrink: 0;">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+                <span>Support on Ko-fi</span>
+              </button>
+
+              <!-- Secondary Action: GitHub Star -->
+              <button
+                type="button"
+                class="github-promo-btn"
+                onclick="toast('Opening GitHub repository: Mohammad-Shahid-07/sendkeep')"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink: 0;">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+                </svg>
+                <span>Star on GitHub</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24" style="margin-left: 2px;">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+              </button>
+            </div>
+            <div class="app-version-footer">
+              <span>SendKeep v2.1.0</span>
+              <span class="version-separator">·</span>
+              <button
+                type="button"
+                class="version-changelog-link"
+                onclick="toast('Changelog: v2.1.0 introduces Edge-Drop clean in-shelf architecture')"
+              >
+                <span>What's New</span>
+                <span style="font-size: 10px; opacity: 0.7;">↗</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Subtle Bottom Quit Button (Edge Drop Style) -->
+          <div style="display: flex; justify-content: center; margin-top: 10px; margin-bottom: 8px;">
+            <button
+              class="subtle-quit-btn"
+              onclick="toast('Quit SendKeep requested')"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+              <span>Quit SendKeep</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- =======================================================================
-         6. EXACT WEB SHARE MODAL (desktop/src/components/WebShareModal.tsx)
+         6. CLEAN IN-SHELF WEB SHARE VIEW (Settings Architecture)
+         Seamlessly slides over shelf with native header, centered QR & breathable rows
          ======================================================================= -->
     <div 
       id="webShareModal" 
-      class="hidden absolute inset-0 z-50 flex items-center justify-center p-3 bg-black/75 backdrop-blur-md pointer-events-auto select-none"
+      class="hidden absolute inset-0 z-50 flex flex-col bg-[#090a0e] pointer-events-auto select-none overflow-hidden"
     >
-      <div class="absolute inset-0 cursor-pointer" onclick="closeWebShareModal()"></div>
-      
-      <div class="relative z-10 w-full max-w-[326px] max-h-[92vh] bg-[#0c0d12] border border-white/[0.1] rounded-2xl shadow-2xl flex flex-col overflow-hidden text-white">
-        <!-- Top Bar -->
-        <div class="flex items-center justify-between border-b border-white/[0.08] pb-3 pt-3.5 px-4 bg-[#090a0e]/60 backdrop-blur-md">
-          <div class="flex items-center gap-2.5">
-            <div class="w-7 h-7 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-white/70">
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-            </div>
-            <div>
-              <h2 class="text-sm font-semibold tracking-tight text-white">Web Share Mode</h2>
-              <p class="text-[11px] text-white/50">Zero-Install Browser Drop</p>
-            </div>
+      <!-- 1. Native Top Header: Back Navigation & Close (Exact Settings Style) -->
+      <div class="flex items-center justify-between px-3.5 h-10 border-b border-white/[0.06] shrink-0 bg-[#090a0e]">
+        <button
+          onclick="closeWebShareModal()"
+          class="flex items-center gap-1.5 text-xs font-semibold text-white/70 hover:text-white transition-colors cursor-pointer py-1 px-2 -ml-1.5 rounded-lg hover:bg-white/[0.06]"
+          title="Back to Shelf (Esc)"
+        >
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m15 18-6-6 6-6"/>
+          </svg>
+          <span>Back</span>
+        </button>
+        <span class="text-xs font-semibold text-white/50 tracking-tight">Web Share</span>
+        <button
+          onclick="closeWebShareModal()"
+          class="w-7 h-7 rounded-lg hover:bg-white/[0.08] text-white/40 hover:text-white flex items-center justify-center transition-colors cursor-pointer -mr-1"
+          title="Close (Esc)"
+        >
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- 2. Scrollable Content (Exact Settings Style) -->
+      <div class="settings-scroll-list flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-1">
+        <!-- Clean QR Code Display -->
+        <div class="flex flex-col items-center justify-center pt-3 pb-2">
+          <div class="p-3.5 bg-white rounded-2xl shadow-xl flex items-center justify-center">
+            <svg viewBox="0 0 29 29" class="w-40 h-40 block" shape-rendering="crispEdges">
+              <rect x="0" y="0" width="7" height="7" fill="#0b0f19"/>
+              <rect x="1" y="1" width="5" height="5" fill="#ffffff"/>
+              <rect x="2" y="2" width="3" height="3" fill="#0b0f19"/>
+              <rect x="22" y="0" width="7" height="7" fill="#0b0f19"/>
+              <rect x="23" y="1" width="5" height="5" fill="#ffffff"/>
+              <rect x="24" y="2" width="3" height="3" fill="#0b0f19"/>
+              <rect x="0" y="22" width="7" height="7" fill="#0b0f19"/>
+              <rect x="1" y="23" width="5" height="5" fill="#ffffff"/>
+              <rect x="2" y="24" width="3" height="3" fill="#0b0f19"/>
+              <rect x="8" y="2" width="2" height="1" fill="#0b0f19"/>
+              <rect x="12" y="1" width="1" height="2" fill="#0b0f19"/>
+              <rect x="15" y="0" width="2" height="2" fill="#0b0f19"/>
+              <rect x="18" y="2" width="2" height="1" fill="#0b0f19"/>
+              <rect x="9" y="5" width="3" height="1" fill="#0b0f19"/>
+              <rect x="14" y="4" width="1" height="3" fill="#0b0f19"/>
+              <rect x="17" y="5" width="2" height="2" fill="#0b0f19"/>
+              <rect x="2" y="8" width="1" height="3" fill="#0b0f19"/>
+              <rect x="5" y="9" width="2" height="2" fill="#0b0f19"/>
+              <rect x="8" y="8" width="3" height="1" fill="#0b0f19"/>
+              <rect x="12" y="9" width="5" height="2" fill="#0b0f19"/>
+              <rect x="19" y="8" width="1" height="3" fill="#0b0f19"/>
+              <rect x="23" y="9" width="2" height="2" fill="#0b0f19"/>
+              <rect x="27" y="8" width="1" height="3" fill="#0b0f19"/>
+              <rect x="0" y="14" width="3" height="1" fill="#0b0f19"/>
+              <rect x="5" y="13" width="2" height="3" fill="#0b0f19"/>
+              <rect x="9" y="14" width="2" height="1" fill="#0b0f19"/>
+              <rect x="18" y="13" width="2" height="3" fill="#0b0f19"/>
+              <rect x="22" y="14" width="3" height="1" fill="#0b0f19"/>
+              <rect x="27" y="13" width="2" height="3" fill="#0b0f19"/>
+              <rect x="8" y="18" width="2" height="2" fill="#0b0f19"/>
+              <rect x="12" y="17" width="5" height="1" fill="#0b0f19"/>
+              <rect x="18" y="18" width="3" height="2" fill="#0b0f19"/>
+              <rect x="23" y="18" width="2" height="1" fill="#0b0f19"/>
+              <rect x="26" y="17" width="2" height="3" fill="#0b0f19"/>
+              <rect x="8" y="22" width="1" height="3" fill="#0b0f19"/>
+              <rect x="11" y="23" width="3" height="2" fill="#0b0f19"/>
+              <rect x="16" y="22" width="2" height="1" fill="#0b0f19"/>
+              <rect x="20" y="23" width="4" height="2" fill="#0b0f19"/>
+              <rect x="26" y="24" width="2" height="3" fill="#0b0f19"/>
+              <rect x="9" y="27" width="4" height="2" fill="#0b0f19"/>
+              <rect x="15" y="26" width="3" height="2" fill="#0b0f19"/>
+              <rect x="21" y="27" width="2" height="1" fill="#0b0f19"/>
+            </svg>
           </div>
-          <button onclick="closeWebShareModal()" class="w-7 h-7 rounded-lg bg-white/[0.04] hover:bg-white/[0.1] border border-white/[0.06] flex items-center justify-center text-white/70 hover:text-white transition-all cursor-pointer">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-          </button>
+          <p class="text-xs text-white/60 text-center mt-3 max-w-[250px] leading-relaxed">
+            Scan with your phone camera to share files directly in browser
+          </p>
         </div>
 
-        <!-- Scrollable Body -->
-        <div class="flex-1 overflow-y-auto px-4 py-3 space-y-3">
-          <!-- Vector QR Code -->
-          <div class="flex flex-col items-center justify-center p-3.5 bg-white/[0.02] border border-white/[0.06] rounded-2xl">
-            <div class="relative p-2.5 bg-white rounded-xl shadow-lg border border-black/10">
-              <svg viewBox="0 0 29 29" class="w-36 h-36 block" shape-rendering="crispEdges">
-                <rect x="0" y="0" width="7" height="7" fill="#0b0f19"/>
-                <rect x="1" y="1" width="5" height="5" fill="#ffffff"/>
-                <rect x="2" y="2" width="3" height="3" fill="#0b0f19"/>
-                <rect x="22" y="0" width="7" height="7" fill="#0b0f19"/>
-                <rect x="23" y="1" width="5" height="5" fill="#ffffff"/>
-                <rect x="24" y="2" width="3" height="3" fill="#0b0f19"/>
-                <rect x="0" y="22" width="7" height="7" fill="#0b0f19"/>
-                <rect x="1" y="23" width="5" height="5" fill="#ffffff"/>
-                <rect x="2" y="24" width="3" height="3" fill="#0b0f19"/>
-                <rect x="8" y="2" width="2" height="1" fill="#0b0f19"/>
-                <rect x="12" y="1" width="1" height="2" fill="#0b0f19"/>
-                <rect x="15" y="0" width="2" height="2" fill="#0b0f19"/>
-                <rect x="18" y="2" width="2" height="1" fill="#0b0f19"/>
-                <rect x="9" y="5" width="3" height="1" fill="#0b0f19"/>
-                <rect x="14" y="4" width="1" height="3" fill="#0b0f19"/>
-                <rect x="17" y="5" width="2" height="2" fill="#0b0f19"/>
-                <rect x="2" y="8" width="1" height="3" fill="#0b0f19"/>
-                <rect x="5" y="9" width="2" height="2" fill="#0b0f19"/>
-                <rect x="8" y="8" width="3" height="1" fill="#0b0f19"/>
-                <rect x="12" y="9" width="5" height="2" fill="#0b0f19"/>
-                <rect x="19" y="8" width="1" height="3" fill="#0b0f19"/>
-                <rect x="23" y="9" width="2" height="2" fill="#0b0f19"/>
-                <rect x="27" y="8" width="1" height="3" fill="#0b0f19"/>
-                <rect x="0" y="14" width="3" height="1" fill="#0b0f19"/>
-                <rect x="5" y="13" width="2" height="3" fill="#0b0f19"/>
-                <rect x="9" y="14" width="2" height="1" fill="#0b0f19"/>
-                <rect x="18" y="13" width="2" height="3" fill="#0b0f19"/>
-                <rect x="22" y="14" width="3" height="1" fill="#0b0f19"/>
-                <rect x="27" y="13" width="2" height="3" fill="#0b0f19"/>
-                <rect x="8" y="18" width="2" height="2" fill="#0b0f19"/>
-                <rect x="12" y="17" width="5" height="1" fill="#0b0f19"/>
-                <rect x="18" y="18" width="3" height="2" fill="#0b0f19"/>
-                <rect x="23" y="18" width="2" height="1" fill="#0b0f19"/>
-                <rect x="26" y="17" width="2" height="3" fill="#0b0f19"/>
-                <rect x="8" y="22" width="1" height="3" fill="#0b0f19"/>
-                <rect x="11" y="23" width="3" height="2" fill="#0b0f19"/>
-                <rect x="16" y="22" width="2" height="1" fill="#0b0f19"/>
-                <rect x="20" y="23" width="4" height="2" fill="#0b0f19"/>
-                <rect x="26" y="24" width="2" height="3" fill="#0b0f19"/>
-                <rect x="9" y="27" width="4" height="2" fill="#0b0f19"/>
-                <rect x="15" y="26" width="3" height="2" fill="#0b0f19"/>
-                <rect x="21" y="27" width="2" height="1" fill="#0b0f19"/>
-              </svg>
-              <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div class="w-8 h-8 rounded-lg bg-black border border-white/20 flex items-center justify-center shadow-md">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                </div>
-              </div>
-            </div>
-            <div class="mt-2 text-center text-[11px] text-white/60">Scan with iPhone or Android camera</div>
-          </div>
+        <div class="setting-divider my-2"></div>
 
-          <!-- Direct URL -->
-          <div class="bg-white/[0.03] border border-white/[0.07] rounded-xl p-2.5 flex flex-col gap-1.5">
-            <div class="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Direct Local URL</div>
-            <div class="flex items-center justify-between gap-1.5 bg-black/40 border border-white/[0.06] rounded-lg px-2.5 py-1.5">
-              <span class="font-mono text-xs text-white/90 truncate select-all">http://192.168.1.15:53317/web</span>
-              <button onclick="copyItem('http://192.168.1.15:53317/web')" class="p-1 rounded hover:bg-white/10 text-white/70 hover:text-white cursor-pointer" title="Copy URL">
-                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-              </button>
-            </div>
+        <div class="setting-group-label">Browser Access</div>
+
+        <!-- Direct URL Row (Flat settings row) -->
+        <div class="setting-row vertical">
+          <div class="setting-info">
+            <div class="setting-title">Web Address</div>
+            <div class="setting-desc">Open in any browser on the same Wi-Fi</div>
+          </div>
+          <div class="w-full flex items-center justify-between gap-2 p-2 px-3 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:border-white/[0.14] transition-colors">
+            <span class="font-mono text-xs text-white/90 truncate select-all">http://192.168.1.15:53317/web</span>
+            <button onclick="copyItem('http://192.168.1.15:53317/web')" class="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer shrink-0" title="Copy URL">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+            </button>
           </div>
         </div>
 
-        <div class="p-3 border-t border-white/[0.08] bg-[#090a0e]/40 flex justify-end">
-          <button onclick="closeWebShareModal()" class="px-4 py-1.5 rounded-xl bg-white text-black font-semibold text-xs hover:bg-white/90 cursor-pointer">
-            Done
-          </button>
+        <div class="setting-divider"></div>
+
+        <!-- Local Network Info -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-title">Local Network</div>
+            <div class="setting-desc">Connected over local port 53317</div>
+          </div>
+          <div class="text-[11px] font-mono text-white/70 bg-white/[0.04] px-2.5 py-1 rounded-lg border border-white/[0.06] shrink-0">
+            Port 53317
+          </div>
+        </div>
+
+        <div class="setting-divider"></div>
+
+        <!-- Zero Install -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-title">Zero Installation</div>
+            <div class="setting-desc">No app needed on the receiving phone</div>
+          </div>
+          <span class="text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md shrink-0">
+            Ready
+          </span>
         </div>
       </div>
     </div>
@@ -1750,19 +2058,19 @@
        ========================================================================= -->
   <div 
     id="transferProgressOverlay"
-    class="hidden fixed bottom-3 right-3 left-[360px] z-[9999] pointer-events-auto select-none transition-all duration-300"
+    class="hidden fixed bottom-4 right-4 z-[9999] pointer-events-auto select-none transition-all duration-200 w-[380px]"
   >
-    <div class="relative rounded-2xl bg-[#12131a]/95 backdrop-blur-xl border border-white/[0.1] shadow-[0_12px_40px_rgba(0,0,0,0.7)] p-3.5 flex flex-col gap-2.5 overflow-hidden">
+    <div class="w-full relative rounded-2xl bg-[#12131a]/95 backdrop-blur-xl border border-white/[0.1] shadow-[0_12px_40px_rgba(0,0,0,0.7)] p-3.5 flex flex-col gap-2.5 overflow-hidden">
       <!-- Top ambient line -->
       <div class="absolute top-0 left-0 right-0 h-[2px] bg-white/20"></div>
 
-      <!-- Header Row -->
-      <div class="flex items-center justify-between gap-2">
-        <div class="flex items-center gap-2 min-w-0">
-          <div id="transferDirIconWrap" class="w-6 h-6 rounded-full flex items-center justify-center shrink-0 bg-white/[0.08] border border-white/[0.1] text-white/80">
+      <!-- Header Row: Fixed height h-8 to prevent any vertical jump -->
+      <div class="flex items-center justify-between gap-2 h-8">
+        <div class="flex items-center gap-2 min-w-0 flex-1">
+          <div id="transferDirIconWrap" class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 bg-white/[0.08] border border-white/[0.1] text-white/80">
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
           </div>
-          <div class="flex flex-col min-w-0">
+          <div class="flex flex-col min-w-0 flex-1">
             <span class="text-xs font-semibold text-white truncate" id="transferTitle">
               Receiving from Galaxy M13
             </span>
@@ -1773,7 +2081,7 @@
         </div>
 
         <div class="flex items-center gap-1.5 shrink-0">
-          <button id="transferFolderBtn" onclick="toast('Opened Downloads folder')" class="hidden flex items-center gap-1 px-2 py-1 rounded-lg bg-white/[0.08] hover:bg-white/[0.15] text-[11px] font-medium text-white/90 hover:text-white transition-colors cursor-pointer">
+          <button id="transferFolderBtn" onclick="toast('Opened Downloads folder')" class="hidden items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.08] hover:bg-white/[0.15] text-[11px] font-medium text-white transition-colors cursor-pointer">
             <svg class="w-3 h-3 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 14 1.45-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.55 6a2 2 0 0 1-1.94 1.5H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H18a2 2 0 0 1 2 2v2"/></svg>
             <span>Show in Folder</span>
           </button>
@@ -1783,24 +2091,23 @@
         </div>
       </div>
 
-      <!-- File & Speed Row -->
-      <div class="flex items-center justify-between gap-3 bg-white/[0.03] border border-white/[0.04] rounded-xl p-2.5">
-        <div class="flex items-center gap-2.5 min-w-0">
-          <div class="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center shrink-0">
-            <svg class="w-5 h-5 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <!-- File & Speed Row: Fixed height h-12 to prevent any vertical jump -->
+      <div class="flex items-center justify-between gap-3 bg-white/[0.03] border border-white/[0.06] rounded-xl p-2.5 h-12">
+        <div class="flex items-center gap-2.5 min-w-0 flex-1">
+          <div class="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center shrink-0 text-white/70">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
           </div>
-          <div class="flex flex-col min-w-0">
+          <div class="flex flex-col min-w-0 flex-1">
             <span class="text-xs font-medium text-white/95 truncate" id="transferFileName">
               DSC_20260913_RAW.dng
             </span>
-            <span class="text-[10px] text-white/50" id="transferSize">
+            <span class="text-[10px] text-white/50 truncate" id="transferSize">
               18.4 MB / 28.5 MB (65%)
             </span>
           </div>
         </div>
 
-        <div class="flex items-center gap-1 px-2 py-1 rounded-md bg-white/[0.06] border border-white/[0.08] text-[11px] font-bold text-white shrink-0">
-          <svg class="w-3 h-3 text-white/70" viewBox="0 0 24 24" fill="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <div class="flex items-center gap-1 px-2 py-1 rounded-md bg-white/[0.06] border border-white/[0.08] text-[11px] font-medium text-white/90 shrink-0" id="transferSpeedWrap">
           <span id="transferSpeed">14.2 MB/s</span>
         </div>
       </div>
@@ -1859,6 +2166,19 @@
         <button onclick="toggleShelfEdge()" class="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-white/[0.14] text-white/90 hover:text-white transition-all cursor-pointer flex flex-col items-center gap-1.5">
           <svg class="w-4 h-4 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
           <span id="dockSideLabel">Right Edge</span>
+        </button>
+        <div 
+          draggable="true" 
+          ondragstart="event.dataTransfer.setData('text/plain', 'Design_Roadmap_Q4.pdf'); event.dataTransfer.effectAllowed = 'copy';"
+          class="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-dashed border-white/20 hover:border-white/35 text-white/90 hover:text-white transition-all cursor-grab active:cursor-grabbing flex items-center justify-center gap-2 col-span-2 sm:col-span-4 select-none"
+          title="Drag this item anywhere into the sidebar to test full-shelf drop"
+        >
+          <svg class="w-4 h-4 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          <span>Drag this card anywhere into the sidebar to test drop</span>
+        </div>
+        <button onclick="handleIncomingFile('Design_System_v2.fig', '4.8 MB')" class="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-white/[0.14] text-white/90 hover:text-white transition-all cursor-pointer flex flex-col items-center gap-1.5 col-span-2 sm:col-span-4">
+          <svg class="w-4 h-4 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M8 5H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-4"/></svg>
+          <span>Simulate Instant Drop File (Click)</span>
         </button>
       </div>
 
@@ -1954,7 +2274,7 @@
       sourcePopover.classList.add('hidden');
       document.getElementById('headerChevron').classList.remove('rotate-180');
 
-      const dot = document.getElementById('headerDot');
+      const iconWrap = document.getElementById('headerIconWrap');
       const title = document.getElementById('headerTitle');
       const dockTitle = document.getElementById('dockTitle');
       const dockSub = document.getElementById('dockSubtitle');
@@ -1969,71 +2289,62 @@
       const optDev = document.getElementById('optDevice');
       const optUni = document.getElementById('optUnified');
 
-      const iconClip = document.getElementById('iconWrapClipboard');
-      const iconDev = document.getElementById('iconWrapDevice');
-      const iconUni = document.getElementById('iconWrapUnified');
+      const activeClass = 'w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-colors cursor-pointer bg-white/[0.08] text-white font-medium';
+      const inactiveClass = 'w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-colors cursor-pointer text-white/70 hover:text-white hover:bg-white/[0.06]';
 
-      if (optClip) {
-        optClip.className = `flex items-center justify-between p-2 rounded-xl border text-left transition-all cursor-pointer ${
-          src === 'clipboard' ? 'bg-white/[0.08] border-white/[0.14]' : 'bg-white/[0.02] hover:bg-white/[0.06] border-white/[0.04]'
-        }`;
-      }
-      if (iconClip) {
-        iconClip.className = `w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border transition-colors ${
-          src === 'clipboard' ? 'bg-white/[0.12] text-white border-white/[0.16]' : 'bg-white/[0.05] text-white/70 border-white/[0.08]'
-        }`;
-      }
-
-      if (optDev) {
-        optDev.className = `group flex items-center justify-between p-2 rounded-xl border text-left transition-all cursor-pointer ${
-          src === 'device' ? 'bg-white/[0.08] border-white/[0.14]' : 'bg-white/[0.02] hover:bg-white/[0.06] border-white/[0.04]'
-        }`;
-      }
-      if (iconDev) {
-        iconDev.className = `relative w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border transition-colors ${
-          src === 'device' ? 'bg-white/[0.12] text-white border-white/[0.16]' : 'bg-white/[0.05] text-white/70 border-white/[0.08]'
-        }`;
-      }
-
-      if (optUni) {
-        optUni.className = `flex items-center justify-between p-2 rounded-xl border text-left transition-all cursor-pointer ${
-          src === 'unified' ? 'bg-white/[0.08] border-white/[0.14]' : 'bg-white/[0.02] hover:bg-white/[0.06] border-white/[0.04]'
-        }`;
-      }
-      if (iconUni) {
-        iconUni.className = `w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border transition-colors ${
-          src === 'unified' ? 'bg-white/[0.12] text-white border-white/[0.16]' : 'bg-white/[0.05] text-white/70 border-white/[0.08]'
-        }`;
-      }
+      if (optClip) optClip.className = src === 'clipboard' ? activeClass : inactiveClass;
+      if (optDev) optDev.className = src === 'device' ? activeClass : inactiveClass;
+      if (optUni) optUni.className = src === 'unified' ? activeClass : inactiveClass;
 
       if (src === 'clipboard') {
-        dot.className = 'w-1.5 h-1.5 rounded-full bg-white/60';
+        if (iconWrap) {
+          iconWrap.innerHTML = `
+            <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none">
+              <rect x="1" y="1" width="6.2" height="6.2" rx="0.8" fill="#0078D4"/>
+              <rect x="8.8" y="1" width="6.2" height="6.2" rx="0.8" fill="#0078D4"/>
+              <rect x="1" y="8.8" width="6.2" height="6.2" rx="0.8" fill="#0078D4"/>
+              <rect x="8.8" y="8.8" width="6.2" height="6.2" rx="0.8" fill="#0078D4"/>
+            </svg>
+          `;
+        }
         title.textContent = 'Windows Clipboard';
         dockTitle.textContent = 'Drop files to stage on shelf';
-        dockSub.textContent = 'Instant stage for desktop drag & drop';
-        dockIconWrap.className = 'w-7 h-7 rounded-lg flex items-center justify-center shrink-0 bg-white/[0.05] border border-white/[0.08] text-white/70';
-        dockIconWrap.innerHTML = `<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>`;
+        dockSub.textContent = 'Click to browse · or drag files';
+        dockIconWrap.className = 'w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-white/50 group-hover:text-white/80 group-hover:bg-white/[0.08] transition-all shrink-0';
+        dockIconWrap.innerHTML = `<svg class="w-4 h-4 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M4 20h16"/></svg>`;
         submitNoteBtnText.textContent = 'Stage on Shelf';
         toast('Active: Windows Clipboard');
       } else if (src === 'device') {
-        dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400';
+        if (iconWrap) {
+          iconWrap.innerHTML = `
+            <div class="relative flex items-center justify-center">
+              <svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+              <span class="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            </div>
+          `;
+        }
         title.textContent = 'Galaxy M13';
-        dockTitle.textContent = 'Drop to beam to Galaxy M13';
-        dockSub.textContent = 'Direct Wi-Fi P2P transfer (0 clicks)';
-        dockIconWrap.className = 'w-7 h-7 rounded-lg flex items-center justify-center shrink-0 bg-white/[0.05] border border-white/[0.08] text-white/70';
-        dockIconWrap.innerHTML = `<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>`;
+        dockTitle.textContent = 'Drop files here to beam';
+        dockSub.textContent = 'Click to browse · or drag files';
+        dockIconWrap.className = 'w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-white/50 group-hover:text-white/80 group-hover:bg-white/[0.08] transition-all shrink-0';
+        dockIconWrap.innerHTML = `<svg class="w-4 h-4 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M4 20h16"/></svg>`;
         submitNoteBtnText.textContent = 'Beam to Phone';
-        toast('Active: Galaxy M13 (Wi-Fi P2P)');
+        toast('Active: Galaxy M13');
       } else {
-        dot.className = 'w-1.5 h-1.5 rounded-full bg-white/60';
+        if (iconWrap) {
+          iconWrap.innerHTML = `
+            <svg class="w-3.5 h-3.5 text-white/80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          `;
+        }
         title.textContent = 'Unified Stream';
-        dockTitle.textContent = 'Drop to beam or stage';
-        dockSub.textContent = 'Phone transfers + PC clips combined';
-        dockIconWrap.className = 'w-7 h-7 rounded-lg flex items-center justify-center shrink-0 bg-white/[0.05] border border-white/[0.08] text-white/70';
-        dockIconWrap.innerHTML = `<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>`;
+        dockTitle.textContent = 'Drop files to beam or stage';
+        dockSub.textContent = 'Click to browse · or drag files';
+        dockIconWrap.className = 'w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-white/50 group-hover:text-white/80 group-hover:bg-white/[0.08] transition-all shrink-0';
+        dockIconWrap.innerHTML = `<svg class="w-4 h-4 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M4 20h16"/></svg>`;
         submitNoteBtnText.textContent = 'Send / Stage';
         toast('Active: Unified Stream');
       }
+      resetDockState();
     }
 
     /* ClearMenu with double click confirmation */
@@ -2074,9 +2385,9 @@
       document.querySelectorAll('.filter-tab-btn').forEach(btn => {
         const isSelected = btn.getAttribute('data-cat') === cat;
         if (isSelected) {
-          btn.className = 'filter-tab-btn flex-1 py-1 text-center text-[11px] font-medium rounded-md transition-all cursor-pointer bg-white/10 text-white font-semibold shadow-sm';
+          btn.className = 'filter-tab-btn flex-1 py-1.5 px-2 text-center text-[11.5px] font-medium rounded-lg transition-all cursor-pointer bg-white/10 text-white font-semibold shadow-sm';
         } else {
-          btn.className = 'filter-tab-btn flex-1 py-1 text-center text-[11px] font-medium rounded-md transition-all cursor-pointer text-white/40 hover:text-white/70';
+          btn.className = 'filter-tab-btn flex-1 py-1.5 px-2 text-center text-[11.5px] font-medium rounded-lg transition-all cursor-pointer text-white/40 hover:text-white/70 hover:bg-white/[0.04]';
         }
       });
 
@@ -2219,14 +2530,14 @@
               <span class="meta-time text-[10px] text-white/40">just now</span>
             </div>
           </div>
-          <div class="actions absolute top-2 right-2 flex items-center gap-1 bg-[#111114]/95 border border-white/[0.1] rounded-full p-1 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-20" onclick="event.stopPropagation()">
-            <button class="p-1 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Direct paste" onclick="toast('Pasted directly')">
+          <div class="actions absolute top-2 right-2 flex items-center gap-1 bg-[#111114]/95 border border-white/[0.1] rounded-xl p-1 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-20" onclick="event.stopPropagation()">
+            <button class="p-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Direct paste" onclick="toast('Pasted directly')">
               <svg class="w-3.5 h-3.5 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg>
             </button>
-            <button class="p-1 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Copy" onclick="copyItem('${escapeHtml(val)}')">
+            <button class="p-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Copy" onclick="copyItem('${escapeHtml(val)}')">
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
             </button>
-            <button class="p-1 rounded-full text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer" title="Delete" onclick="deleteCard(this)">
+            <button class="p-1.5 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer" title="Delete" onclick="deleteCard(this)">
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
             </button>
           </div>
@@ -2256,12 +2567,12 @@
         bladeAside.className = 'fixed top-0 right-0 w-[350px] h-screen bg-[#090a0e] border-l border-white/[0.06] shadow-2xl shadow-black flex flex-col pointer-events-auto relative overflow-hidden z-20 transition-transform duration-300';
         canvasMain.classList.add('docked-right');
         document.getElementById('dockSideLabel').textContent = 'Left Edge';
-        transferOverlay.className = 'hidden fixed bottom-3 left-3 right-[360px] z-[9999] pointer-events-auto select-none transition-all duration-300';
+        transferOverlay.className = 'hidden fixed bottom-4 left-4 z-[9999] pointer-events-auto select-none transition-all duration-200 w-[380px]';
       } else {
         bladeAside.className = 'fixed top-0 left-0 w-[350px] h-screen bg-[#090a0e] border-r border-white/[0.06] shadow-2xl shadow-black flex flex-col pointer-events-auto relative overflow-hidden z-20 transition-transform duration-300';
         canvasMain.classList.remove('docked-right');
         document.getElementById('dockSideLabel').textContent = 'Right Edge';
-        transferOverlay.className = 'hidden fixed bottom-3 right-3 left-[360px] z-[9999] pointer-events-auto select-none transition-all duration-300';
+        transferOverlay.className = 'hidden fixed bottom-4 right-4 z-[9999] pointer-events-auto select-none transition-all duration-200 w-[380px]';
       }
     }
 
@@ -2276,12 +2587,14 @@
       let progress = 20;
       const bar = document.getElementById('transferProgressBar');
       const size = document.getElementById('transferSize');
-      const speed = document.getElementById('transferSpeed');
+      const speedWrap = document.getElementById('transferSpeedWrap');
       const eta = document.getElementById('transferEta');
       const folderBtn = document.getElementById('transferFolderBtn');
 
+      folderBtn.classList.remove('flex');
       folderBtn.classList.add('hidden');
       bar.style.width = '20%';
+      speedWrap.innerHTML = '<span id="transferSpeed">14.2 MB/s</span>';
 
       const interval = setInterval(() => {
         progress += 15;
@@ -2291,13 +2604,17 @@
           bar.style.width = '100%';
           size.textContent = '28.5 MB / 28.5 MB (100%)';
           eta.textContent = 'Finished • Saved to Downloads/SendKeep';
-          speed.textContent = 'Delivered';
+          speedWrap.innerHTML = `
+            <svg class="w-3 h-3 text-white/80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span class="font-medium text-white">Delivered</span>
+          `;
           folderBtn.classList.remove('hidden');
-          toast('File transfer complete!');
+          folderBtn.classList.add('flex');
+          toast('File transfer complete');
         } else {
           bar.style.width = progress + '%';
           size.textContent = `${(28.5 * progress / 100).toFixed(1)} MB / 28.5 MB (${progress}%)`;
-          speed.textContent = `${(12 + Math.random() * 4).toFixed(1)} MB/s`;
+          speedWrap.innerHTML = `<span id="transferSpeed">${(12 + Math.random() * 4).toFixed(1)} MB/s</span>`;
           eta.textContent = `~${Math.max(1, Math.round((100 - progress) / 20))}s left • Wi-Fi P2P`;
         }
       }, 400);
@@ -2341,10 +2658,10 @@
         const content = document.getElementById('tabContent' + t.charAt(0).toUpperCase() + t.slice(1));
         if (btn && content) {
           if (t === tab) {
-            btn.className = 'settings-tab-btn capitalize active';
+            btn.className = 'settings-tab-btn active';
             content.classList.remove('hidden');
           } else {
-            btn.className = 'settings-tab-btn capitalize';
+            btn.className = 'settings-tab-btn';
             content.classList.add('hidden');
           }
         }
@@ -2441,11 +2758,181 @@
       selectActiveSource('device');
     }
 
-    function handleNativeFileSelect(input) {
-      if (input.files && input.files[0]) {
-        toast(`Staged file: ${input.files[0].name}`);
+    /* Drop Dock State & File Handlers */
+    function resetDockState() {
+      const dropDockTray = document.getElementById('dropDockTray');
+      const dockTitle = document.getElementById('dockTitle');
+      const dockSub = document.getElementById('dockSubtitle');
+      if (!dropDockTray || !dockTitle || !dockSub) return;
+
+      dropDockTray.classList.remove('dock-dragover');
+      if (activeSource === 'clipboard') {
+        dockTitle.textContent = 'Drop files to stage on shelf';
+      } else if (activeSource === 'device') {
+        dockTitle.textContent = 'Drop files here to beam';
+      } else {
+        dockTitle.textContent = 'Drop files to beam or stage';
+      }
+      dockSub.textContent = 'Click to browse · or drag files';
+    }
+
+    function handleIncomingFile(fileName, fileSize = '2.4 MB') {
+      if (activeSource === 'device') {
+        // Trigger realistic Beam transfer progress
+        simulateTransferOverlay();
+        toast(`Beaming "${fileName}" to Galaxy M13`);
+      } else {
+        // Stage file on shelf
+        const newCard = document.createElement('article');
+        newCard.setAttribute('data-cat', 'files');
+        newCard.onclick = () => openPreview('file', fileName, fileSize);
+        newCard.className = 'item group relative rounded-[16px] bg-[#161619] hover:bg-[#1a1a1f] border border-white/[0.04] hover:border-white/[0.08] transition-all overflow-hidden';
+        newCard.innerHTML = `
+          <div class="item-main w-full flex flex-col cursor-pointer select-none">
+            <div class="body w-full flex flex-col p-3.5 pb-2.5">
+              <div class="item-content w-full flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-white/[0.05] border border-white/[0.08] text-white/70 flex items-center justify-center shrink-0">
+                  <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="text-[13px] font-medium text-zinc-200 truncate">${escapeHtml(fileName)}</div>
+                  <div class="text-[11px] text-white/40 font-mono mt-0.5">${fileSize} · Staged file</div>
+                </div>
+              </div>
+              <div class="item-footer flex items-center justify-between pt-2.5 mt-1 text-[11px] text-white/40 select-none border-t border-white/[0.04]">
+                <div class="meta flex items-center gap-1.5">
+                  <span class="px-1.5 py-0.5 rounded bg-white/[0.06] text-[10px] font-medium text-white/60">file</span>
+                </div>
+                <span class="meta-time text-[10px] text-white/40">just now</span>
+              </div>
+            </div>
+            <div class="actions absolute top-2 right-2 flex items-center gap-1 bg-[#111114]/95 border border-white/[0.1] rounded-xl p-1 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-20" onclick="event.stopPropagation()">
+              <button class="p-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Preview" onclick="openPreview('file', '${escapeHtml(fileName)}', '${fileSize}')">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+              <button class="p-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Direct paste" onclick="toast('Pasted file')">
+                <svg class="w-3.5 h-3.5 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg>
+              </button>
+              <button class="p-1.5 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer" title="Delete" onclick="deleteCard(this)">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              </button>
+            </div>
+          </div>
+        `;
+        cardsSection.insertBefore(newCard, cardsSection.firstChild);
+        toast(`Staged file: ${fileName}`);
       }
     }
+
+    function handleNativeFileSelect(input) {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const sizeFormatted = file.size > 1048576 
+          ? (file.size / 1048576).toFixed(1) + ' MB'
+          : Math.max(1, Math.round(file.size / 1024)) + ' KB';
+        handleIncomingFile(file.name, sizeFormatted);
+        input.value = '';
+      }
+    }
+
+    /* Full-Sidebar Drag & Drop Interactive Controller */
+    const ambientDragOverlay = document.getElementById('ambientDragOverlay');
+    const ambientDragTitle = document.getElementById('ambientDragTitle');
+    const ambientDragSub = document.getElementById('ambientDragSub');
+    const dockTrayEl = document.getElementById('dropDockTray');
+    let shelfDragCounter = 0;
+
+    function showShelfDragOverlay() {
+      if (!ambientDragOverlay) return;
+      if (activeSource === 'device') {
+        ambientDragTitle.textContent = 'Drop anywhere to beam';
+        ambientDragSub.textContent = 'Direct Wi-Fi transfer to Galaxy M13';
+      } else if (activeSource === 'clipboard') {
+        ambientDragTitle.textContent = 'Drop anywhere to stage';
+        ambientDragSub.textContent = 'Staged on Windows shelf';
+      } else {
+        ambientDragTitle.textContent = 'Drop anywhere to beam or stage';
+        ambientDragSub.textContent = 'Smart stream routing';
+      }
+      ambientDragOverlay.classList.remove('hidden');
+      ambientDragOverlay.classList.add('flex');
+      if (dockTrayEl) {
+        dockTrayEl.classList.add('dock-dragover');
+        if (activeSource === 'device') {
+          document.getElementById('dockTitle').textContent = 'Release to beam to Galaxy M13';
+        } else {
+          document.getElementById('dockTitle').textContent = 'Release to stage on shelf';
+        }
+        document.getElementById('dockSubtitle').textContent = 'Drop files now';
+      }
+    }
+
+    function hideShelfDragOverlay() {
+      shelfDragCounter = 0;
+      if (ambientDragOverlay) {
+        ambientDragOverlay.classList.add('hidden');
+        ambientDragOverlay.classList.remove('flex');
+      }
+      resetDockState();
+    }
+
+    if (bladeAside) {
+      bladeAside.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+        shelfDragCounter++;
+        if (shelfDragCounter === 1) {
+          showShelfDragOverlay();
+        }
+      });
+
+      bladeAside.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+        if (ambientDragOverlay && ambientDragOverlay.classList.contains('hidden')) {
+          showShelfDragOverlay();
+        }
+      });
+
+      bladeAside.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        shelfDragCounter--;
+        if (shelfDragCounter <= 0) {
+          hideShelfDragOverlay();
+        }
+      });
+
+      bladeAside.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        hideShelfDragOverlay();
+
+        const files = e.dataTransfer ? e.dataTransfer.files : null;
+        if (files && files.length > 0) {
+          for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const sizeFormatted = file.size > 1048576 
+              ? (file.size / 1048576).toFixed(1) + ' MB'
+              : Math.max(1, Math.round(file.size / 1024)) + ' KB';
+            handleIncomingFile(file.name, sizeFormatted);
+          }
+        } else {
+          const text = e.dataTransfer ? (e.dataTransfer.getData('text/plain') || e.dataTransfer.getData('text')) : '';
+          if (text) {
+            handleIncomingFile(text.length > 25 ? text.slice(0, 25) + '...' : text, 'Snippet');
+          } else {
+            handleIncomingFile('Document.pdf', '2.4 MB');
+          }
+        }
+      });
+    }
+
+    // Prevent default browser file open when dragging over simulator canvas
+    window.addEventListener('dragover', (e) => {
+      e.preventDefault();
+    });
+    window.addEventListener('drop', (e) => {
+      e.preventDefault();
+    });
 
     function escapeHtml(str) {
       return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
