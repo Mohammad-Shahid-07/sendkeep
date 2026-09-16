@@ -7,6 +7,7 @@ import { ItemList } from './ItemList';
 import { DropDock } from './DropDock';
 import { CopyIndicatorCurve } from './CopyIndicatorCurve';
 import { PreviewFlyout } from './PreviewFlyout';
+import { IndicatorStyleFlyout } from './IndicatorStyleFlyout';
 import { PairRequestToast } from './PairRequestToast';
 import { SettingsModal } from './SettingsModal';
 import { WebShareModal } from './WebShareModal';
@@ -178,19 +179,46 @@ export const Panel: React.FC = () => {
     }
   };
 
+  const isRight = settings.stickPosition === 'right';
+
   return (
     <div className="root fixed inset-0 w-full h-screen pointer-events-none select-none overflow-hidden">
       {/* Screen Edge Copy Indicator Curve */}
       <CopyIndicatorCurve />
 
-      {/* Refined Minimalist Screen Edge Affordance (2.5px Frosted Glass Hairline, Zero Neon) */}
+      {/* Screen Edge Location Beacon Hint */}
+      <AnimatePresence>
+        {!isOpen && useStore.getState().isNearEdge && (settings.showEdgeLocationHint ?? true) && (
+          <motion.div
+            key="edge-beacon"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.6 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            style={{
+              position: 'absolute',
+              top: '20%',
+              bottom: '20%',
+              [isRight ? 'right' : 'left']: 0,
+              width: 2.5,
+              background: 'linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.7) 30%, rgba(255, 255, 255, 0.7) 70%, transparent)',
+              boxShadow: '0 0 8px rgba(255, 255, 255, 0.35)',
+              borderRadius: isRight ? '999px 0 0 999px' : '0 999px 999px 0',
+              pointerEvents: 'none',
+              zIndex: 35,
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Refined Minimalist Screen Edge Affordance (2.5px Frosted Glass Hairline) */}
       <AnimatePresence>
         {!isOpen && settings.showEdgeHandle !== false && (
           <motion.div
             key="edge-notch"
-            initial={{ opacity: 0, x: -4 }}
+            initial={{ opacity: 0, x: isRight ? 4 : -4 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -4 }}
+            exit={{ opacity: 0, x: isRight ? 4 : -4 }}
             transition={{ duration: 0.15 }}
             onClick={() => {
               useStore.getState().setOpen(true);
@@ -200,10 +228,14 @@ export const Panel: React.FC = () => {
               useStore.getState().setOpen(true);
               invoke('set_interactive', { interactive: true });
             }}
-            className="absolute left-0 top-1/2 -translate-y-1/2 w-[2.5px] flex items-center group cursor-pointer pointer-events-auto z-30 select-none"
+            className={`absolute ${isRight ? 'right-0' : 'left-0'} top-1/2 -translate-y-1/2 w-[2.5px] flex items-center group cursor-pointer pointer-events-auto z-30 select-none`}
             title="Click or hover edge to open SendKeep"
           >
-            <div className="w-[2.5px] h-12 rounded-r-full bg-white/35 border-r border-y border-white/25 backdrop-blur-sm transition-all duration-150 ease-out group-hover:w-[3px] group-hover:bg-white/90 group-hover:shadow-[0_0_8px_rgba(255,255,255,0.35)]" />
+            <div
+              className={`w-[2.5px] h-12 ${
+                isRight ? 'rounded-l-full border-l' : 'rounded-r-full border-r'
+              } bg-white/35 border-y border-white/25 backdrop-blur-sm transition-all duration-150 ease-out group-hover:w-[3px] group-hover:bg-white/90 group-hover:shadow-[0_0_8px_rgba(255,255,255,0.35)]`}
+            />
           </motion.div>
         )}
       </AnimatePresence>
@@ -212,7 +244,7 @@ export const Panel: React.FC = () => {
       <motion.aside
         initial={false}
         animate={{
-          x: isOpen ? 0 : -350,
+          x: isOpen ? 0 : isRight ? 350 : -350,
         }}
         transition={{
           duration: 0.22,
@@ -234,7 +266,11 @@ export const Panel: React.FC = () => {
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className="fixed top-0 left-0 w-[350px] h-screen bg-[#090a0e] border-r border-white/[0.06] shadow-[8px_0_24px_rgba(0,0,0,0.5)] flex flex-col pointer-events-auto relative overflow-hidden z-20 will-change-transform transform-gpu"
+        className={`fixed top-0 ${
+          isRight
+            ? 'right-0 border-l shadow-[-8px_0_24px_rgba(0,0,0,0.5)]'
+            : 'left-0 border-r shadow-[8px_0_24px_rgba(0,0,0,0.5)]'
+        } w-[350px] h-screen bg-[#090a0e] border-white/[0.06] flex flex-col pointer-events-auto relative overflow-hidden z-20 will-change-transform transform-gpu`}
       >
         {/* Full-Sidebar Ambient Drag Overlay */}
         <AnimatePresence>
@@ -291,10 +327,7 @@ export const Panel: React.FC = () => {
         {/* 3. Receptive Drop Dock & Quick Note Composer */}
         <DropDock />
 
-        {/* 4. Interactive Rich Preview Flyout */}
-        <PreviewFlyout />
-
-        {/* 5. In-Shelf Slide-Over Modals */}
+        {/* 4. In-Shelf Slide-Over Modals */}
         <SettingsModal />
         <WebShareModal />
         <PairDeviceModal
@@ -302,6 +335,10 @@ export const Panel: React.FC = () => {
           onClose={() => setPairModalOpen(false)}
         />
       </motion.aside>
+
+      {/* 5. Floating Adjacent Flyouts (Rendered outside aside to prevent overflow clipping) */}
+      <PreviewFlyout isRight={isRight} />
+      <IndicatorStyleFlyout isRight={isRight} />
     </div>
   );
 };

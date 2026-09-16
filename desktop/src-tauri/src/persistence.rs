@@ -16,6 +16,40 @@ pub struct DesktopSettings {
     pub security_pin: Option<String>,
     #[serde(default = "default_context_menu_enabled")]
     pub context_menu_enabled: bool,
+    #[serde(default = "default_stick_position")]
+    pub stick_position: String,
+    #[serde(default)]
+    pub stick_display_id: Option<String>,
+    #[serde(default = "default_vertical_offset")]
+    pub vertical_offset: f64,
+    #[serde(default = "default_trigger_alignment")]
+    pub trigger_alignment: String,
+    #[serde(default = "default_hot_zone_height")]
+    pub hot_zone_height: f64,
+    #[serde(default = "default_hot_zone_width")]
+    pub hot_zone_width: f64,
+    #[serde(default = "default_panel_height")]
+    pub panel_height: f64,
+    #[serde(default = "default_true")]
+    pub show_copy_indicator: bool,
+    #[serde(default = "default_copy_indicator_style")]
+    pub copy_indicator_style: String,
+    #[serde(default = "default_true")]
+    pub hover_activation: bool,
+    #[serde(default = "default_toggle_hotkey")]
+    pub toggle_hotkey: String,
+    #[serde(default = "default_true")]
+    pub suppress_in_fullscreen: bool,
+    #[serde(default = "default_font_size_scale")]
+    pub font_size_scale: f64,
+    #[serde(default = "default_true")]
+    pub show_edge_location_hint: bool,
+    #[serde(default)]
+    pub auto_delete_hours: u32,
+    #[serde(default = "default_history_limit")]
+    pub history_limit: usize,
+    #[serde(default = "default_true")]
+    pub autostart_enabled: bool,
 }
 
 fn default_context_menu_enabled() -> bool {
@@ -24,6 +58,50 @@ fn default_context_menu_enabled() -> bool {
 
 fn default_collision_strategy() -> String {
     "rename".to_string()
+}
+
+fn default_stick_position() -> String {
+    "left".to_string()
+}
+
+fn default_vertical_offset() -> f64 {
+    0.5
+}
+
+fn default_trigger_alignment() -> String {
+    "center".to_string()
+}
+
+fn default_hot_zone_height() -> f64 {
+    0.4
+}
+
+fn default_hot_zone_width() -> f64 {
+    3.0
+}
+
+fn default_panel_height() -> f64 {
+    0.65
+}
+
+fn default_true() -> bool {
+    true
+}
+
+fn default_copy_indicator_style() -> String {
+    "logo".to_string()
+}
+
+fn default_toggle_hotkey() -> String {
+    "Alt+C".to_string()
+}
+
+fn default_font_size_scale() -> f64 {
+    1.0
+}
+
+fn default_history_limit() -> usize {
+    500
 }
 
 impl Default for DesktopSettings {
@@ -46,6 +124,23 @@ impl Default for DesktopSettings {
             require_pin: false,
             security_pin: None,
             context_menu_enabled: true,
+            stick_position: "left".to_string(),
+            stick_display_id: None,
+            vertical_offset: 0.5,
+            trigger_alignment: "center".to_string(),
+            hot_zone_height: 0.4,
+            hot_zone_width: 3.0,
+            panel_height: 0.65,
+            show_copy_indicator: true,
+            copy_indicator_style: "logo".to_string(),
+            hover_activation: true,
+            toggle_hotkey: "Alt+C".to_string(),
+            suppress_in_fullscreen: true,
+            font_size_scale: 1.0,
+            show_edge_location_hint: true,
+            auto_delete_hours: 0,
+            history_limit: 500,
+            autostart_enabled: true,
         }
     }
 }

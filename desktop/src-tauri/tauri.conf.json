@@ -27,7 +27,7 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' asset: https://asset.localhost data: blob:; script-src 'self'; connect-src 'self' ipc: http: ws:;"
     }
   },
   "bundle": {
@@ -39,6 +39,19 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "publisher": "SendKeep",
+    "copyright": "Copyright 2026 SendKeep",
+    "shortDescription": "Seamless cross-device drop environment for Windows and Android",
+    "longDescription": "SendKeep connects your Windows PC and Android phone with zero-friction file streaming, an invisible slide-out edge shelf, and encrypted peer-to-peer clipboard syncing.",
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser",
+        "displayLanguageSelector": false,
+        "languages": [
+          "English"
+        ]
+      }
+    }
   }
 }

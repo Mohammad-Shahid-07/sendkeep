@@ -241,6 +241,13 @@ interface AppState {
   markInternalCopy: () => void;
   probeAllTrusted: () => Promise<void>;
   pairDeviceByIp: (ip: string, port?: number) => Promise<TrustedDevice | null>;
+  expandedStackId: string | null;
+  setExpandedStackId: (id: string | null) => void;
+  isIndicatorStyleFlyoutOpen: boolean;
+  setIndicatorStyleFlyoutOpen: (open: boolean) => void;
+  isSearching: boolean;
+  setIsSearching: (isSearching: boolean) => void;
+  copySubItem: (req: { id: string; paths?: string[]; imageId?: string }) => Promise<void>;
 }
 
 export interface DesktopSettingsState {
@@ -254,6 +261,23 @@ export interface DesktopSettingsState {
   contextMenuEnabled?: boolean;
   edgeTriggerEnabled?: boolean;
   showEdgeHandle?: boolean;
+  stickPosition?: 'left' | 'right';
+  stickDisplayId?: number;
+  verticalOffset?: number; // 0.0 - 1.0 (default 0.5)
+  triggerAlignment?: 'top' | 'center' | 'bottom';
+  hotZoneHeight?: number; // 0.2 - 0.6 (default 0.4)
+  hotZoneWidth?: number; // 1 - 7 (default 3)
+  panelHeight?: number; // 0.5 - 0.8 (default 0.65)
+  showCopyIndicator?: boolean; // default true
+  copyIndicatorStyle?: 'logo' | 'check' | 'copy' | 'sparkle'; // default 'logo'
+  hoverActivation?: boolean; // default true
+  toggleHotkey?: string; // default 'Alt+C'
+  suppressInFullscreen?: boolean; // default true
+  fontSizeScale?: number; // default 1.0
+  showEdgeLocationHint?: boolean; // default true
+  autoDeleteHours?: number; // 0 (Never), 1, 6, 24, 168
+  historyLimit?: number; // 100, 250, 500, 1000
+  autostartEnabled?: boolean; // default true
 }
 
 const INITIAL_ITEMS: SendKeepItem[] = [];
@@ -318,6 +342,21 @@ export const useStore = create<AppState>((set, get) => ({
   },
   isNearEdge: false,
   setIsNearEdge: (near: boolean) => set({ isNearEdge: near }),
+  expandedStackId: null,
+  setExpandedStackId: (id) => set({ expandedStackId: id }),
+  isIndicatorStyleFlyoutOpen: false,
+  setIndicatorStyleFlyoutOpen: (open) => set({ isIndicatorStyleFlyoutOpen: open }),
+  isSearching: false,
+  setIsSearching: (isSearching) => set({ isSearching }),
+  copySubItem: async (req) => {
+    const item = get().items.find((i) => i.id === req.id);
+    if (!item) return;
+    if (req.paths && req.paths.length > 0) {
+      await navigator.clipboard.writeText(req.paths.join('\n'));
+    } else if (item.content) {
+      await navigator.clipboard.writeText(item.content);
+    }
+  },
   settings: {
     saveDirectory: '',
     deviceAlias: '',
@@ -329,6 +368,23 @@ export const useStore = create<AppState>((set, get) => ({
     contextMenuEnabled: false,
     edgeTriggerEnabled: true,
     showEdgeHandle: true,
+    stickPosition: 'left',
+    stickDisplayId: undefined,
+    verticalOffset: 0.5,
+    triggerAlignment: 'center',
+    hotZoneHeight: 0.4,
+    hotZoneWidth: 3,
+    panelHeight: 0.65,
+    showCopyIndicator: true,
+    copyIndicatorStyle: 'logo',
+    hoverActivation: true,
+    toggleHotkey: 'Alt+C',
+    suppressInFullscreen: true,
+    fontSizeScale: 1.0,
+    showEdgeLocationHint: true,
+    autoDeleteHours: 0,
+    historyLimit: 500,
+    autostartEnabled: true,
   },
   updateSettings: async (partial) => {
     const updated = { ...get().settings, ...partial };
@@ -336,6 +392,12 @@ export const useStore = create<AppState>((set, get) => ({
     try {
       if (partial.contextMenuEnabled !== undefined) {
         await invoke('set_windows_context_menu', { enabled: partial.contextMenuEnabled });
+      }
+      if (partial.autostartEnabled !== undefined) {
+        await invoke('set_windows_autostart', { enabled: partial.autostartEnabled });
+      }
+      if (partial.toggleHotkey !== undefined) {
+        await invoke('register_global_hotkey', { hotkey: partial.toggleHotkey }).catch(() => {});
       }
       await invoke('update_desktop_settings', { settings: updated });
     } catch (e) {

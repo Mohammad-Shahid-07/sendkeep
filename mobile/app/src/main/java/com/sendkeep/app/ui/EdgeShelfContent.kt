@@ -2,6 +2,7 @@ package com.sendkeep.app.ui
 
 import android.content.ClipboardManager
 import android.content.Context
+import com.sendkeep.app.util.ClipboardSecurity
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
@@ -150,11 +151,13 @@ fun EdgeShelfContent(
 
             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
             val clip = clipboard?.primaryClip
-            if (clip != null && clip.itemCount > 0) {
+            if (clip != null && !ClipboardSecurity.isSensitive(clip) && clip.itemCount > 0) {
                 val text = clip.getItemAt(0).text?.toString()
                 if (!text.isNullOrBlank()) {
                     clipboardText = text
                 }
+            } else {
+                clipboardText = null
             }
         }
     }

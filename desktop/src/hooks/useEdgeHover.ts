@@ -4,28 +4,48 @@ import { invoke } from '@tauri-apps/api/core';
 import { useStore, SendKeepItem, TransferProgress } from '../store/appStore';
 import { playCopy, playPop } from '../lib/soundEffects';
 
-const GRACE_MS = 300;
-const PANEL_WIDTH = 350;
+const GRACE_MS = 250;
+const DWELL_MS = 80;
+const BASE_PANEL_WIDTH = 350;
+const FLYOUT_PANEL_WIDTH = 820;
 
 export function useEdgeHover() {
   const dwellTimer = useRef<number | null>(null);
   const graceTimer = useRef<number | null>(null);
   const isInteractive = useRef(false);
+  const lastPos = useRef<{ x: number; y: number; time: number }>({ x: 0, y: 0, time: 0 });
+
+  const previewItemId = useStore((s) => s.previewItemId);
+  const isIndicatorStyleFlyoutOpen = useStore((s) => s.isIndicatorStyleFlyoutOpen);
+
+  // Synchronize OS window width with adjacent flyout state
+  useEffect(() => {
+    const hasFlyout = Boolean(previewItemId !== null || isIndicatorStyleFlyoutOpen);
+    invoke('set_preview_mode', { active: hasFlyout }).catch(() => {});
+  }, [previewItemId, isIndicatorStyleFlyoutOpen]);
 
   useEffect(() => {
     // 1. Listen for cursor position from Rust background tracker
-    const unlistenCursorPromise = listen<[number, number]>('sendkeep:cursor-pos', (event) => {
+    const unlistenCursorPromise = listen<[number, number]>('sendkeep:cursor-pos', async (event) => {
       const [rawX, rawY] = event.payload;
       const dpr = window.devicePixelRatio || 1;
       const x = rawX / dpr;
       const y = rawY / dpr;
+
+      const now = performance.now();
+      const dt = now - lastPos.current.time;
+      const dx = Math.abs(x - lastPos.current.x);
+      const dy = Math.abs(y - lastPos.current.y);
+      const speed = dt > 0 ? Math.hypot(dx, dy) / dt : 0; // px/ms
+      lastPos.current = { x, y, time: now };
 
       const state = useStore.getState();
       const isModalActive = Boolean(
         state.isWebShareOpen ||
         state.isSettingsOpen ||
         state.isPairModalOpen ||
-        state.previewItemId !== null
+        state.previewItemId !== null ||
+        state.isIndicatorStyleFlyoutOpen
       );
 
       const isOverTransferOverlay = Boolean(
@@ -33,7 +53,6 @@ export function useEdgeHover() {
       );
 
       if (isModalActive || isOverTransferOverlay) {
-        // When any modal or active transfer card is on screen, the window MUST remain interactive
         if (graceTimer.current) {
           clearTimeout(graceTimer.current);
           graceTimer.current = null;
@@ -46,36 +65,75 @@ export function useEdgeHover() {
       }
 
       const isOpen = state.isOpen;
+      const isRight = state.settings.stickPosition === 'right';
+      const screenW = window.innerWidth;
+      const screenH = window.innerHeight;
+
+      // Calculate vertical trigger band
+      const pFrac = state.settings.panelHeight || 0.65;
+      const panelH = screenH * pFrac;
+      const minY = panelH / 2;
+      const maxY = screenH - panelH / 2;
+      const vOffset = state.settings.verticalOffset ?? 0.5;
+      const midY = minY + vOffset * (maxY - minY);
+      const triggerH = Math.min(panelH, screenH * (state.settings.hotZoneHeight || 0.4));
+
+      let triggerTop = midY - triggerH / 2;
+      let triggerBottom = midY + triggerH / 2;
+      if (state.settings.triggerAlignment === 'top') {
+        triggerTop = midY - panelH / 2;
+        triggerBottom = triggerTop + triggerH;
+      } else if (state.settings.triggerAlignment === 'bottom') {
+        triggerBottom = midY + panelH / 2;
+        triggerTop = triggerBottom - triggerH;
+      }
+
+      const inVerticalZone = y >= triggerTop && y <= triggerBottom;
+      const distFromEdge = isRight ? screenW - x : x;
+      const hotWidth = state.settings.hotZoneWidth || 3;
+      const isAtEdge = distFromEdge <= hotWidth && distFromEdge >= -30;
+      const isNearEdge = distFromEdge <= hotWidth + 20 && distFromEdge >= -30;
 
       if (!isOpen) {
-        // Check if user enabled edge trigger in settings
-        const isEdgeTriggerEnabled = Boolean(state.settings?.edgeTriggerEnabled ?? true);
+        const isHoverEnabled = Boolean(state.settings?.hoverActivation ?? true);
 
-        // Direct edge detection only (cursor within 2-3px of left screen edge)
-        const isAtEdge = x <= 3;
-        if (state.isNearEdge !== isAtEdge) {
-          useStore.getState().setIsNearEdge(isAtEdge);
+        // Subtle edge hint beacon when touching wrong vertical area
+        if (isNearEdge && !inVerticalZone && isHoverEnabled && (state.settings.showEdgeLocationHint ?? true)) {
+          if (!state.isNearEdge) {
+            useStore.getState().setIsNearEdge(true);
+          }
+        } else if (!isNearEdge && state.isNearEdge) {
+          useStore.getState().setIsNearEdge(false);
         }
 
-        if (isEdgeTriggerEnabled && isAtEdge) {
-          // Immediately make window interactive and open
-          if (!isInteractive.current) {
-            invoke('set_interactive', { interactive: true });
-            isInteractive.current = true;
-          }
+        // Multi-monitor seam intent filter: fast flicks across monitor boundary are ignored
+        const isFastTraverse = speed > 1.5;
 
-          if (dwellTimer.current) {
-            clearTimeout(dwellTimer.current);
-            dwellTimer.current = null;
+        if (isHoverEnabled && isAtEdge && inVerticalZone && !isFastTraverse) {
+          if (!dwellTimer.current) {
+            dwellTimer.current = window.setTimeout(async () => {
+              dwellTimer.current = null;
+              // Check fullscreen suppression if enabled
+              if (state.settings.suppressInFullscreen ?? true) {
+                try {
+                  const isFs = await invoke<boolean>('check_fullscreen');
+                  if (isFs) return;
+                } catch {}
+              }
+
+              if (!isInteractive.current) {
+                invoke('set_interactive', { interactive: true });
+                isInteractive.current = true;
+              }
+              useStore.getState().setOpen(true);
+              useStore.getState().setIsNearEdge(false);
+            }, DWELL_MS);
           }
-          useStore.getState().setOpen(true);
-          useStore.getState().setIsNearEdge(false);
         } else {
           if (dwellTimer.current) {
             clearTimeout(dwellTimer.current);
             dwellTimer.current = null;
           }
-          // If cursor left edge and shelf is still closed, return to click-through
           if (isInteractive.current && !useStore.getState().isOpen) {
             invoke('set_interactive', { interactive: false });
             isInteractive.current = false;
@@ -85,8 +143,18 @@ export function useEdgeHover() {
         if (state.isNearEdge) {
           useStore.getState().setIsNearEdge(false);
         }
-        // Open state: keep open if inside panel, start close timer if moved away
-        if (x > PANEL_WIDTH) {
+
+        // Open state: Dead-band hysteresis calculation
+        const hasFlyout = Boolean(state.previewItemId !== null || state.isIndicatorStyleFlyoutOpen);
+        const activeWidth = hasFlyout ? FLYOUT_PANEL_WIDTH : BASE_PANEL_WIDTH;
+        const keepOpenPx = activeWidth - 15;
+        const startClosePx = activeWidth + 25;
+
+        const currentDist = isRight ? screenW - x : x;
+        const isClearlyInside = currentDist <= keepOpenPx;
+        const isClearlyOutside = currentDist > startClosePx;
+
+        if (isClearlyOutside) {
           if (!graceTimer.current) {
             graceTimer.current = window.setTimeout(() => {
               const curState = useStore.getState();
@@ -94,7 +162,8 @@ export function useEdgeHover() {
                 curState.isWebShareOpen ||
                 curState.isSettingsOpen ||
                 curState.isPairModalOpen ||
-                curState.previewItemId !== null
+                curState.previewItemId !== null ||
+                curState.isIndicatorStyleFlyoutOpen
               ) {
                 graceTimer.current = null;
                 return;
@@ -109,8 +178,7 @@ export function useEdgeHover() {
               graceTimer.current = null;
             }, GRACE_MS);
           }
-        } else {
-          // Inside panel: cancel any pending close and guarantee interactive is true!
+        } else if (isClearlyInside) {
           if (graceTimer.current) {
             clearTimeout(graceTimer.current);
             graceTimer.current = null;

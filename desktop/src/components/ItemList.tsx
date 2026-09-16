@@ -2,8 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useStore, SendKeepItem } from '../store/appStore';
 import { ClipboardItem } from './ClipboardItem';
-import { Pin, ChevronDown, Smartphone, Clipboard, Plus, Layers, Copy, Check, Trash2, X } from 'lucide-react';
+import { Pin, ChevronDown, ChevronUp, Smartphone, Clipboard, Plus, Layers, Copy, Check, Trash2, X } from 'lucide-react';
 import { isImagePath } from '../lib/format';
+import { playDialTickSound } from '../lib/soundEffects';
 
 export const ItemList: React.FC = () => {
   const {
@@ -22,6 +23,7 @@ export const ItemList: React.FC = () => {
   } = useStore();
   const [pinnedCollapsed, setPinnedCollapsed] = useState(false);
   const [batchCopied, setBatchCopied] = useState(false);
+  const [showJumpToTop, setShowJumpToTop] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const handleBatchCopy = async () => {
@@ -196,6 +198,14 @@ export const ItemList: React.FC = () => {
     }
   }, [activeFilter, activeSource, connectedDevice?.id]);
 
+  // Smart auto-scroll to top when a new item is captured if near the top
+  const topItemId = items[0]?.id;
+  useEffect(() => {
+    if (scrollContainerRef.current && scrollContainerRef.current.scrollTop < 120) {
+      scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [topItemId]);
+
   const feedContainerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -230,9 +240,33 @@ export const ItemList: React.FC = () => {
       <div className="pointer-events-none absolute top-0 left-0 right-0 h-3.5 bg-gradient-to-b from-[#090a0e] to-transparent z-10" />
       <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-3.5 bg-gradient-to-t from-[#090a0e] to-transparent z-10" />
 
+      {/* Floating Jump to Top Button */}
+      <AnimatePresence>
+        {showJumpToTop && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8, y: -10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: -10 }}
+            transition={{ duration: 0.15 }}
+            onClick={() => {
+              playDialTickSound();
+              scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="absolute top-4 right-5 z-20 p-1.5 rounded-full bg-[#181a24]/90 hover:bg-[#222636] border border-white/[0.15] text-white/70 hover:text-white shadow-xl backdrop-blur-md cursor-pointer transition-colors"
+            title="Jump to Top"
+          >
+            <ChevronUp className="w-4 h-4" />
+          </motion.button>
+        )}
+      </AnimatePresence>
+
       {/* Scrollable Item Feed */}
       <div
         ref={scrollContainerRef}
+        onScroll={(e) => {
+          const top = e.currentTarget.scrollTop;
+          setShowJumpToTop(top > 280);
+        }}
         className={`flex-1 overflow-y-auto px-3.5 py-3 custom-scrollbar select-none relative transition-all ${
           selectedItemIds.length > 0 ? 'pb-16' : ''
         }`}

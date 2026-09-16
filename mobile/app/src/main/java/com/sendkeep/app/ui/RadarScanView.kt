@@ -55,7 +55,7 @@ fun RadarScanView(
         modifier = Modifier
             .fillMaxWidth()
             .background(Color(0x59000000), RoundedCornerShape(18.dp))
-            .border(1.dp, Color(0x4DB8FF24), RoundedCornerShape(18.dp))
+            .border(1.dp, ElectricViolet.copy(alpha = 0.35f), RoundedCornerShape(18.dp))
             .padding(18.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -66,11 +66,11 @@ fun RadarScanView(
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {
                 // Concentric static circles
-                drawCircle(color = ElectricLime.copy(alpha = 0.15f), style = Stroke(1.dp.toPx()))
-                drawCircle(color = ElectricLime.copy(alpha = 0.25f), radius = size.minDimension / 3, style = Stroke(1.dp.toPx()))
+                drawCircle(color = ElectricViolet.copy(alpha = 0.15f), style = Stroke(1.dp.toPx()))
+                drawCircle(color = ElectricViolet.copy(alpha = 0.25f), radius = size.minDimension / 3, style = Stroke(1.dp.toPx()))
                 // Dynamic pulsing wave
                 drawCircle(
-                    color = ElectricLime.copy(alpha = (1f - (ringPulse - 0.4f) / 0.75f).coerceIn(0f, 0.6f)),
+                    color = ElectricViolet.copy(alpha = (1f - (ringPulse - 0.4f) / 0.75f).coerceIn(0f, 0.6f)),
                     radius = (size.minDimension / 2) * (ringPulse / 1.15f),
                     style = Stroke(1.5.dp.toPx())
                 )
@@ -83,7 +83,7 @@ fun RadarScanView(
                     .rotate(sweepAngle)
                     .background(
                         brush = Brush.sweepGradient(
-                            listOf(Color.Transparent, Color.Transparent, ElectricLime.copy(alpha = 0.35f))
+                            listOf(Color.Transparent, Color.Transparent, ElectricViolet.copy(alpha = 0.35f))
                         ),
                         shape = CircleShape
                     )
@@ -93,11 +93,11 @@ fun RadarScanView(
             Box(
                 modifier = Modifier
                     .size(28.dp)
-                    .background(Color(0xFF192219), CircleShape)
-                    .border(1.5.dp, ElectricLime, CircleShape),
+                    .background(RadarCoreBg, CircleShape)
+                    .border(1.5.dp, ElectricViolet, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.Wifi, contentDescription = null, tint = ElectricLime, modifier = Modifier.size(14.dp))
+                Icon(Icons.Default.Wifi, contentDescription = null, tint = ElectricViolet, modifier = Modifier.size(14.dp))
             }
         }
 

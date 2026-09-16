@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, FolderOpen, Globe, Settings, Smartphone, Layers, Check, Plus, PanelLeftClose } from 'lucide-react';
+import { ChevronDown, FolderOpen, Globe, Settings, Smartphone, Layers, Check, Plus, PanelLeftClose, Search } from 'lucide-react';
 import { useStore, FilterCategory } from '../store/appStore';
 import { ClearMenu } from './ClearMenu';
+import { SearchBar } from './SearchBar';
+import { playButtonClickSound } from '../lib/soundEffects';
 import { invoke } from '@tauri-apps/api/core';
 
 export const Header: React.FC = () => {
@@ -19,7 +21,12 @@ export const Header: React.FC = () => {
     clearUnpinned,
     activeFilter,
     setFilter,
+    isSearching,
+    setIsSearching,
+    searchQuery,
+    setSearchQuery,
   } = useStore();
+
 
   const [showPopover, setShowPopover] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -27,6 +34,21 @@ export const Header: React.FC = () => {
   const handleOpenFolder = () => {
     invoke('open_downloads_folder').catch(() => {});
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Avoid capturing when already typing in an input or textarea
+      const target = e.target as HTMLElement | null;
+      const isInput = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA');
+
+      if ((e.key === '/' && !isInput) || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f')) {
+        e.preventDefault();
+        setIsSearching(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [setIsSearching]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -41,6 +63,7 @@ export const Header: React.FC = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showPopover]);
+
 
   const tabs: { key: FilterCategory; label: string }[] = [
     { key: 'all', label: 'All' },
@@ -237,6 +260,23 @@ export const Header: React.FC = () => {
 
         {/* Header Action Icons: Web Share, Downloads, Settings, Clear History */}
         <div className="flex items-center gap-1">
+          {/* Search Toggle */}
+          <button
+            onClick={() => {
+              playButtonClickSound();
+              setIsSearching(!isSearching);
+              if (isSearching) setSearchQuery('');
+            }}
+            title="Search History (/ or Ctrl+F)"
+            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+              isSearching || searchQuery
+                ? 'text-white bg-white/10'
+                : 'text-white/40 hover:text-white hover:bg-white/[0.06]'
+            }`}
+          >
+            <Search className="w-3.5 h-3.5" />
+          </button>
+
           {/* Web Share Mode */}
           <button
             onClick={() => setWebShareOpen(true)}
@@ -288,6 +328,26 @@ export const Header: React.FC = () => {
         </div>
       </header>
 
+      {/* Search Bar Input (when toggled or active query) */}
+      <AnimatePresence>
+        {isSearching && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.15 }}
+            className="overflow-hidden"
+          >
+            <SearchBar
+              onClose={() => {
+                setIsSearching(false);
+                setSearchQuery('');
+              }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* 2. Category Filter Tabs (Squircle Segmented Bar with Gliding Active Pill) */}
       <div className="px-3.5 pb-2.5">
         <nav className="flex items-center p-1 rounded-xl bg-white/[0.03] border border-white/[0.06] gap-1">
@@ -296,7 +356,10 @@ export const Header: React.FC = () => {
             return (
               <button
                 key={tab.key}
-                onClick={() => setFilter(tab.key)}
+                onClick={() => {
+                  playButtonClickSound();
+                  setFilter(tab.key);
+                }}
                 className={`filter-tab-btn relative flex-1 py-1.5 px-2 text-center text-[11.5px] font-medium rounded-lg transition-colors cursor-pointer select-none ${
                   isActive
                     ? 'text-white font-semibold'
@@ -319,4 +382,5 @@ export const Header: React.FC = () => {
     </div>
   );
 };
+
 

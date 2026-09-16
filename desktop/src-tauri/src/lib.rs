@@ -90,15 +90,64 @@ async fn pick_save_directory(
     }
 }
 
+#[cfg(target_os = "windows")]
+pub fn reposition_window(window: &tauri::WebviewWindow, preview_mode: bool) {
+    if let Ok(hwnd) = window.hwnd() {
+        if let Some((rc_monitor, _rc_work)) = window_hooks::get_monitor_and_work_rect(hwnd.0 as isize) {
+            let scale = window.scale_factor().unwrap_or(1.0);
+            let mon_h = (rc_monitor.bottom - rc_monitor.top) as f64;
+            let target_logical_w = if preview_mode { 820.0 } else { 350.0 };
+            let phys_width = (target_logical_w * scale).round() as u32;
+            let phys_height = if mon_h >= 1000.0 {
+                mon_h.round() as u32
+            } else {
+                (mon_h * scale).round() as u32
+            };
+
+            let settings = persistence::load_desktop_settings();
+            let is_right = settings.stick_position == "right";
+            let phys_x = if is_right {
+                rc_monitor.right - phys_width as i32
+            } else {
+                rc_monitor.left
+            };
+            let phys_y = rc_monitor.top;
+
+            let _ = window.set_size(tauri::Size::Physical(tauri::PhysicalSize {
+                width: phys_width,
+                height: phys_height,
+            }));
+            let _ = window.set_position(tauri::Position::Physical(tauri::PhysicalPosition {
+                x: phys_x,
+                y: phys_y,
+            }));
+        }
+    }
+}
+
+#[tauri::command]
+fn set_preview_mode(app: AppHandle, active: bool) {
+    if let Some(window) = app.get_webview_window("main") {
+        #[cfg(target_os = "windows")]
+        reposition_window(&window, active);
+    }
+}
+
 #[tauri::command]
 async fn update_desktop_settings(
+    app: AppHandle,
     server_state: tauri::State<'_, Arc<server::ServerState>>,
     settings: persistence::DesktopSettings,
 ) -> Result<(), String> {
     let new_dir = PathBuf::from(&settings.save_directory);
     let _ = tokio::fs::create_dir_all(&new_dir).await;
     server_state.set_save_dir(new_dir).await;
-    persistence::save_desktop_settings_to_disk(&settings)
+    let res = persistence::save_desktop_settings_to_disk(&settings);
+    if let Some(window) = app.get_webview_window("main") {
+        #[cfg(target_os = "windows")]
+        reposition_window(&window, false);
+    }
+    res
 }
 
 #[tauri::command]
@@ -197,6 +246,56 @@ async fn is_windows_context_menu_enabled() -> Result<bool, String> {
         Ok(false)
     }
 }
+
+#[tauri::command]
+async fn set_windows_autostart(enabled: bool) -> Result<bool, String> {
+    #[cfg(windows)]
+    {
+        let exe_path = std::env::current_exe().map_err(|e| e.to_string())?;
+        let exe_str = exe_path.to_string_lossy().to_string();
+        if enabled {
+            let _ = tokio::process::Command::new("reg")
+                .args(["add", r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run", "/v", "SendKeep", "/t", "REG_SZ", "/d", &format!("\"{}\"", exe_str), "/f"])
+                .creation_flags(0x08000000)
+                .output().await;
+        } else {
+            let _ = tokio::process::Command::new("reg")
+                .args(["delete", r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run", "/v", "SendKeep", "/f"])
+                .creation_flags(0x08000000)
+                .output().await;
+        }
+
+        let mut settings = persistence::load_desktop_settings();
+        settings.autostart_enabled = enabled;
+        let _ = persistence::save_desktop_settings_to_disk(&settings);
+
+        Ok(enabled)
+    }
+    #[cfg(not(windows))]
+    {
+        Err("Autostart is only supported on Windows".to_string())
+    }
+}
+
+#[tauri::command]
+async fn is_windows_autostart_enabled() -> Result<bool, String> {
+    #[cfg(windows)]
+    {
+        let output = tokio::process::Command::new("reg")
+            .args(["query", r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run", "/v", "SendKeep"])
+            .creation_flags(0x08000000)
+            .output().await;
+        match output {
+            Ok(out) => Ok(out.status.success()),
+            Err(_) => Ok(false),
+        }
+    }
+    #[cfg(not(windows))]
+    {
+        Ok(false)
+    }
+}
+
 
 #[tauri::command]
 fn read_image_base64(path: String) -> Result<String, String> {
@@ -930,6 +1029,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             set_interactive,
+            set_preview_mode,
             open_file_in_folder,
             open_downloads_folder,
             start_drag,
@@ -961,6 +1061,8 @@ pub fn run() {
             sync_web_share_files,
             set_windows_context_menu,
             is_windows_context_menu_enabled,
+            set_windows_autostart,
+            is_windows_autostart_enabled,
             get_network_interfaces,
         ])
         .setup(|app| {
@@ -992,6 +1094,13 @@ pub fn run() {
             if desktop_settings.context_menu_enabled {
                 tauri::async_runtime::spawn(async move {
                     let _ = set_windows_context_menu(true).await;
+                });
+            }
+
+            // Ensure Windows autostart on boot is synchronized with settings
+            if desktop_settings.autostart_enabled {
+                tauri::async_runtime::spawn(async move {
+                    let _ = set_windows_autostart(true).await;
                 });
             }
             let downloads_dir = PathBuf::from(&desktop_settings.save_directory);
@@ -1046,43 +1155,32 @@ pub fn run() {
             // 4. Start Real Windows Clipboard Watcher
             clipboard::start_clipboard_watcher(app_handle.clone());
 
+            // 5. Start Background Global Hotkey Daemon (Default Alt+C)
+            #[cfg(target_os = "windows")]
+            {
+                let hotkey_app = app_handle.clone();
+                std::thread::spawn(move || {
+                    use windows::Win32::UI::Input::KeyboardAndMouse::{RegisterHotKey, MOD_ALT, MOD_NOREPEAT};
+                    use windows::Win32::UI::WindowsAndMessaging::{GetMessageW, MSG, WM_HOTKEY};
+                    use windows::Win32::Foundation::HWND;
+
+                    unsafe {
+                        let _ = RegisterHotKey(HWND(std::ptr::null_mut()), 1001, MOD_ALT | MOD_NOREPEAT, 0x43);
+                        let mut msg = MSG::default();
+                        while GetMessageW(&mut msg, HWND(std::ptr::null_mut()), 0, 0).as_bool() {
+                            if msg.message == WM_HOTKEY && msg.wParam.0 == 1001 {
+                                let _ = hotkey_app.emit("sendkeep:toggle-shelf", ());
+                            }
+                        }
+                    }
+                });
+            }
+
             // Set initial click-through state and fit to work area (excluding taskbar)
             if let Some(window) = app.get_webview_window("main") {
                 #[cfg(target_os = "windows")]
-                {
-                    if let Ok(hwnd) = window.hwnd() {
-                        if let Some((rc_monitor, _rc_work)) = window_hooks::get_monitor_and_work_rect(hwnd.0 as isize) {
-                            let scale = window.scale_factor().unwrap_or(1.0);
-                            let mon_h = (rc_monitor.bottom - rc_monitor.top) as f64;
+                reposition_window(&window, false);
 
-                            // 100vh: Spans the full height of the display monitor
-                            let (phys_width, phys_height, phys_x, phys_y) = if mon_h >= 1000.0 {
-                                (
-                                    (350.0 * scale).round() as u32,
-                                    mon_h.round() as u32,
-                                    rc_monitor.left,
-                                    rc_monitor.top,
-                                )
-                            } else {
-                                (
-                                    (350.0 * scale).round() as u32,
-                                    (mon_h * scale).round() as u32,
-                                    (rc_monitor.left as f64 * scale).round() as i32,
-                                    (rc_monitor.top as f64 * scale).round() as i32,
-                                )
-                            };
-
-                            let _ = window.set_size(tauri::Size::Physical(tauri::PhysicalSize {
-                                width: phys_width,
-                                height: phys_height,
-                            }));
-                            let _ = window.set_position(tauri::Position::Physical(tauri::PhysicalPosition {
-                                x: phys_x,
-                                y: phys_y,
-                            }));
-                        }
-                    }
-                }
                 if let Ok(hwnd) = window.hwnd() {
                     window_hooks::set_window_interactive(hwnd.0 as isize, false);
                 }

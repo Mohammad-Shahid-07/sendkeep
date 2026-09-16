@@ -309,7 +309,7 @@ class EdgeShelfService : Service() {
     private fun updateHandleAppearance(isLeft: Boolean) {
         val r = dp(3f).toFloat()
         val bg = GradientDrawable().apply {
-            setColor(AndroidColor.parseColor("#B8FF24"))
+            setColor(AndroidColor.parseColor("#8B5CF6"))
             cornerRadii = if (isLeft) {
                 floatArrayOf(0f, 0f, r, r, r, r, 0f, 0f)
             } else {
@@ -394,7 +394,7 @@ class EdgeShelfService : Service() {
     private fun expandDragCatcher() {
         val r = dp(4f).toFloat()
         handleStrip.background = GradientDrawable().apply {
-            setColor(AndroidColor.parseColor("#B8FF24"))
+            setColor(AndroidColor.parseColor("#8B5CF6"))
             cornerRadii = if (isLeftEdge) {
                 floatArrayOf(0f, 0f, r, r, r, r, 0f, 0f)
             } else {
@@ -411,9 +411,9 @@ class EdgeShelfService : Service() {
         val r = dp(4f).toFloat()
         handleStrip.background = GradientDrawable().apply {
             if (isInside) {
-                setColor(AndroidColor.parseColor("#E6B8FF24"))
+                setColor(AndroidColor.parseColor("#E68B5CF6"))
             } else {
-                setColor(AndroidColor.parseColor("#B8FF24"))
+                setColor(AndroidColor.parseColor("#8B5CF6"))
             }
             cornerRadii = if (isLeftEdge) {
                 floatArrayOf(0f, 0f, r, r, r, r, 0f, 0f)
@@ -426,7 +426,7 @@ class EdgeShelfService : Service() {
     private fun collapseDragCatcher() {
         val r = dp(3f).toFloat()
         handleStrip.background = GradientDrawable().apply {
-            setColor(AndroidColor.parseColor("#B8FF24"))
+            setColor(AndroidColor.parseColor("#8B5CF6"))
             cornerRadii = if (isLeftEdge) {
                 floatArrayOf(0f, 0f, r, r, r, r, 0f, 0f)
             } else {

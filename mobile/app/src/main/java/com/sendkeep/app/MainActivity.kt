@@ -2,6 +2,7 @@ package com.sendkeep.app
 
 import android.content.ClipboardManager
 import android.content.Context
+import com.sendkeep.app.util.ClipboardSecurity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -545,7 +546,7 @@ fun SendKeepDashboard(
     var showManualIpDialog by remember { mutableStateOf(false) }
     var isManualPairing by remember { mutableStateOf(false) }
     var selectedFilterIndex by remember { mutableStateOf(0) }
-    val filterCategories = listOf("All", "Folders", "APKs", "Files", "Photos")
+    val filterCategories = listOf("All", "Media", "Files", "Links", "Notes")
 
     var quickNoteText by remember { mutableStateOf("") }
     var hasOverlayPermission by remember {
@@ -773,12 +774,17 @@ fun SendKeepDashboard(
                     onOpenFolders = { folderPicker.launch(null) },
                     onSyncClipboard = {
                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        val item = clipboard.primaryClip?.getItemAt(0)?.text?.toString()
-                        if (!item.isNullOrBlank()) {
-                            onSendText(item)
-                            Toast.makeText(context, "⚡ Beaming clipboard text to PC...", Toast.LENGTH_SHORT).show()
+                        val clip = clipboard.primaryClip
+                        if (ClipboardSecurity.isSensitive(clip)) {
+                            Toast.makeText(context, "🔒 Protected: Sensitive/password clipboard item not synced", Toast.LENGTH_SHORT).show()
                         } else {
-                            Toast.makeText(context, "Clipboard is empty", Toast.LENGTH_SHORT).show()
+                            val item = clip?.getItemAt(0)?.text?.toString()
+                            if (!item.isNullOrBlank()) {
+                                onSendText(item)
+                                Toast.makeText(context, "⚡ Beaming clipboard text to PC...", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(context, "Clipboard is empty", Toast.LENGTH_SHORT).show()
+                            }
                         }
                     },
                     quickNoteText = quickNoteText,
@@ -1279,8 +1285,15 @@ fun ShelfScreen(
             }
         }
 
-        // Stream Items: 100% UNIFIED MONOCHROME
-        val filteredItems = if (selectedFilter == "All") streamItems else streamItems.filter { it.category == selectedFilter }
+        // Stream Items: 100% UNIFIED MONOCHROME (Desktop 5-Category Taxonomy)
+        val filteredItems = when (selectedFilter) {
+            "All" -> streamItems
+            "Media" -> streamItems.filter { it.category in listOf("Media", "Photos", "photo", "media", "video") || it.iconName == "photo" }
+            "Files" -> streamItems.filter { it.category in listOf("Files", "Folders", "APKs", "folder", "apk", "doc", "archive", "zip", "file") || it.iconName in listOf("folder", "apk", "zip", "archive", "file", "doc") }
+            "Links" -> streamItems.filter { it.category in listOf("Links", "Link", "link") || it.name.startsWith("http://") || it.name.startsWith("https://") }
+            "Notes" -> streamItems.filter { it.category in listOf("Notes", "Note", "note", "clipboard") || it.iconName == "note" }
+            else -> streamItems.filter { it.category.equals(selectedFilter, ignoreCase = true) }
+        }
         if (filteredItems.isEmpty()) {
             item {
                 Box(
@@ -1473,7 +1486,7 @@ private fun BottomNavItem(
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(14.dp))
-            .background(if (active) Color(0x1FB8FF24) else Color.Transparent)
+            .background(if (active) VioletDim else Color.Transparent)
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 6.dp),
         contentAlignment = Alignment.Center
@@ -1604,7 +1617,7 @@ fun RadarDevicesScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp),
                     color = CardBg,
-                    border = BorderStroke(1.dp, if (isOnline) Color(0x33B8FF24) else CardBorder)
+                    border = BorderStroke(1.dp, if (isOnline) ElectricViolet.copy(alpha = 0.35f) else CardBorder)
                 ) {
                     Row(
                         modifier = Modifier
@@ -1621,7 +1634,7 @@ fun RadarDevicesScreen(
                                 modifier = Modifier
                                     .size(40.dp)
                                     .background(
-                                        if (isOnline) Color(0x1FB8FF24) else IconBoxBg,
+                                        if (isOnline) VioletDim else IconBoxBg,
                                         RoundedCornerShape(10.dp)
                                     ),
                                 contentAlignment = Alignment.Center
@@ -1743,7 +1756,7 @@ fun RadarDevicesScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp),
                     color = CardBg,
-                    border = BorderStroke(1.dp, if (isTrusted) Color(0x33B8FF24) else CardBorder)
+                    border = BorderStroke(1.dp, if (isTrusted) ElectricViolet.copy(alpha = 0.35f) else CardBorder)
                 ) {
                     Row(
                         modifier = Modifier
@@ -1799,10 +1812,10 @@ fun RadarDevicesScreen(
                                 text = "✓ PAIRED",
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = ElectricLime,
+                                color = ElectricViolet,
                                 modifier = Modifier
-                                    .background(Color(0x1FB8FF24), RoundedCornerShape(6.dp))
-                                    .border(1.dp, Color(0x33B8FF24), RoundedCornerShape(6.dp))
+                                    .background(VioletDim, RoundedCornerShape(6.dp))
+                                    .border(1.dp, ElectricViolet.copy(alpha = 0.35f), RoundedCornerShape(6.dp))
                                     .padding(horizontal = 8.dp, vertical = 4.dp)
                             )
                         } else {

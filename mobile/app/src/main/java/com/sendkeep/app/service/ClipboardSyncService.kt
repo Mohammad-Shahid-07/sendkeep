@@ -11,6 +11,7 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.sendkeep.app.network.SendKeepClient
+import com.sendkeep.app.util.ClipboardSecurity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -25,6 +26,12 @@ class ClipboardSyncService : Service() {
     private val clipListener = ClipboardManager.OnPrimaryClipChangedListener {
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager ?: return@OnPrimaryClipChangedListener
         val clip = clipboard.primaryClip ?: return@OnPrimaryClipChangedListener
+
+        // Never sync sensitive/password clipboard data across the network
+        if (ClipboardSecurity.isSensitive(clip)) {
+            return@OnPrimaryClipChangedListener
+        }
+
         if (clip.itemCount > 0) {
             val text = clip.getItemAt(0).text?.toString() ?: return@OnPrimaryClipChangedListener
             if (text != lastCopiedText && text.isNotBlank()) {

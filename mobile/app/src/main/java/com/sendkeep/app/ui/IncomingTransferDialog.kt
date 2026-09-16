@@ -66,8 +66,8 @@ fun IncomingTransferDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                .background(Color(0xFF111611))
-                .border(BorderStroke(1.dp, Color(0x59B8FF24)), RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                .background(SheetBg)
+                .border(BorderStroke(1.dp, VioletGlow), RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
                 .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { }
                 .padding(horizontal = 18.dp, vertical = 20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -77,14 +77,14 @@ fun IncomingTransferDialog(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 modifier = Modifier
-                    .background(LimeDim, RoundedCornerShape(20.dp))
-                    .border(BorderStroke(1.dp, Color(0x4DB8FF24)), RoundedCornerShape(20.dp))
+                    .background(VioletDim, RoundedCornerShape(20.dp))
+                    .border(BorderStroke(1.dp, ElectricViolet.copy(alpha = 0.35f)), RoundedCornerShape(20.dp))
                     .padding(horizontal = 9.dp, vertical = 3.dp)
             ) {
-                Box(modifier = Modifier.size(6.dp).background(ElectricLime, CircleShape))
+                Box(modifier = Modifier.size(6.dp).background(ElectricViolet, CircleShape))
                 Text(
                     text = "INCOMING BEAM REQUEST",
-                    color = ElectricLime,
+                    color = ElectricViolet,
                     fontSize = 10.sp,
                     fontWeight = FontWeight.ExtraBold,
                     letterSpacing = 0.5.sp
@@ -104,11 +104,11 @@ fun IncomingTransferDialog(
                 Box(
                     modifier = Modifier
                         .size(36.dp)
-                        .background(Color(0xFF182218), RoundedCornerShape(9.dp))
-                        .border(BorderStroke(1.dp, Color(0x40B8FF24)), RoundedCornerShape(9.dp)),
+                        .background(Color(0xFF1C182A), RoundedCornerShape(9.dp))
+                        .border(BorderStroke(1.dp, ElectricViolet.copy(alpha = 0.35f)), RoundedCornerShape(9.dp)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.Laptop, contentDescription = null, tint = ElectricLime, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Default.Laptop, contentDescription = null, tint = ElectricViolet, modifier = Modifier.size(20.dp))
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     Text(senderName, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)

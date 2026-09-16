@@ -16,6 +16,8 @@ desktop/src-tauri/target/
 src-tauri/target/
 target/
 *.pdb
+desktop/src-tauri/icons/android/
+desktop/src-tauri/icons/ios/
 
 # Android Gradle builds
 mobile/.gradle/
@@ -26,6 +28,9 @@ mobile/local.properties
 build/
 *.apk
 *.aab
+*.jks
+*.keystore
+mobile/keystore/
 
 # IDE & System files
 .idea/

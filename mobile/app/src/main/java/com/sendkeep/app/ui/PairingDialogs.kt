@@ -56,8 +56,8 @@ fun IncomingPairDialog(
                     Box(
                         modifier = Modifier
                             .size(44.dp)
-                            .background(Color(0x1FB8FF24), RoundedCornerShape(12.dp))
-                            .border(BorderStroke(1.dp, Color(0x33B8FF24)), RoundedCornerShape(12.dp)),
+                            .background(VioletDim, RoundedCornerShape(12.dp))
+                            .border(BorderStroke(1.dp, ElectricViolet.copy(alpha = 0.35f)), RoundedCornerShape(12.dp)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
