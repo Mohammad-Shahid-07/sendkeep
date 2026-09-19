@@ -14,6 +14,7 @@ export function useEdgeHover() {
   const graceTimer = useRef<number | null>(null);
   const isInteractive = useRef(false);
   const lastPos = useRef<{ x: number; y: number; time: number }>({ x: 0, y: 0, time: 0 });
+  const openTimestamp = useRef<number>(0);
 
   const previewItemId = useStore((s) => s.previewItemId);
   const isIndicatorStyleFlyoutOpen = useStore((s) => s.isIndicatorStyleFlyoutOpen);
@@ -90,11 +91,12 @@ export function useEdgeHover() {
 
       const inVerticalZone = y >= triggerTop && y <= triggerBottom;
       const distFromEdge = isRight ? screenW - x : x;
-      const hotWidth = state.settings.hotZoneWidth || 3;
-      const isAtEdge = distFromEdge <= hotWidth && distFromEdge >= -30;
-      const isNearEdge = distFromEdge <= hotWidth + 20 && distFromEdge >= -30;
+      const hotWidth = Math.max(state.settings.hotZoneWidth || 3, 4);
+      const isAtEdge = distFromEdge <= hotWidth && distFromEdge >= -15;
+      const isNearEdge = distFromEdge <= hotWidth + 20 && distFromEdge >= -15;
 
       if (!isOpen) {
+        openTimestamp.current = 0;
         const isHoverEnabled = Boolean(state.settings?.hoverActivation ?? true);
 
         // Subtle edge hint beacon when touching wrong vertical area
@@ -107,7 +109,7 @@ export function useEdgeHover() {
         }
 
         // Multi-monitor seam intent filter: fast flicks across monitor boundary are ignored
-        const isFastTraverse = speed > 1.5;
+        const isFastTraverse = speed > 1.8;
 
         if (isHoverEnabled && isAtEdge && inVerticalZone && !isFastTraverse) {
           if (!dwellTimer.current) {
@@ -125,6 +127,7 @@ export function useEdgeHover() {
                 invoke('set_interactive', { interactive: true });
                 isInteractive.current = true;
               }
+              openTimestamp.current = performance.now();
               useStore.getState().setOpen(true);
               useStore.getState().setIsNearEdge(false);
             }, DWELL_MS);
@@ -140,6 +143,10 @@ export function useEdgeHover() {
           }
         }
       } else {
+        if (openTimestamp.current === 0) {
+          openTimestamp.current = performance.now();
+        }
+
         if (state.isNearEdge) {
           useStore.getState().setIsNearEdge(false);
         }
@@ -147,12 +154,21 @@ export function useEdgeHover() {
         // Open state: Dead-band hysteresis calculation
         const hasFlyout = Boolean(state.previewItemId !== null || state.isIndicatorStyleFlyoutOpen);
         const activeWidth = hasFlyout ? FLYOUT_PANEL_WIDTH : BASE_PANEL_WIDTH;
-        const keepOpenPx = activeWidth - 15;
-        const startClosePx = activeWidth + 25;
+        const keepOpenPx = activeWidth;
+        const startClosePx = activeWidth + 20;
 
         const currentDist = isRight ? screenW - x : x;
-        const isClearlyInside = currentDist <= keepOpenPx;
-        const isClearlyOutside = currentDist > startClosePx;
+        const isClearlyInside = currentDist <= keepOpenPx && currentDist >= -20;
+        const isClearlyOutside = currentDist > startClosePx || currentDist < -50;
+
+        // Prevent premature closing during initial opening animation
+        if (performance.now() - openTimestamp.current < 320) {
+          if (graceTimer.current) {
+            clearTimeout(graceTimer.current);
+            graceTimer.current = null;
+          }
+          return;
+        }
 
         if (isClearlyOutside) {
           if (!graceTimer.current) {

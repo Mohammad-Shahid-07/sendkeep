@@ -2,11 +2,11 @@
 use windows::Win32::Foundation::{HWND, POINT, RECT};
 #[cfg(target_os = "windows")]
 use windows::Win32::Graphics::Gdi::{
-    GetMonitorInfoW, MonitorFromWindow, MONITORINFO, MONITOR_DEFAULTTOPRIMARY,
+    GetMonitorInfoW, MonitorFromWindow, MONITORINFO, MONITOR_DEFAULTTOPRIMARY, ScreenToClient,
 };
 #[cfg(target_os = "windows")]
 use windows::Win32::UI::WindowsAndMessaging::{
-    GetCursorPos, GetWindowLongW, SetForegroundWindow, SetWindowLongW,
+    GetCursorPos, GetWindowLongW, SetWindowLongW,
     SetWindowPos, GWL_EXSTYLE, HWND_TOPMOST,
     SWP_NOMOVE, SWP_NOSIZE, SWP_NOACTIVATE,
     WS_EX_LAYERED, WS_EX_NOACTIVATE, WS_EX_TRANSPARENT,
@@ -38,9 +38,6 @@ pub fn set_window_interactive(hwnd: isize, interactive: bool) {
                 0,
                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE,
             );
-        }
-        if interactive {
-            let _ = SetForegroundWindow(hwnd_val);
         }
     }
 }
@@ -80,6 +77,25 @@ pub fn get_cursor_position() -> Option<(i32, i32)> {
             None
         }
     }
+}
+
+#[cfg(target_os = "windows")]
+pub fn get_cursor_pos_client(hwnd: isize) -> Option<(i32, i32)> {
+    unsafe {
+        let hwnd_val = HWND(hwnd as *mut std::ffi::c_void);
+        let mut pt = POINT::default();
+        if GetCursorPos(&mut pt).is_ok() {
+            let _ = ScreenToClient(hwnd_val, &mut pt);
+            Some((pt.x, pt.y))
+        } else {
+            None
+        }
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+pub fn get_cursor_pos_client(_hwnd: isize) -> Option<(i32, i32)> {
+    None
 }
 
 #[cfg(not(target_os = "windows"))]

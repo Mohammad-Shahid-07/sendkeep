@@ -6,6 +6,7 @@ mod persistence;
 mod server;
 mod tray;
 mod window_hooks;
+mod installer;
 
 use discovery::DiscoveryService;
 use server::{start_server, DeviceInfo, ServerState};
@@ -22,10 +23,14 @@ fn set_interactive(app: AppHandle, interactive: bool) {
     if let Some(window) = app.get_webview_window("main") {
         if let Ok(hwnd) = window.hwnd() {
             window_hooks::set_window_interactive(hwnd.0 as isize, interactive);
-            if interactive {
-                let _ = window.set_focus();
-            }
         }
+    }
+}
+
+#[tauri::command]
+fn focus_window(app: AppHandle) {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.set_focus();
     }
 }
 
@@ -253,12 +258,15 @@ async fn set_windows_autostart(enabled: bool) -> Result<bool, String> {
     {
         let exe_path = std::env::current_exe().map_err(|e| e.to_string())?;
         let exe_str = exe_path.to_string_lossy().to_string();
-        if enabled {
+        let lower = exe_str.to_lowercase();
+        let is_dev = lower.contains(r"\target\debug") || lower.contains(r"\target\release");
+
+        if enabled && !is_dev {
             let _ = tokio::process::Command::new("reg")
                 .args(["add", r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run", "/v", "SendKeep", "/t", "REG_SZ", "/d", &format!("\"{}\"", exe_str), "/f"])
                 .creation_flags(0x08000000)
                 .output().await;
-        } else {
+        } else if !enabled || is_dev {
             let _ = tokio::process::Command::new("reg")
                 .args(["delete", r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run", "/v", "SendKeep", "/f"])
                 .creation_flags(0x08000000)
@@ -1025,10 +1033,50 @@ pub fn run() {
         }
     }
 
+    if installer::is_uninstall_mode() {
+        installer::handle_uninstallation();
+        return;
+    }
+
+#[tauri::command]
+fn show_installer_window(app: AppHandle) {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.set_size(tauri::Size::Logical(tauri::LogicalSize { width: 620.0, height: 440.0 }));
+        let _ = window.center();
+        let _ = window.show();
+        let _ = window.set_focus();
+    }
+}
+
+#[tauri::command]
+fn resize_installer_window(app: AppHandle) {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.set_size(tauri::Size::Logical(tauri::LogicalSize { width: 620.0, height: 440.0 }));
+        let _ = window.center();
+    }
+}
+
+#[tauri::command]
+fn minimize_installer_window(app: AppHandle) {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.minimize();
+    }
+}
+
+#[tauri::command]
+fn start_installer_dragging(app: AppHandle) {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.start_dragging();
+    }
+}
+
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
+            minimize_installer_window,
+            start_installer_dragging,
             set_interactive,
+            focus_window,
             set_preview_mode,
             open_file_in_folder,
             open_downloads_folder,
@@ -1064,8 +1112,76 @@ pub fn run() {
             set_windows_autostart,
             is_windows_autostart_enabled,
             get_network_interfaces,
+            show_installer_window,
+            resize_installer_window,
+            installer::get_default_install_dir,
+            installer::check_is_installer_mode,
+            installer::pick_install_directory,
+            installer::execute_installer,
+            installer::launch_installed_app,
+            installer::exit_installer,
         ])
         .setup(|app| {
+            let is_installer = installer::is_installer_mode();
+            if is_installer {
+                let mut builder = tauri::WebviewWindowBuilder::new(
+                    app,
+                    "main",
+                    tauri::WebviewUrl::App("/index.html?mode=installer".into()),
+                )
+                .title("SendKeep Setup")
+                .inner_size(620.0, 440.0)
+                .resizable(false)
+                .decorations(false)
+                .transparent(true)
+                .visible(false)
+                .always_on_top(false)
+                .skip_taskbar(false)
+                .shadow(false)
+                .center();
+
+                if let Some(icon) = app.default_window_icon() {
+                    builder = builder.icon(icon.clone())?;
+                }
+
+                let window = builder.build()?;
+
+                let _ = window.set_focus();
+
+                #[cfg(target_os = "windows")]
+                if let Ok(hwnd) = window.hwnd() {
+                    window_hooks::set_window_interactive(hwnd.0 as isize, true);
+                }
+
+                // Unconditionally show window after 800ms max to prevent any ghosting or hidden window deadlocks
+                let win_clone = window.clone();
+                tauri::async_runtime::spawn(async move {
+                    tokio::time::sleep(std::time::Duration::from_millis(800)).await;
+                    let _ = win_clone.show();
+                    let _ = win_clone.set_focus();
+                });
+
+                println!("[SendKeep] Running in custom installer setup mode.");
+                return Ok(());
+            }
+
+            // Normal application mode: create desktop shelf window
+            let _shelf_window = tauri::WebviewWindowBuilder::new(
+                app,
+                "main",
+                tauri::WebviewUrl::App("/index.html".into()),
+            )
+            .title("SendKeep")
+            .inner_size(350.0, 864.0)
+            .position(0.0, 0.0)
+            .resizable(false)
+            .decorations(false)
+            .transparent(true)
+            .always_on_top(true)
+            .skip_taskbar(true)
+            .shadow(false)
+            .build()?;
+
             let app_handle = app.handle().clone();
             
             // Handle Explorer right-click / CLI file arguments on clean cold boot
@@ -1146,8 +1262,12 @@ pub fn run() {
                 let mut interval = tokio::time::interval(std::time::Duration::from_millis(16));
                 loop {
                     interval.tick().await;
-                    if let Some((x, y)) = window_hooks::get_cursor_position() {
-                        let _ = edge_app.emit("sendkeep:cursor-pos", (x, y));
+                    if let Some(window) = edge_app.get_webview_window("main") {
+                        if let Ok(hwnd) = window.hwnd() {
+                            if let Some((cx, cy)) = window_hooks::get_cursor_pos_client(hwnd.0 as isize) {
+                                let _ = edge_app.emit("sendkeep:cursor-pos", (cx, cy));
+                            }
+                        }
                     }
                 }
             });
@@ -1184,6 +1304,7 @@ pub fn run() {
                 if let Ok(hwnd) = window.hwnd() {
                     window_hooks::set_window_interactive(hwnd.0 as isize, false);
                 }
+                let _ = window.show();
             }
 
             println!("[SendKeep] Initialized successfully. Background daemon active.");

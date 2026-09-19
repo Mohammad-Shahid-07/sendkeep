@@ -15,16 +15,16 @@ import { PairDeviceModal } from './PairDeviceModal';
 import { playBeam } from '../lib/soundEffects';
 
 export const Panel: React.FC = () => {
-  const {
-    isOpen,
-    addItem,
-    connectedDevice,
-    activeSource,
-    beamItemToDevice,
-    isPairModalOpen,
-    setPairModalOpen,
-    settings,
-  } = useStore();
+  const isOpen = useStore((s) => s.isOpen);
+  const isRight = useStore((s) => s.settings.stickPosition === 'right');
+  const showEdgeHandle = useStore((s) => s.settings.showEdgeHandle !== false);
+  const showEdgeLocationHint = useStore((s) => s.settings.showEdgeLocationHint ?? true);
+  const isPairModalOpen = useStore((s) => s.isPairModalOpen);
+  const setPairModalOpen = useStore((s) => s.setPairModalOpen);
+  const activeSource = useStore((s) => s.activeSource);
+  const connectedDevice = useStore((s) => s.connectedDevice);
+  const addItem = useStore((s) => s.addItem);
+  const beamItemToDevice = useStore((s) => s.beamItemToDevice);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -179,8 +179,6 @@ export const Panel: React.FC = () => {
     }
   };
 
-  const isRight = settings.stickPosition === 'right';
-
   return (
     <div className="root fixed inset-0 w-full h-screen pointer-events-none select-none overflow-hidden">
       {/* Screen Edge Copy Indicator Curve */}
@@ -188,7 +186,7 @@ export const Panel: React.FC = () => {
 
       {/* Screen Edge Location Beacon Hint */}
       <AnimatePresence>
-        {!isOpen && useStore.getState().isNearEdge && (settings.showEdgeLocationHint ?? true) && (
+        {!isOpen && useStore.getState().isNearEdge && showEdgeLocationHint && (
           <motion.div
             key="edge-beacon"
             initial={{ opacity: 0 }}
@@ -213,7 +211,7 @@ export const Panel: React.FC = () => {
 
       {/* Refined Minimalist Screen Edge Affordance (2.5px Frosted Glass Hairline) */}
       <AnimatePresence>
-        {!isOpen && settings.showEdgeHandle !== false && (
+        {!isOpen && showEdgeHandle && (
           <motion.div
             key="edge-notch"
             initial={{ opacity: 0, x: isRight ? 4 : -4 }}
@@ -240,27 +238,26 @@ export const Panel: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Full-Height SendKeep Sidebar Panel (100vh, DirectComposition GPU Accelerated) */}
+      {/* Full-Height SendKeep Sidebar Panel (Butter-Smooth Hardware Accelerated) */}
       <motion.aside
         initial={false}
         animate={{
           x: isOpen ? 0 : isRight ? 350 : -350,
         }}
         transition={{
-          duration: 0.22,
-          ease: [0.16, 1, 0.3, 1],
-        }}
-        style={{
-          willChange: 'transform',
-          transform: 'translateZ(0)',
-          backfaceVisibility: 'hidden',
-          WebkitBackfaceVisibility: 'hidden',
+          type: 'spring',
+          stiffness: 420,
+          damping: 38,
+          mass: 0.8,
         }}
         onMouseEnter={() => {
           invoke('set_interactive', { interactive: true }).catch(() => {});
         }}
         onPointerDown={() => {
-          invoke('set_interactive', { interactive: true }).catch(() => {});
+          invoke('focus_window').catch(() => {});
+        }}
+        style={{
+          willChange: 'transform',
         }}
         onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}
@@ -268,9 +265,9 @@ export const Panel: React.FC = () => {
         onDrop={handleDrop}
         className={`fixed top-0 ${
           isRight
-            ? 'right-0 border-l shadow-[-8px_0_24px_rgba(0,0,0,0.5)]'
-            : 'left-0 border-r shadow-[8px_0_24px_rgba(0,0,0,0.5)]'
-        } w-[350px] h-screen bg-[#090a0e] border-white/[0.06] flex flex-col pointer-events-auto relative overflow-hidden z-20 will-change-transform transform-gpu`}
+            ? 'right-0 border-l border-white/[0.08]'
+            : 'left-0 border-r border-white/[0.08]'
+        } w-[350px] h-screen bg-[#090a0e] flex flex-col pointer-events-auto relative overflow-hidden z-20`}
       >
         {/* Full-Sidebar Ambient Drag Overlay */}
         <AnimatePresence>

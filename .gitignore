@@ -16,6 +16,8 @@ desktop/src-tauri/target/
 src-tauri/target/
 target/
 *.pdb
+*.exe
+*.msi
 desktop/src-tauri/icons/android/
 desktop/src-tauri/icons/ios/
 
