@@ -94,7 +94,8 @@ export const ClearMenu: React.FC<ClearMenuProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -4 }}
             transition={{ duration: 0.14 }}
-            className="absolute right-0 mt-1.5 w-48 rounded-xl bg-[#141620]/95 backdrop-blur-xl border border-white/[0.12] shadow-2xl p-1 z-[999] flex flex-col gap-0.5 select-none text-xs"
+            style={{ backgroundColor: '#141620', background: '#141620' }}
+            className="absolute right-0 mt-1.5 w-48 rounded-xl border border-white/[0.12] shadow-2xl p-1 z-[999] flex flex-col gap-0.5 select-none text-xs"
           >
             <div className="px-2.5 py-1.5 text-[10px] font-semibold tracking-wider text-white/40 uppercase">
               Clear Unpinned History

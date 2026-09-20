@@ -252,7 +252,8 @@ export const ItemList: React.FC = () => {
               playDialTickSound();
               scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className="absolute top-4 right-5 z-20 p-1.5 rounded-full bg-[#181a24]/90 hover:bg-[#222636] border border-white/[0.15] text-white/70 hover:text-white shadow-xl backdrop-blur-md cursor-pointer transition-colors"
+            style={{ backgroundColor: '#181a24', background: '#181a24' }}
+            className="absolute top-4 right-5 z-20 p-1.5 rounded-full hover:bg-[#222636] border border-white/[0.15] text-white/70 hover:text-white shadow-xl cursor-pointer transition-colors"
             title="Jump to Top"
           >
             <ChevronUp className="w-4 h-4" />
@@ -399,7 +400,8 @@ export const ItemList: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 15, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 420, damping: 28 }}
-            className="absolute bottom-3 left-3 right-3 z-40 px-3 py-2 rounded-xl bg-[#121216]/95 backdrop-blur-xl border border-white/[0.12] shadow-[0_12px_32px_rgba(0,0,0,0.85),0_0_0_1px_rgba(99,102,241,0.3)] flex items-center justify-between select-none"
+            style={{ backgroundColor: '#121216', background: '#121216' }}
+            className="absolute bottom-3 left-3 right-3 z-40 px-3 py-2 rounded-xl border border-white/[0.12] shadow-[0_12px_32px_rgba(0,0,0,0.85),0_0_0_1px_rgba(99,102,241,0.3)] flex items-center justify-between select-none"
           >
             <div className="flex items-center gap-2 min-w-0">
               <span className="w-5 h-5 rounded-full bg-indigo-500 text-[10px] font-bold text-white flex items-center justify-center shrink-0">

@@ -189,7 +189,7 @@ interface AppState {
   activeTransfer: TransferProgress | null;
   setActiveTransfer: (transfer: TransferProgress | null) => void;
   cancelTransfer: (sessionId?: string) => Promise<void>;
-  beamItemToDevice: (item: SendKeepItem, rawBytes?: Uint8Array) => Promise<boolean>;
+  beamItemToDevice: (item: SendKeepItem, rawBytes?: Uint8Array, targetDevice?: TrustedDevice) => Promise<boolean>;
   setOpen: (open: boolean) => void;
   toggleOpen: () => void;
   setActiveSource: (source: ActiveSource) => void;
@@ -1008,17 +1008,17 @@ export const useStore = create<AppState>((set, get) => ({
   activeDraggingId: null,
   setActiveDraggingId: (id) => set({ activeDraggingId: id }),
 
-  beamItemToDevice: async (item, _rawBytes) => {
+  beamItemToDevice: async (item, _rawBytes, specificTarget) => {
     const { connectedDevice, trustedDevices, discoveredDevices } = get();
-    // Resolve target: prefer connectedDevice if online, or any online trusted/discovered device
-    let target = connectedDevice && connectedDevice.status === 'online' ? connectedDevice : null;
-    if (!target) {
+    // Resolve target: prefer specificTarget if provided, then connectedDevice if online, or any online trusted/discovered device
+    let target = specificTarget || (connectedDevice && connectedDevice.status === 'online' ? connectedDevice : null);
+    if (!target && !specificTarget) {
       target = trustedDevices.find((d) => d.status === 'online') || null;
     }
-    if (!target && connectedDevice?.ip) {
+    if (!target && !specificTarget && connectedDevice?.ip) {
       target = connectedDevice;
     }
-    if (!target) {
+    if (!target && !specificTarget) {
       const disc = discoveredDevices.find((d) => d.ip);
       if (disc) {
         target = {

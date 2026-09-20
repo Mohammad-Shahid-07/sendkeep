@@ -1039,6 +1039,13 @@ pub fn run() {
     }
 
 #[tauri::command]
+fn show_shelf_window(app: AppHandle) {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.show();
+    }
+}
+
+#[tauri::command]
 fn show_installer_window(app: AppHandle) {
     if let Some(window) = app.get_webview_window("main") {
         let _ = window.set_size(tauri::Size::Logical(tauri::LogicalSize { width: 620.0, height: 440.0 }));
@@ -1112,6 +1119,7 @@ fn start_installer_dragging(app: AppHandle) {
             set_windows_autostart,
             is_windows_autostart_enabled,
             get_network_interfaces,
+            show_shelf_window,
             show_installer_window,
             resize_installer_window,
             installer::get_default_install_dir,
@@ -1180,6 +1188,7 @@ fn start_installer_dragging(app: AppHandle) {
             .always_on_top(true)
             .skip_taskbar(true)
             .shadow(false)
+            .visible(false)
             .build()?;
 
             let app_handle = app.handle().clone();
@@ -1304,7 +1313,13 @@ fn start_installer_dragging(app: AppHandle) {
                 if let Ok(hwnd) = window.hwnd() {
                     window_hooks::set_window_interactive(hwnd.0 as isize, false);
                 }
-                let _ = window.show();
+
+                // Fallback guarantee: show window after 600ms if frontend invoke didn't trigger
+                let win_clone = window.clone();
+                tauri::async_runtime::spawn(async move {
+                    tokio::time::sleep(std::time::Duration::from_millis(600)).await;
+                    let _ = win_clone.show();
+                });
             }
 
             println!("[SendKeep] Initialized successfully. Background daemon active.");

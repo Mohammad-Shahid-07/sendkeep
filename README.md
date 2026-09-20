@@ -31,14 +31,14 @@
 
 ## ✨ Features
 
-* **Invisible Slide-Out Edge Shelf**:
+* **Invisible Slide-Out Edge Shelf (Windows)**:
   * Lives invisibly on your Windows screen border.
   * Hover or glide your cursor against the screen border or hit **`Alt + C`** to reveal with fluid spring physics.
   * Drag files from your desktop onto the shelf to beam them instantly to your phone.
 * **Zero-Prompt Auto-Accept**:
   * Stream photos, 4K videos, and archives directly from your phone to your PC over local Wi-Fi with zero clicks required on Windows.
-* **Edge Shelf & Android Share Sheet**:
-  * Native floating drop target and translucent Android share target to beam media in under 1 second.
+* **Instant Android Share Sheet & Quick Settings**:
+  * Translucent Android share target to beam media directly from any app in under 1 second, plus a Quick Settings tile for instant access.
 * **Background Clipboard Sync**:
   * Seamless clipboard synchronization between your phone and laptop shelf.
   * **Privacy Guard**: Automatically redacts sensitive passwords and credentials (evaluates 1Password, Bitwarden, KeePass, and Android 13+ `EXTRA_IS_SENSITIVE`).

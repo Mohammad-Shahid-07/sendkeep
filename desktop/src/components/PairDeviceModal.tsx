@@ -79,7 +79,7 @@ export const PairDeviceModal: React.FC<PairDeviceModalProps> = ({ isOpen, onClos
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md select-none pointer-events-auto">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 select-none pointer-events-auto">
         {/* Backdrop click to close */}
         <div className="absolute inset-0" onClick={onClose} />
 

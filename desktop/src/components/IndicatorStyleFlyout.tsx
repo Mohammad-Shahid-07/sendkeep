@@ -43,8 +43,10 @@ export const IndicatorStyleFlyout: React.FC<{ isRight?: boolean }> = ({ isRight 
             left: isRight ? undefined : '362px',
             right: isRight ? '362px' : undefined,
             top: '20%',
+            backgroundColor: '#0e1017',
+            background: '#0e1017',
           }}
-          className="fixed z-[60] w-[320px] p-4 bg-[#0e1017]/98 border border-white/[0.12] rounded-2xl shadow-2xl backdrop-blur-2xl flex flex-col gap-3 text-white select-none pointer-events-auto"
+          className="fixed z-[60] w-[320px] p-4 border border-white/[0.12] rounded-2xl shadow-2xl flex flex-col gap-3 text-white select-none pointer-events-auto"
         >
           <div className="flex items-center justify-between pb-1 border-b border-white/[0.06]">
             <div>

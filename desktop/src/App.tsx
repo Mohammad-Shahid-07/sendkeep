@@ -12,6 +12,10 @@ import './styles/panel.css';
 function MainShelf() {
   useEdgeHover();
 
+  useEffect(() => {
+    invoke('show_shelf_window').catch(() => {});
+  }, []);
+
   return (
     <main className="w-full h-screen overflow-hidden bg-transparent">
       <Panel />

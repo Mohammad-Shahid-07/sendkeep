@@ -53,7 +53,6 @@ import com.sendkeep.app.network.TrustedDeviceEntity
 import com.sendkeep.app.network.SendKeepClient
 import com.sendkeep.app.network.SendKeepDiscovery
 import com.sendkeep.app.network.SendKeepServer
-import com.sendkeep.app.service.EdgeShelfService
 import com.sendkeep.app.network.TransferProgressState
 import com.sendkeep.app.network.TransferStatus
 import com.sendkeep.app.network.TransferDirection
@@ -502,13 +501,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        if (android.provider.Settings.canDrawOverlays(this)) {
-            EdgeShelfService.start(this)
-        }
-    }
-
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         setIntent(intent)
@@ -549,9 +541,6 @@ fun SendKeepDashboard(
     val filterCategories = listOf("All", "Media", "Files", "Links", "Notes")
 
     var quickNoteText by remember { mutableStateOf("") }
-    var hasOverlayPermission by remember {
-        mutableStateOf(android.provider.Settings.canDrawOverlays(context))
-    }
 
     val filePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetMultipleContents()
@@ -566,15 +555,6 @@ fun SendKeepDashboard(
     ) { treeUri ->
         if (treeUri != null) {
             onSendFiles(listOf(treeUri))
-        }
-    }
-
-    val overlayPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) {
-        hasOverlayPermission = android.provider.Settings.canDrawOverlays(context)
-        if (hasOverlayPermission) {
-            EdgeShelfService.start(context)
         }
     }
 
@@ -897,25 +877,7 @@ fun SendKeepDashboard(
 
         if (showSettingsSheet) {
             SettingsSheet(
-                onDismiss = { showSettingsSheet = false },
-                edgeShelfActive = hasOverlayPermission,
-                onToggleEdgeShelf = { enable ->
-                    if (enable) {
-                        if (android.provider.Settings.canDrawOverlays(context)) {
-                            hasOverlayPermission = true
-                            EdgeShelfService.start(context)
-                        } else {
-                            val intent = Intent(
-                                android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                                Uri.parse("package:${context.packageName}")
-                            )
-                            overlayPermissionLauncher.launch(intent)
-                        }
-                    } else {
-                        hasOverlayPermission = false
-                        EdgeShelfService.stop(context)
-                    }
-                }
+                onDismiss = { showSettingsSheet = false }
             )
         }
 

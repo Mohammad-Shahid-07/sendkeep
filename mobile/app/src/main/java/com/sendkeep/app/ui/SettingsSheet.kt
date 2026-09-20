@@ -37,9 +37,7 @@ import com.sendkeep.app.ui.theme.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsSheet(
-    onDismiss: () -> Unit,
-    edgeShelfActive: Boolean,
-    onToggleEdgeShelf: (Boolean) -> Unit
+    onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("sendkeep_prefs", Context.MODE_PRIVATE) }
@@ -143,7 +141,7 @@ fun SettingsSheet(
                             color = TextMain
                         )
                         Text(
-                            text = "Local beam engine & edge overlay",
+                            text = "Local beam engine & preferences",
                             fontSize = 11.5.sp,
                             color = TextSub
                         )
@@ -382,47 +380,7 @@ fun SettingsSheet(
                 }
             }
 
-            // Section 3: Edge Shelf System
-            SettingsGroupHeader(title = "EDGE OVERLAY SYSTEM")
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp),
-                color = CardBg,
-                border = BorderStroke(1.dp, CardBorder)
-            ) {
-                Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    SettingsSwitchRow(
-                        icon = Icons.Default.ElectricBolt,
-                        title = "Right-Edge Shelf Handle",
-                        subtitle = "Always-available 4dp grip tick for quick drag-and-beam and 1-tap shelf",
-                        checked = edgeShelfActive,
-                        onCheckedChange = {
-                            onToggleEdgeShelf(it)
-                        }
-                    )
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(CanvasBg, RoundedCornerShape(8.dp))
-                            .padding(horizontal = 10.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(6.dp)
-                                .background(if (edgeShelfActive) ElectricLime else TextDim, CircleShape)
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            text = if (edgeShelfActive) "Docked at right bezel • Thumb-reach 216dp" else "Disabled • Tap toggle to activate",
-                            fontSize = 10.5.sp,
-                            color = if (edgeShelfActive) TextMain else TextSub
-                        )
-                    }
-                }
-            }
-
-            // Section 4: Device Identity & Port
+            // Section 3: Device Identity & Port
             SettingsGroupHeader(title = "LOCAL NETWORK IDENTITY")
             Surface(
                 modifier = Modifier.fillMaxWidth(),

@@ -936,7 +936,8 @@ export const ClipboardItem: React.FC<Props> = ({ item }) => {
 
                               {/* Sub-Item Floating Actions on Hover */}
                               <div
-                                className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 bg-[#141418]/95 backdrop-blur-md border border-white/[0.1] rounded-md p-0.5 shadow-xl opacity-0 group-hover/sub:opacity-100 transition-opacity z-10"
+                                style={{ backgroundColor: '#141418', background: '#141418' }}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 border border-white/[0.12] rounded-md p-0.5 shadow-xl opacity-0 group-hover/sub:opacity-100 transition-opacity z-10"
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 <button

@@ -135,7 +135,8 @@ export const Header: React.FC = () => {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: -6 }}
                 transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
-                className="absolute top-9 left-0 w-64 bg-[#111219]/98 border border-white/[0.08] rounded-xl p-1.5 shadow-2xl z-50 flex flex-col gap-0.5 backdrop-blur-xl select-none text-xs"
+                style={{ backgroundColor: '#111219', background: '#111219' }}
+                className="absolute top-9 left-0 w-64 border border-white/[0.12] rounded-xl p-1.5 shadow-2xl z-50 flex flex-col gap-0.5 select-none text-xs"
               >
               <div className="px-2 pt-1 pb-0.5 text-[10px] font-semibold text-white/40 uppercase tracking-wider">
                 Stream Sources

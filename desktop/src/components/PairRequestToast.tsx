@@ -26,7 +26,8 @@ export const PairRequestToast: React.FC = () => {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -20, scale: 0.95 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
-        className="fixed top-14 left-3.5 right-3.5 z-50 bg-[#12131b] border border-emerald-500/40 rounded-2xl p-3.5 shadow-2xl shadow-black/80 backdrop-blur-xl flex flex-col gap-2.5 text-white select-none"
+        style={{ backgroundColor: '#12131b', background: '#12131b' }}
+        className="fixed top-14 left-3.5 right-3.5 z-50 border border-emerald-500/40 rounded-2xl p-3.5 shadow-2xl shadow-black/80 flex flex-col gap-2.5 text-white select-none"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5 min-w-0">

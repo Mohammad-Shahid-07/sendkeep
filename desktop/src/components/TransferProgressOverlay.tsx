@@ -87,12 +87,16 @@ export const TransferProgressOverlay: React.FC = () => {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 16, scale: 0.96 }}
         transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+        style={{ willChange: 'transform, opacity' }}
         onMouseEnter={() => {
           invoke('set_interactive', { interactive: true }).catch(() => {});
         }}
         className="fixed bottom-3 left-3 right-3 z-[9999] pointer-events-auto select-none max-w-[326px] mx-auto"
       >
-        <div className="relative rounded-2xl bg-[#131419]/96 backdrop-blur-2xl border border-white/[0.08] shadow-[0_12px_36px_rgba(0,0,0,0.8)] p-3 flex flex-col gap-2.5 overflow-hidden">
+        <div
+          style={{ backgroundColor: '#13141c', background: '#13141c' }}
+          className="relative rounded-2xl border border-white/[0.12] shadow-[0_16px_40px_rgba(0,0,0,0.95),0_0_0_1px_rgba(255,255,255,0.06)] p-3 flex flex-col gap-2.5 overflow-hidden"
+        >
           {/* Top Row: Device/Status + Action Controls */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0 flex-1">

@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { invoke } from '@tauri-apps/api/core';
-import { useStore } from '../store/appStore';
+import { getCurrentWebview } from '@tauri-apps/api/webview';
+import { useStore, SendKeepItem, TrustedDevice } from '../store/appStore';
 import { Header } from './Header';
 import { ItemList } from './ItemList';
 import { DropDock } from './DropDock';
@@ -12,7 +13,8 @@ import { PairRequestToast } from './PairRequestToast';
 import { SettingsModal } from './SettingsModal';
 import { WebShareModal } from './WebShareModal';
 import { PairDeviceModal } from './PairDeviceModal';
-import { playBeam } from '../lib/soundEffects';
+import { SidebarDropOverlay } from './SidebarDropOverlay';
+import { playBeam, playCopy } from '../lib/soundEffects';
 
 export const Panel: React.FC = () => {
   const isOpen = useStore((s) => s.isOpen);
@@ -25,6 +27,257 @@ export const Panel: React.FC = () => {
   const connectedDevice = useStore((s) => s.connectedDevice);
   const addItem = useStore((s) => s.addItem);
   const beamItemToDevice = useStore((s) => s.beamItemToDevice);
+
+  const [isWindowDragOver, setIsWindowDragOver] = useState(false);
+  const isWindowDragOverRef = useRef(false);
+  isWindowDragOverRef.current = isWindowDragOver;
+  const [activeDropZone, setActiveDropZone] = useState<string | null>(null);
+  const activeDropZoneRef = useRef<string | null>(null);
+  activeDropZoneRef.current = activeDropZone;
+  const dragCounterRef = useRef(0);
+
+  // Handle native OS files dropped via Tauri onDragDropEvent
+  const handleNativePathsDrop = async (paths: string[], targetZone: string | null) => {
+    if (!paths || paths.length === 0) return;
+
+    let targetDevice: TrustedDevice | undefined = undefined;
+    const isDeviceTarget = Boolean(targetZone && targetZone.startsWith('device-'));
+    const isClipboardTarget = targetZone === 'clipboard';
+
+    const state = useStore.getState();
+    const allDevices = [...state.trustedDevices];
+    if (state.connectedDevice && !allDevices.some((d) => d.id === state.connectedDevice?.id)) {
+      allDevices.push(state.connectedDevice);
+    }
+
+    if (isDeviceTarget && targetZone) {
+      const devId = targetZone.replace('device-', '');
+      targetDevice = allDevices.find((d) => d.id === devId) || allDevices[0];
+    } else if (!isClipboardTarget && state.activeSource === 'device') {
+      targetDevice = allDevices[0];
+    }
+
+    const isBeamMode = Boolean(isDeviceTarget || (!isClipboardTarget && state.activeSource === 'device' && targetDevice));
+
+    if (isBeamMode) {
+      playBeam();
+    } else {
+      playCopy();
+      try {
+        await navigator.clipboard.writeText(paths.join('\n'));
+      } catch {}
+    }
+
+    if (paths.length > 1) {
+      const subItems: SendKeepItem[] = [];
+      let totalSize = 0;
+
+      for (let i = 0; i < paths.length; i++) {
+        const p = paths[i];
+        let name = p.split(/[/\\]/).pop() || 'File';
+        let size = 0;
+        let fileType = 'application/octet-stream';
+
+        try {
+          const info = await invoke<{ name: string; size: number; fileType: string }>('get_file_info', { path: p });
+          if (info) {
+            name = info.name || name;
+            size = info.size || 0;
+            fileType = info.fileType || fileType;
+          }
+        } catch {}
+
+        totalSize += size;
+        subItems.push({
+          id: `sub-drop-${Date.now()}-${i}`,
+          name,
+          path: p,
+          size,
+          fileType,
+          sender: isBeamMode ? 'You' : 'Windows Clipboard',
+          source: isBeamMode ? 'device' : 'clipboard',
+          timestamp: Date.now(),
+        });
+      }
+
+      const bundleItem: SendKeepItem = {
+        id: `stack-drop-${Date.now()}`,
+        name: `Collection (${paths.length} files)`,
+        path: paths[0],
+        size: totalSize,
+        fileType: 'bundle/files',
+        sender: isBeamMode ? 'You' : 'Windows Clipboard',
+        source: isBeamMode ? 'device' : 'clipboard',
+        timestamp: Date.now(),
+        isStack: true,
+        isExpanded: false,
+        bundleItems: subItems,
+      };
+
+      state.addItem(bundleItem);
+      if (isBeamMode) {
+        state.beamItemToDevice(bundleItem, undefined, targetDevice).catch(() => {});
+      }
+    } else {
+      const p = paths[0];
+      let name = p.split(/[/\\]/).pop() || 'File';
+      let size = 0;
+      let fileType = 'application/octet-stream';
+      let isDirectory = false;
+
+      try {
+        const info = await invoke<{ name: string; size: number; fileType: string; isDirectory?: boolean }>('get_file_info', { path: p });
+        if (info) {
+          name = info.name || name;
+          size = info.size || 0;
+          fileType = info.fileType || fileType;
+          isDirectory = Boolean(info.isDirectory || info.fileType === 'folder');
+        }
+      } catch {}
+
+      if (isDirectory) {
+        try {
+          const folderFiles = await invoke<Array<{
+            name: string;
+            relativePath: string;
+            fullPath: string;
+            size: number;
+            fileType: string;
+          }>>('collect_folder_files', { folderPath: p });
+
+          if (folderFiles && folderFiles.length > 0) {
+            const subItems = folderFiles.map((ff, idx) => ({
+              id: `sub-folder-${Date.now()}-${idx}`,
+              name: ff.relativePath,
+              path: ff.fullPath,
+              size: ff.size,
+              fileType: ff.fileType,
+              sender: isBeamMode ? 'You' : 'Windows Clipboard',
+              source: isBeamMode ? ('device' as const) : ('clipboard' as const),
+              timestamp: Date.now(),
+            }));
+            const totalFolderSize = folderFiles.reduce((acc, f) => acc + f.size, 0);
+            const bundleItem: SendKeepItem = {
+              id: `folder-drop-${Date.now()}`,
+              name: `${name} (${folderFiles.length} files)`,
+              path: p,
+              size: totalFolderSize,
+              fileType: 'bundle/folder',
+              sender: isBeamMode ? 'You' : 'Windows Clipboard',
+              source: isBeamMode ? 'device' : 'clipboard',
+              timestamp: Date.now(),
+              isStack: true,
+              isExpanded: false,
+              bundleItems: subItems,
+            };
+            state.addItem(bundleItem);
+            if (isBeamMode) {
+              state.beamItemToDevice(bundleItem, undefined, targetDevice).catch(() => {});
+            }
+            return;
+          }
+        } catch {}
+      }
+
+      const singleItem: SendKeepItem = {
+        id: `drop-${Date.now()}`,
+        name,
+        path: p,
+        size,
+        fileType,
+        sender: isBeamMode ? 'You' : 'Windows Clipboard',
+        source: isBeamMode ? 'device' : 'clipboard',
+        timestamp: Date.now(),
+      };
+
+      state.addItem(singleItem);
+      if (isBeamMode) {
+        state.beamItemToDevice(singleItem, undefined, targetDevice).catch(() => {});
+      }
+    }
+  };
+
+  // Register Tauri v2 native window drag-and-drop listener for external OS files
+  useEffect(() => {
+    let unlisten: (() => void) | null = null;
+
+    const resolveZone = (y: number): string => {
+      const state = useStore.getState();
+      const allDevices = [...state.trustedDevices];
+      if (state.connectedDevice && !allDevices.some((d) => d.id === state.connectedDevice?.id)) {
+        allDevices.push(state.connectedDevice);
+      }
+
+      const totalZones = 1 + Math.max(1, allDevices.length);
+      const screenH = window.innerHeight || 864;
+      const fraction = Math.max(0, Math.min(1, y / screenH));
+
+      if (fraction < 1 / totalZones) {
+        return 'clipboard';
+      }
+
+      if (allDevices.length === 0) {
+        return 'device-none';
+      }
+
+      const deviceFraction = (fraction - 1 / totalZones) / (1 - 1 / totalZones);
+      const deviceIndex = Math.min(
+        allDevices.length - 1,
+        Math.floor(deviceFraction * allDevices.length)
+      );
+      return `device-${allDevices[deviceIndex].id}`;
+    };
+
+    try {
+      getCurrentWebview().onDragDropEvent((event) => {
+        const payload = event.payload;
+        if (payload.type === 'enter') {
+          useStore.getState().setOpen(true);
+          invoke('set_interactive', { interactive: true }).catch(() => {});
+          if (!isWindowDragOverRef.current) {
+            isWindowDragOverRef.current = true;
+            setIsWindowDragOver(true);
+          }
+        } else if (payload.type === 'over') {
+          if (!isWindowDragOverRef.current) {
+            isWindowDragOverRef.current = true;
+            setIsWindowDragOver(true);
+          }
+          const dpr = window.devicePixelRatio || 1;
+          const y = payload.position.y / dpr;
+          const zoneId = resolveZone(y);
+          if (activeDropZoneRef.current !== zoneId) {
+            activeDropZoneRef.current = zoneId;
+            setActiveDropZone(zoneId);
+          }
+        } else if (payload.type === 'drop') {
+          const dpr = window.devicePixelRatio || 1;
+          const y = payload.position.y / dpr;
+          const zoneId = resolveZone(y) || activeDropZoneRef.current;
+          handleNativePathsDrop(payload.paths, zoneId);
+          isWindowDragOverRef.current = false;
+          setIsWindowDragOver(false);
+          activeDropZoneRef.current = null;
+          setActiveDropZone(null);
+        } else if (payload.type === 'leave') {
+          isWindowDragOverRef.current = false;
+          setIsWindowDragOver(false);
+          activeDropZoneRef.current = null;
+          setActiveDropZone(null);
+        }
+      }).then((fn) => {
+        unlisten = fn;
+      }).catch((err) => {
+        console.warn('[SendKeep] onDragDropEvent registration failed:', err);
+      });
+    } catch (err) {
+      console.warn('[SendKeep] getCurrentWebview failed:', err);
+    }
+
+    return () => {
+      if (unlisten) unlisten();
+    };
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -54,8 +307,6 @@ export const Panel: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen]);
 
-  const [isWindowDragOver, setIsWindowDragOver] = useState(false);
-  const dragCounterRef = useRef(0);
 
   const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
@@ -73,6 +324,11 @@ export const Panel: React.FC = () => {
 
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      dragCounterRef.current = 0;
+      setIsWindowDragOver(false);
+      return;
+    }
     dragCounterRef.current = Math.max(0, dragCounterRef.current - 1);
     if (dragCounterRef.current === 0) {
       setIsWindowDragOver(false);
@@ -232,7 +488,7 @@ export const Panel: React.FC = () => {
             <div
               className={`w-[2.5px] h-12 ${
                 isRight ? 'rounded-l-full border-l' : 'rounded-r-full border-r'
-              } bg-white/35 border-y border-white/25 backdrop-blur-sm transition-all duration-150 ease-out group-hover:w-[3px] group-hover:bg-white/90 group-hover:shadow-[0_0_8px_rgba(255,255,255,0.35)]`}
+              } bg-white/45 border-y border-white/30 transition-all duration-150 ease-out group-hover:w-[3px] group-hover:bg-white/90 group-hover:shadow-[0_0_8px_rgba(255,255,255,0.35)]`}
             />
           </motion.div>
         )}
@@ -269,46 +525,18 @@ export const Panel: React.FC = () => {
             : 'left-0 border-r border-white/[0.08]'
         } w-[350px] h-screen bg-[#090a0e] flex flex-col pointer-events-auto relative overflow-hidden z-20`}
       >
-        {/* Full-Sidebar Ambient Drag Overlay */}
+        {/* Full-Sidebar Droppable Target Zones Overlay */}
         <AnimatePresence>
           {isWindowDragOver && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.15 }}
-              className="absolute inset-2.5 z-50 flex flex-col items-center justify-center gap-2.5 pointer-events-none rounded-2xl border border-dashed border-white/25 bg-[#090a0e]/95 backdrop-blur-xl shadow-2xl transition-all select-none"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-white/[0.06] border border-white/15 flex items-center justify-center text-white/90 shadow-sm">
-                <svg
-                  className="w-6 h-6"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M12 3v12" />
-                  <path d="m8 11 4 4 4-4" />
-                  <path d="M4 20h16" />
-                </svg>
-              </div>
-              <div className="flex flex-col items-center gap-0.5 text-center px-4">
-                <div className="text-sm font-semibold text-white tracking-tight">
-                  {activeSource === 'device'
-                    ? 'Drop anywhere to beam'
-                    : activeSource === 'clipboard'
-                    ? 'Drop anywhere to stage'
-                    : 'Drop anywhere to beam or stage'}
-                </div>
-                <div className="text-xs text-white/50">
-                  {activeSource === 'device' && connectedDevice
-                    ? `Direct Wi-Fi transfer to ${connectedDevice.name}`
-                    : activeSource === 'clipboard'
-                    ? 'Staged on Windows shelf'
-                    : 'Release anywhere on the sidebar'}
-                </div>
-              </div>
-            </motion.div>
+            <SidebarDropOverlay
+              activeZone={activeDropZone}
+              setActiveZone={setActiveDropZone}
+              onClose={() => {
+                dragCounterRef.current = 0;
+                setIsWindowDragOver(false);
+                setActiveDropZone(null);
+              }}
+            />
           )}
         </AnimatePresence>
 
