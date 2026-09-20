@@ -741,14 +741,6 @@ fun SendKeepDashboard(
         ) {
             when (activeTab) {
                 0 -> ShelfScreen(
-                    hasOverlayPermission = hasOverlayPermission,
-                    onRequestOverlay = {
-                        val intent = Intent(
-                            android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                            Uri.parse("package:${context.packageName}")
-                        )
-                        overlayPermissionLauncher.launch(intent)
-                    },
                     onOpenPhotos = { showMediaPicker = true },
                     onOpenFiles = { filePicker.launch("*/*") },
                     onOpenFolders = { folderPicker.launch(null) },
@@ -1018,8 +1010,6 @@ fun SendKeepDashboard(
 
 @Composable
 fun ShelfScreen(
-    hasOverlayPermission: Boolean,
-    onRequestOverlay: () -> Unit,
     onOpenPhotos: () -> Unit,
     onOpenFiles: () -> Unit,
     onOpenFolders: () -> Unit,
@@ -1043,54 +1033,6 @@ fun ShelfScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(top = 4.dp, bottom = 20.dp)
     ) {
-        // Subtle prompt only if overlay permission is completely missing
-        if (!hasOverlayPermission) {
-            item {
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(14.dp))
-                        .clickable { onRequestOverlay() },
-                    shape = RoundedCornerShape(14.dp),
-                    color = Color(0xFF1E170A),
-                    border = BorderStroke(1.dp, Color(0xFFD97706))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(32.dp)
-                                .background(Color(0xFF332005), CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Warning,
-                                contentDescription = null,
-                                tint = WarningYellow,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Enable Edge Shelf & Drag-to-Send",
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.5.sp
-                            )
-                            Text(
-                                text = "Tap here to allow overlay permission for 1-tap edge handle.",
-                                color = Color(0xFFFDE68A),
-                                fontSize = 10.5.sp
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
         // UNIFIED ACTION HUB (4 Identical Tiles + Quick Compose Bar)
         item {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {

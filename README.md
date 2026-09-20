@@ -18,14 +18,14 @@
 
 ---
 
-## 📦 Production Downloads (v1.0.0)
+## 📦 Downloads (v0.0.1)
 
-| Platform | Package | Size | Description |
+| Platform | Package | Size | Download |
 | :--- | :--- | :--- | :--- |
-| **Windows 10/11** | [**`SendKeep_1.0.0_x64-setup.exe`**](file:///d:/Web-Dev/software/sendkeep/desktop/src-tauri/target/release/bundle/nsis/SendKeep_1.0.0_x64-setup.exe) | **1.89 MB** | Fast user-level NSIS installer (no admin prompt required) |
-| **Windows 10/11** | [**`SendKeep_1.0.0_x64_en-US.msi`**](file:///d:/Web-Dev/software/sendkeep/desktop/src-tauri/target/release/bundle/msi/SendKeep_1.0.0_x64_en-US.msi) | **2.69 MB** | Enterprise Windows Installer Package |
-| **Android** | [**`app-release.apk`**](file:///d:/Web-Dev/software/sendkeep/mobile/app/build/outputs/apk/release/app-release.apk) | **1.94 MB** | Signed production APK for direct sideloading |
-| **Google Play** | [**`app-release.aab`**](file:///d:/Web-Dev/software/sendkeep/mobile/app/build/outputs/bundle/release/app-release.aab) | **3.87 MB** | Optimized Android App Bundle for Play Store distribution |
+| **Windows 10/11** | **`SendKeep_0.0.1_x64-setup.exe`** | **~3.3 MB** | [⬇️ Download for Windows](https://github.com/Mohammad-Shahid-07/sendkeep/releases/latest/download/SendKeep_0.0.1_x64-setup.exe) |
+| **Android 8.0+** | **`SendKeep-v0.0.1.apk`** | **~1.9 MB** | [⬇️ Download APK](https://github.com/Mohammad-Shahid-07/sendkeep/releases/latest/download/SendKeep-v0.0.1.apk) |
+
+> 💡 *Or view all assets on the [Official GitHub Releases Page](https://github.com/Mohammad-Shahid-07/sendkeep/releases).*
 
 ---
 

@@ -59,13 +59,26 @@ export const SettingsModal: React.FC = () => {
     setIndicatorStyleFlyoutOpen,
   } = useStore();
 
-  const [activeTab, setActiveTab] = useState<'behaviour' | 'position' | 'appearance' | 'transfer'>('behaviour');
+  const [activeTab, setActiveTab] = useState<'behaviour' | 'position' | 'appearance' | 'transfer' | 'updates'>('behaviour');
   const [aliasDraft, setAliasDraft] = useState(settings.deviceAlias);
   const [pinDraft, setPinDraft] = useState(settings.securityPin || '');
   const [showPin, setShowPin] = useState(false);
   const [isPickingFolder, setIsPickingFolder] = useState(false);
   const [networkInterfaces, setNetworkInterfaces] = useState<{ name: string; ip: string }[]>([]);
   const [aliasSaved, setAliasSaved] = useState(false);
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
+  const [updateInfo, setUpdateInfo] = useState<{
+    current_version: string;
+    latest_version: string;
+    has_update: boolean;
+    release_notes: string;
+    download_url?: string;
+    asset_name?: string;
+    asset_size?: number;
+  } | null>(null);
+  const [updateStatus, setUpdateStatus] = useState<string>('');
+  const [isInstallingUpdate, setIsInstallingUpdate] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
 
   const handleSaveAlias = async () => {
     if (aliasDraft.trim()) {
@@ -73,6 +86,54 @@ export const SettingsModal: React.FC = () => {
       await updateSettings({ deviceAlias: aliasDraft.trim() });
       setAliasSaved(true);
       setTimeout(() => setAliasSaved(false), 1800);
+    }
+  };
+
+  React.useEffect(() => {
+    let unlisten: (() => void) | undefined;
+    import('@tauri-apps/api/event').then(({ listen }) => {
+      listen<{ percentage: number }>('update-download-progress', (event) => {
+        setDownloadProgress(event.payload.percentage);
+      }).then((fn) => {
+        unlisten = fn;
+      });
+    }).catch(() => {});
+    return () => {
+      if (unlisten) unlisten();
+    };
+  }, []);
+
+  const handleCheckUpdate = async () => {
+    playPop();
+    setIsCheckingUpdate(true);
+    setUpdateStatus('Checking GitHub Releases for SendKeep updates...');
+    try {
+      const res = await invoke<any>('check_for_desktop_update');
+      setUpdateInfo(res);
+      if (res.has_update) {
+        setUpdateStatus(`New release v${res.latest_version} available!`);
+      } else {
+        setUpdateStatus(`SendKeep is up to date (v${res.current_version}).`);
+      }
+    } catch (e: any) {
+      setUpdateStatus(`Check failed: ${e?.message || e}`);
+    } finally {
+      setIsCheckingUpdate(false);
+    }
+  };
+
+  const handleInstallUpdate = async () => {
+    if (!updateInfo?.download_url) return;
+    playPop();
+    setIsInstallingUpdate(true);
+    setUpdateStatus('Downloading installer...');
+    try {
+      await invoke('download_and_install_desktop_update', {
+        downloadUrl: updateInfo.download_url,
+      });
+    } catch (e: any) {
+      setIsInstallingUpdate(false);
+      setUpdateStatus(`Installation failed: ${e?.message || e}`);
     }
   };
 
@@ -172,6 +233,7 @@ export const SettingsModal: React.FC = () => {
               { id: 'position', label: 'Position' },
               { id: 'appearance', label: 'Appearance' },
               { id: 'transfer', label: 'Network' },
+              { id: 'updates', label: 'Updates' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -764,6 +826,83 @@ export const SettingsModal: React.FC = () => {
                     </div>
                   ))
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* ──── UPDATES TAB ──── */}
+          {activeTab === 'updates' && (
+            <div className="flex flex-col gap-3 py-1">
+              <div className="setting-group-label">Application Updates & Release</div>
+
+              {/* Version & Check Card */}
+              <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] flex flex-col gap-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-col">
+                    <span className="text-xs font-semibold text-white/90">Current Version</span>
+                    <span className="text-[11px] text-white/50 font-mono">SendKeep v0.0.1 (Storeless)</span>
+                  </div>
+                  <button
+                    onClick={handleCheckUpdate}
+                    disabled={isCheckingUpdate || isInstallingUpdate}
+                    className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-xs font-semibold text-white transition-all cursor-pointer shadow-[0_0_12px_rgba(99,102,241,0.3)]"
+                  >
+                    {isCheckingUpdate ? 'Checking...' : 'Check for Updates'}
+                  </button>
+                </div>
+
+                {updateStatus && (
+                  <div className="text-[11px] text-white/70 pt-1 border-t border-white/[0.05]">
+                    {updateStatus}
+                  </div>
+                )}
+              </div>
+
+              {/* Update Details Card (Shown when update is available) */}
+              {updateInfo?.has_update && updateInfo.download_url && (
+                <div className="p-3.5 rounded-xl bg-indigo-500/[0.08] border border-indigo-500/30 flex flex-col gap-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-indigo-300">
+                      ⚡ Update v{updateInfo.latest_version} Available
+                    </span>
+                    {updateInfo.asset_size && (
+                      <span className="text-[10px] text-white/40 font-mono">
+                        {(updateInfo.asset_size / (1024 * 1024)).toFixed(1)} MB
+                      </span>
+                    )}
+                  </div>
+
+                  {updateInfo.release_notes && (
+                    <div className="text-[11px] text-white/80 bg-black/30 p-2.5 rounded-lg max-h-24 overflow-y-auto leading-relaxed border border-white/[0.04]">
+                      {updateInfo.release_notes}
+                    </div>
+                  )}
+
+                  {isInstallingUpdate ? (
+                    <div className="flex flex-col gap-1.5 pt-1">
+                      <div className="w-full bg-white/[0.1] h-1.5 rounded-full overflow-hidden">
+                        <div
+                          className="bg-indigo-500 h-full transition-all duration-150"
+                          style={{ width: `${downloadProgress}%` }}
+                        />
+                      </div>
+                      <span className="text-[10px] text-white/50 font-mono">
+                        Downloading installer: {downloadProgress.toFixed(0)}%
+                      </span>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={handleInstallUpdate}
+                      className="w-full py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white transition-all cursor-pointer shadow-[0_0_16px_rgba(16,185,129,0.35)]"
+                    >
+                      Install Update
+                    </button>
+                  )}
+                </div>
+              )}
+
+              <div className="text-[10px] text-white/30 text-center pt-2">
+                SendKeep checks directly with GitHub Releases. No Microsoft Store required.
               </div>
             </div>
           )}

@@ -7,6 +7,7 @@ mod server;
 mod tray;
 mod window_hooks;
 mod installer;
+mod updater;
 
 use discovery::DiscoveryService;
 use server::{start_server, DeviceInfo, ServerState};
@@ -1128,6 +1129,8 @@ fn start_installer_dragging(app: AppHandle) {
             installer::execute_installer,
             installer::launch_installed_app,
             installer::exit_installer,
+            updater::check_for_desktop_update,
+            updater::download_and_install_desktop_update,
         ])
         .setup(|app| {
             let is_installer = installer::is_installer_mode();

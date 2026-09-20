@@ -24,7 +24,6 @@ export const Panel: React.FC = () => {
   const isPairModalOpen = useStore((s) => s.isPairModalOpen);
   const setPairModalOpen = useStore((s) => s.setPairModalOpen);
   const activeSource = useStore((s) => s.activeSource);
-  const connectedDevice = useStore((s) => s.connectedDevice);
   const addItem = useStore((s) => s.addItem);
   const beamItemToDevice = useStore((s) => s.beamItemToDevice);
 

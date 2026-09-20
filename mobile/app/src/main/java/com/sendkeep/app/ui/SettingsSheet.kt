@@ -30,9 +30,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sendkeep.app.BuildConfig
 import com.sendkeep.app.ui.theme.*
+import com.sendkeep.app.util.AppUpdater
+import com.sendkeep.app.util.AppUpdateInfo
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,7 +45,14 @@ fun SettingsSheet(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     val prefs = remember { context.getSharedPreferences("sendkeep_prefs", Context.MODE_PRIVATE) }
+
+    var isCheckingUpdates by remember { mutableStateOf(false) }
+    var updateInfo by remember { mutableStateOf<AppUpdateInfo?>(null) }
+    var updateStatusMessage by remember { mutableStateOf("") }
+    var isDownloadingUpdate by remember { mutableStateOf(false) }
+    var downloadProgress by remember { mutableFloatStateOf(0f) }
 
     var storagePath by remember {
         mutableStateOf(prefs.getString("storage_path", "/Download/SendKeep") ?: "/Download/SendKeep")
@@ -497,6 +509,145 @@ fun SettingsSheet(
                 }
             }
 
+            // Section 5: App Updates (No Store Required)
+            SettingsGroupHeader(title = "APP UPDATES")
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                color = CardBg,
+                border = BorderStroke(1.dp, CardBorder)
+            ) {
+                Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text("Current Version", fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold, color = TextMain)
+                            Text("SendKeep v${BuildConfig.VERSION_NAME} (Storeless)", fontSize = 11.sp, color = TextSub)
+                        }
+                        Button(
+                            onClick = {
+                                isCheckingUpdates = true
+                                updateStatusMessage = "Checking GitHub releases..."
+                                coroutineScope.launch {
+                                    val info = AppUpdater.checkForUpdates(BuildConfig.VERSION_NAME)
+                                    isCheckingUpdates = false
+                                    updateInfo = info
+                                    updateStatusMessage = if (info.hasUpdate) {
+                                        "New version v${info.latestVersion} available!"
+                                    } else {
+                                        "You are on the latest version."
+                                    }
+                                }
+                            },
+                            enabled = !isCheckingUpdates && !isDownloadingUpdate,
+                            colors = ButtonDefaults.buttonColors(containerColor = SurfaceDark, contentColor = ElectricLime),
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                            modifier = Modifier.height(34.dp)
+                        ) {
+                            if (isCheckingUpdates) {
+                                CircularProgressIndicator(modifier = Modifier.size(14.dp), color = ElectricLime, strokeWidth = 2.dp)
+                            } else {
+                                Text("Check for Updates", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+
+                    if (updateStatusMessage.isNotBlank()) {
+                        Text(
+                            text = updateStatusMessage,
+                            fontSize = 11.sp,
+                            color = if (updateInfo?.hasUpdate == true) ElectricLime else TextSub
+                        )
+                    }
+
+                    if (updateInfo?.hasUpdate == true && updateInfo?.apkUrl != null) {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(10.dp),
+                            color = CanvasBg,
+                            border = BorderStroke(1.dp, CardBorder)
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = "⚡ Update v${updateInfo!!.latestVersion}",
+                                        fontSize = 12.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = ElectricLime
+                                    )
+                                    if (updateInfo!!.apkSize != null && updateInfo!!.apkSize!! > 0) {
+                                        Text(
+                                            text = "%.1f MB".format(updateInfo!!.apkSize!! / (1024f * 1024f)),
+                                            fontSize = 10.5.sp,
+                                            color = TextSub
+                                        )
+                                    }
+                                }
+
+                                if (updateInfo!!.releaseNotes.isNotBlank()) {
+                                    Text(
+                                        text = updateInfo!!.releaseNotes,
+                                        fontSize = 11.sp,
+                                        color = TextMain,
+                                        maxLines = 4,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+
+                                if (isDownloadingUpdate) {
+                                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        LinearProgressIndicator(
+                                            progress = { downloadProgress },
+                                            modifier = Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)),
+                                            color = ElectricLime,
+                                            trackColor = SurfaceDark
+                                        )
+                                        Text(
+                                            text = "Downloading APK: ${(downloadProgress * 100).toInt()}%",
+                                            fontSize = 10.5.sp,
+                                            color = TextSub
+                                        )
+                                    }
+                                } else {
+                                    Button(
+                                        onClick = {
+                                            isDownloadingUpdate = true
+                                            coroutineScope.launch {
+                                                AppUpdater.downloadAndInstallApk(
+                                                    context = context,
+                                                    apkUrl = updateInfo!!.apkUrl!!,
+                                                    onProgress = { prog, _, _ ->
+                                                        downloadProgress = prog
+                                                    },
+                                                    onError = { err ->
+                                                        isDownloadingUpdate = false
+                                                        updateStatusMessage = "Download failed: $err"
+                                                    }
+                                                )
+                                                isDownloadingUpdate = false
+                                            }
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = ElectricLime, contentColor = LimeText),
+                                        shape = RoundedCornerShape(8.dp),
+                                        modifier = Modifier.fillMaxWidth().height(36.dp)
+                                    ) {
+                                        Text("Install Update", fontSize = 12.5.sp, fontWeight = FontWeight.ExtraBold)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             // Footer
             Box(
                 modifier = Modifier
@@ -505,7 +656,7 @@ fun SettingsSheet(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "SendKeep Mobile v1.0.0 • Obsidian Zero-Cloud Engine",
+                    text = "SendKeep Mobile v0.0.1 • Obsidian Zero-Cloud Engine",
                     fontSize = 10.5.sp,
                     color = TextDim
                 )
