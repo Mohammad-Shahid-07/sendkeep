@@ -48,7 +48,7 @@ export const InstallerTitlebar: FC = () => {
           SendKeep
         </span>
         <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-white/[0.05] text-white/40 border border-white/[0.08]">
-          v1.0.0
+          v0.0.1
         </span>
       </div>
 

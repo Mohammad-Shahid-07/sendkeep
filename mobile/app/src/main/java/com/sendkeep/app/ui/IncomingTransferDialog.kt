@@ -69,6 +69,7 @@ fun IncomingTransferDialog(
                 .background(SheetBg)
                 .border(BorderStroke(1.dp, VioletGlow), RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
                 .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { }
+                .navigationBarsPadding()
                 .padding(horizontal = 18.dp, vertical = 20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {

@@ -37,45 +37,64 @@ export const SidebarDropOverlay: React.FC<SidebarDropOverlayProps> = ({
   const activeZone = externalActiveZone !== undefined ? externalActiveZone : localActiveZone;
   const setActiveZone = externalSetActiveZone || setLocalActiveZone;
 
-  // Compile list of available devices (trusted + connected + discovered, deduped)
+  // Compile list of available devices (trusted + connected + discovered, strictly deduped)
   const deviceList: TrustedDevice[] = React.useMemo(() => {
     const list: TrustedDevice[] = [];
-    const seen = new Set<string>();
+    const seenIds = new Set<string>();
+    const seenIps = new Set<string>();
+    const seenFingerprints = new Set<string>();
+    const seenNames = new Set<string>();
 
-    // 1. Add all trusted devices
+    const isDuplicate = (dev: { id?: string; ip?: string; fingerprint?: string; name?: string }) => {
+      const normName = (dev.name || '').trim().toLowerCase();
+      if (dev.id && seenIds.has(dev.id)) return true;
+      if (dev.ip && seenIps.has(dev.ip)) return true;
+      if (dev.fingerprint && seenFingerprints.has(dev.fingerprint)) return true;
+      if (normName && seenNames.has(normName)) return true;
+      return false;
+    };
+
+    const markSeen = (dev: { id?: string; ip?: string; fingerprint?: string; name?: string }) => {
+      const normName = (dev.name || '').trim().toLowerCase();
+      if (dev.id) seenIds.add(dev.id);
+      if (dev.ip) seenIps.add(dev.ip);
+      if (dev.fingerprint) seenFingerprints.add(dev.fingerprint);
+      if (normName) seenNames.add(normName);
+    };
+
+    // 1. Add all online trusted devices
     for (const dev of trustedDevices) {
-      const key = dev.id || dev.fingerprint || dev.ip;
-      if (key && !seen.has(key)) {
-        seen.add(key);
+      if (dev.status !== 'online') continue;
+      if (!isDuplicate(dev)) {
+        markSeen(dev);
         list.push(dev);
       }
     }
 
-    // 2. Add connectedDevice if not already in list
-    if (connectedDevice) {
-      const key = connectedDevice.id || connectedDevice.fingerprint || connectedDevice.ip;
-      if (key && !seen.has(key)) {
-        seen.add(key);
+    // 2. Add connectedDevice if online and not already in list
+    if (connectedDevice && connectedDevice.status === 'online') {
+      if (!isDuplicate(connectedDevice)) {
+        markSeen(connectedDevice);
         list.push(connectedDevice);
       }
     }
 
-    // 3. Fallback to discovered online devices if list is still empty
-    if (list.length === 0) {
-      for (const disc of discoveredDevices) {
-        if (disc.ip && !seen.has(disc.ip)) {
-          seen.add(disc.ip);
-          list.push({
-            id: disc.ip,
-            name: disc.name || disc.ip,
-            ip: disc.ip,
-            port: disc.port || 53317,
-            model: disc.model,
-            deviceType: disc.deviceType,
-            fingerprint: disc.fingerprint,
-            status: 'online',
-          });
-        }
+    // 3. Only include discovered nearby devices if NOT already in list
+    for (const disc of discoveredDevices) {
+      if (disc.status === 'offline') continue;
+      if (!disc.ip) continue;
+      if (!isDuplicate(disc)) {
+        markSeen(disc);
+        list.push({
+          id: disc.ip,
+          name: disc.name || disc.ip,
+          ip: disc.ip,
+          port: disc.port || 53317,
+          model: disc.model,
+          deviceType: disc.deviceType,
+          fingerprint: disc.fingerprint,
+          status: 'online',
+        });
       }
     }
 
@@ -487,7 +506,7 @@ export const SidebarDropOverlay: React.FC<SidebarDropOverlayProps> = ({
 
             return (
               <div
-                key={dev.id}
+                key={`${dev.id || dev.ip}-${dev.name}`}
                 data-drop-zone={zoneKey}
                 style={{
                   backgroundColor: isDeviceActive ? '#0c2b20' : '#12141e',

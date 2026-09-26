@@ -17,7 +17,7 @@ function MainShelf() {
   }, []);
 
   return (
-    <main className="w-full h-screen overflow-hidden bg-transparent">
+    <main className="w-full h-screen overflow-hidden bg-transparent pointer-events-none">
       <Panel />
       <TransferProgressOverlay />
     </main>
@@ -33,12 +33,14 @@ export function App() {
   });
 
   useEffect(() => {
-    invoke<boolean>('check_is_installer_mode')
-      .then((res) => {
-        if (res) setIsInstaller(true);
-      })
-      .catch(() => {});
-  }, []);
+    if (!isInstaller) {
+      invoke<boolean>('check_is_installer_mode')
+        .then((res) => {
+          if (res) setIsInstaller(true);
+        })
+        .catch(() => {});
+    }
+  }, [isInstaller]);
 
   if (isInstaller) {
     return <InstallerApp />;

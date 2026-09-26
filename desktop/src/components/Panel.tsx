@@ -44,14 +44,42 @@ export const Panel: React.FC = () => {
     const isClipboardTarget = targetZone === 'clipboard';
 
     const state = useStore.getState();
-    const allDevices = [...state.trustedDevices];
-    if (state.connectedDevice && !allDevices.some((d) => d.id === state.connectedDevice?.id)) {
-      allDevices.push(state.connectedDevice);
+    const seen = new Set<string>();
+    const allDevices: TrustedDevice[] = [];
+    const addD = (d: TrustedDevice) => {
+      seen.add(d.id);
+      if (d.ip) seen.add(d.ip);
+      if (d.name) seen.add(d.name.trim().toLowerCase());
+      if (d.fingerprint) seen.add(d.fingerprint);
+      allDevices.push(d);
+    };
+
+    for (const d of state.trustedDevices) {
+      if (d.status === 'online' && !seen.has(d.id) && (!d.ip || !seen.has(d.ip)) && (!d.name || !seen.has(d.name.trim().toLowerCase()))) {
+        addD(d);
+      }
+    }
+    if (state.connectedDevice && state.connectedDevice.status === 'online' && !seen.has(state.connectedDevice.id) && (!state.connectedDevice.ip || !seen.has(state.connectedDevice.ip)) && (!state.connectedDevice.name || !seen.has(state.connectedDevice.name.trim().toLowerCase()))) {
+      addD(state.connectedDevice);
+    }
+    for (const disc of state.discoveredDevices) {
+      if (disc.status !== 'offline' && disc.ip && !seen.has(disc.ip) && (!disc.name || !seen.has(disc.name.trim().toLowerCase()))) {
+        addD({
+          id: disc.ip,
+          name: disc.name || disc.ip,
+          ip: disc.ip,
+          port: disc.port || 53317,
+          model: disc.model,
+          deviceType: disc.deviceType,
+          fingerprint: disc.fingerprint,
+          status: 'online',
+        });
+      }
     }
 
     if (isDeviceTarget && targetZone) {
       const devId = targetZone.replace('device-', '');
-      targetDevice = allDevices.find((d) => d.id === devId) || allDevices[0];
+      targetDevice = allDevices.find((d) => d.id === devId || d.ip === devId) || allDevices[0];
     } else if (!isClipboardTarget && state.activeSource === 'device') {
       targetDevice = allDevices[0];
     }
@@ -95,6 +123,9 @@ export const Panel: React.FC = () => {
           fileType,
           sender: isBeamMode ? 'You' : 'Windows Clipboard',
           source: isBeamMode ? 'device' : 'clipboard',
+          targetDeviceId: isBeamMode ? targetDevice?.id : undefined,
+          targetDeviceName: isBeamMode ? targetDevice?.name : undefined,
+          targetDeviceIp: isBeamMode ? targetDevice?.ip : undefined,
           timestamp: Date.now(),
         });
       }
@@ -107,6 +138,9 @@ export const Panel: React.FC = () => {
         fileType: 'bundle/files',
         sender: isBeamMode ? 'You' : 'Windows Clipboard',
         source: isBeamMode ? 'device' : 'clipboard',
+        targetDeviceId: isBeamMode ? targetDevice?.id : undefined,
+        targetDeviceName: isBeamMode ? targetDevice?.name : undefined,
+        targetDeviceIp: isBeamMode ? targetDevice?.ip : undefined,
         timestamp: Date.now(),
         isStack: true,
         isExpanded: false,
@@ -186,6 +220,9 @@ export const Panel: React.FC = () => {
         fileType,
         sender: isBeamMode ? 'You' : 'Windows Clipboard',
         source: isBeamMode ? 'device' : 'clipboard',
+        targetDeviceId: isBeamMode ? targetDevice?.id : undefined,
+        targetDeviceName: isBeamMode ? targetDevice?.name : undefined,
+        targetDeviceIp: isBeamMode ? targetDevice?.ip : undefined,
         timestamp: Date.now(),
       };
 
@@ -202,9 +239,37 @@ export const Panel: React.FC = () => {
 
     const resolveZone = (y: number): string => {
       const state = useStore.getState();
-      const allDevices = [...state.trustedDevices];
-      if (state.connectedDevice && !allDevices.some((d) => d.id === state.connectedDevice?.id)) {
-        allDevices.push(state.connectedDevice);
+      const seen = new Set<string>();
+      const allDevices: TrustedDevice[] = [];
+      const addD = (d: TrustedDevice) => {
+        seen.add(d.id);
+        if (d.ip) seen.add(d.ip);
+        if (d.name) seen.add(d.name.trim().toLowerCase());
+        if (d.fingerprint) seen.add(d.fingerprint);
+        allDevices.push(d);
+      };
+
+      for (const d of state.trustedDevices) {
+        if (d.status === 'online' && !seen.has(d.id) && (!d.ip || !seen.has(d.ip)) && (!d.name || !seen.has(d.name.trim().toLowerCase()))) {
+          addD(d);
+        }
+      }
+      if (state.connectedDevice && state.connectedDevice.status === 'online' && !seen.has(state.connectedDevice.id) && (!state.connectedDevice.ip || !seen.has(state.connectedDevice.ip)) && (!state.connectedDevice.name || !seen.has(state.connectedDevice.name.trim().toLowerCase()))) {
+        addD(state.connectedDevice);
+      }
+      for (const disc of state.discoveredDevices) {
+        if (disc.status !== 'offline' && disc.ip && !seen.has(disc.ip) && (!disc.name || !seen.has(disc.name.trim().toLowerCase()))) {
+          addD({
+            id: disc.ip,
+            name: disc.name || disc.ip,
+            ip: disc.ip,
+            port: disc.port || 53317,
+            model: disc.model,
+            deviceType: disc.deviceType,
+            fingerprint: disc.fingerprint,
+            status: 'online',
+          });
+        }
       }
 
       const totalZones = 1 + Math.max(1, allDevices.length);
@@ -345,6 +410,7 @@ export const Panel: React.FC = () => {
       const text = e.dataTransfer.getData('text/plain') || e.dataTransfer.getData('text');
       if (text) {
         const isPhoneMode = activeSource === 'device';
+        const curDev = useStore.getState().connectedDevice;
         const isLink = text.startsWith('http://') || text.startsWith('https://');
         const clipItem = {
           id: 'drop-text-' + Date.now(),
@@ -354,6 +420,9 @@ export const Panel: React.FC = () => {
           fileType: 'text/plain',
           sender: 'You',
           source: isPhoneMode ? ('device' as const) : ('clipboard' as const),
+          targetDeviceId: isPhoneMode ? curDev?.id : undefined,
+          targetDeviceName: isPhoneMode ? curDev?.name : undefined,
+          targetDeviceIp: isPhoneMode ? curDev?.ip : undefined,
           timestamp: Date.now(),
           content: text,
         };
@@ -367,6 +436,7 @@ export const Panel: React.FC = () => {
 
     playBeam();
     const isPhoneMode = activeSource === 'device';
+    const curDev = useStore.getState().connectedDevice;
 
     if (files.length > 1) {
       const subItems = [];
@@ -383,6 +453,9 @@ export const Panel: React.FC = () => {
           fileType: file.type || 'application/octet-stream',
           sender: 'You',
           source: isPhoneMode ? ('device' as const) : ('clipboard' as const),
+          targetDeviceId: isPhoneMode ? curDev?.id : undefined,
+          targetDeviceName: isPhoneMode ? curDev?.name : undefined,
+          targetDeviceIp: isPhoneMode ? curDev?.ip : undefined,
           timestamp: Date.now(),
         });
       }
@@ -395,6 +468,9 @@ export const Panel: React.FC = () => {
         fileType: 'bundle/files',
         sender: 'You',
         source: isPhoneMode ? ('device' as const) : ('clipboard' as const),
+        targetDeviceId: isPhoneMode ? curDev?.id : undefined,
+        targetDeviceName: isPhoneMode ? curDev?.name : undefined,
+        targetDeviceIp: isPhoneMode ? curDev?.ip : undefined,
         timestamp: Date.now(),
         isStack: true,
         isExpanded: false,
@@ -423,6 +499,9 @@ export const Panel: React.FC = () => {
         fileType: file.type || 'application/octet-stream',
         sender: 'You',
         source: isPhoneMode ? ('device' as const) : ('clipboard' as const),
+        targetDeviceId: isPhoneMode ? curDev?.id : undefined,
+        targetDeviceName: isPhoneMode ? curDev?.name : undefined,
+        targetDeviceIp: isPhoneMode ? curDev?.ip : undefined,
         timestamp: Date.now(),
         content: textContent,
       };
@@ -473,21 +552,13 @@ export const Panel: React.FC = () => {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: isRight ? 4 : -4 }}
             transition={{ duration: 0.15 }}
-            onClick={() => {
-              useStore.getState().setOpen(true);
-              invoke('set_interactive', { interactive: true });
-            }}
-            onMouseEnter={() => {
-              useStore.getState().setOpen(true);
-              invoke('set_interactive', { interactive: true });
-            }}
-            className={`absolute ${isRight ? 'right-0' : 'left-0'} top-1/2 -translate-y-1/2 w-[2.5px] flex items-center group cursor-pointer pointer-events-auto z-30 select-none`}
-            title="Click or hover edge to open SendKeep"
+            className={`absolute ${isRight ? 'right-0' : 'left-0'} top-1/2 -translate-y-1/2 w-[2.5px] flex items-center group pointer-events-none z-30 select-none`}
+            title="Move cursor to edge to open SendKeep"
           >
             <div
               className={`w-[2.5px] h-12 ${
                 isRight ? 'rounded-l-full border-l' : 'rounded-r-full border-r'
-              } bg-white/45 border-y border-white/30 transition-all duration-150 ease-out group-hover:w-[3px] group-hover:bg-white/90 group-hover:shadow-[0_0_8px_rgba(255,255,255,0.35)]`}
+              } bg-white/45 border-y border-white/30 transition-all duration-150 ease-out`}
             />
           </motion.div>
         )}
@@ -501,28 +572,40 @@ export const Panel: React.FC = () => {
         }}
         transition={{
           type: 'spring',
-          stiffness: 420,
+          stiffness: 540,
           damping: 38,
-          mass: 0.8,
+          mass: 0.65,
         }}
         onMouseEnter={() => {
-          invoke('set_interactive', { interactive: true }).catch(() => {});
+          if (isOpen) {
+            invoke('set_interactive', { interactive: true }).catch(() => {});
+          }
         }}
         onPointerDown={() => {
-          invoke('focus_window').catch(() => {});
+          if (isOpen) {
+            invoke('focus_window').catch(() => {});
+          }
         }}
         style={{
           willChange: 'transform',
+          pointerEvents: isOpen ? 'auto' : 'none',
         }}
         onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
+        onMouseLeave={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+            useStore.getState().setDeviceMenuOpen(false);
+          }
+        }}
         className={`fixed top-0 ${
           isRight
             ? 'right-0 border-l border-white/[0.08]'
             : 'left-0 border-r border-white/[0.08]'
-        } w-[350px] h-screen bg-[#090a0e] flex flex-col pointer-events-auto relative overflow-hidden z-20`}
+        } w-[350px] h-screen bg-[#090a0e] flex flex-col ${
+          isOpen ? 'pointer-events-auto' : 'pointer-events-none'
+        } relative overflow-hidden z-20`}
       >
         {/* Full-Sidebar Droppable Target Zones Overlay */}
         <AnimatePresence>

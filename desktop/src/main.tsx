@@ -9,6 +9,17 @@ import '@fontsource/jetbrains-mono/500.css';
 import '@fontsource/jetbrains-mono/600.css';
 import App from "./App";
 
+// Disable default browser context menu globally to give a clean native desktop experience
+if (typeof window !== 'undefined') {
+  window.addEventListener(
+    'contextmenu',
+    (e) => {
+      e.preventDefault();
+    },
+    { capture: true }
+  );
+}
+
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <App />

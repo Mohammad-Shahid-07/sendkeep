@@ -200,6 +200,7 @@ fun MediaPickerDrawer(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(0.85f)
+                .navigationBarsPadding()
                 .padding(horizontal = 16.dp)
         ) {
             // Header

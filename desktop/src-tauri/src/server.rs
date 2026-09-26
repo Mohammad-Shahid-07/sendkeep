@@ -13,7 +13,7 @@ use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, Manager};
 use tokio::fs::File;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::sync::RwLock;
@@ -256,6 +256,7 @@ pub async fn start_server(state: Arc<ServerState>, port: u16) {
         .route("/api/sendkeep/v1/upload", post(upload_handler))
         .route("/api/sendkeep/v1/cancel", post(cancel_handler))
         .route("/api/sendkeep/v1/cli-drop", post(cli_drop_handler))
+        .route("/api/sendkeep/v1/reveal", post(reveal_handler).get(reveal_handler))
         // Interoperability fallback for standard LocalSend apps
         .route("/api/localsend/v2/info", get(info_handler))
         .route("/api/localsend/v2/register", post(register_handler))
@@ -318,6 +319,19 @@ async fn cli_drop_handler(
 ) -> impl IntoResponse {
     println!("[SendKeep Server] CLI file drop received: {}", payload.path);
     let _ = state.app_handle.emit("sendkeep:cli-file-dropped", payload.path);
+    StatusCode::OK
+}
+
+async fn reveal_handler(
+    State(state): State<Arc<ServerState>>,
+) -> impl IntoResponse {
+    println!("[SendKeep Server] Reveal request received from secondary instance");
+    if let Some(window) = state.app_handle.get_webview_window("main") {
+        let _ = window.show();
+        let _ = window.unminimize();
+        let _ = window.set_focus();
+    }
+    let _ = state.app_handle.emit("sendkeep:toggle-shelf", ());
     StatusCode::OK
 }
 

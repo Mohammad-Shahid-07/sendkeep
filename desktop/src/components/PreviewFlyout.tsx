@@ -309,6 +309,11 @@ export const PreviewFlyout: React.FC<{ isRight?: boolean }> = ({ isRight: isRigh
         onMouseEnter={() => {
           invoke('set_interactive', { interactive: true }).catch(() => {});
         }}
+        onMouseLeave={() => {
+          if (!useStore.getState().isOpen) {
+            invoke('set_interactive', { interactive: false }).catch(() => {});
+          }
+        }}
         style={{
           position: 'fixed',
           top: '20px',

@@ -398,3 +398,108 @@ pub async fn probe_peer(ip: String, port: u16) -> Result<Option<serde_json::Valu
     Ok(json_resp)
 }
 
+#[tauri::command]
+pub async fn prepare_upload_peer(
+    target_ip: String,
+    port: u16,
+    payload: serde_json::Value,
+) -> Result<serde_json::Value, String> {
+    let clean_ip: Ipv4Addr = target_ip
+        .trim()
+        .parse()
+        .map_err(|e| format!("Invalid IPv4 address: {}", e))?;
+
+    let addr = SocketAddr::new(IpAddr::V4(clean_ip), port);
+    let mut stream = match tokio::time::timeout(Duration::from_secs(5), TcpStream::connect(addr)).await {
+        Ok(Ok(s)) => s,
+        Ok(Err(e)) => return Err(format!("Failed to connect to {}:{}: {}", clean_ip, port, e)),
+        Err(_) => return Err(format!("Connection to {}:{} timed out", clean_ip, port)),
+    };
+
+    let body = serde_json::to_string(&payload).map_err(|e| e.to_string())?;
+
+    // Try SendKeep v1 endpoint first
+    let req = format!(
+        "POST /api/sendkeep/v1/prepare-upload HTTP/1.1\r\nHost: {}:{}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+        clean_ip, port, body.len(), body
+    );
+
+    if let Err(e) = stream.write_all(req.as_bytes()).await {
+        return Err(format!("Failed writing prepare-upload headers: {}", e));
+    }
+
+    // Wait up to 60 seconds for recipient approval
+    let mut buf = Vec::new();
+    let mut temp = [0u8; 1024];
+    loop {
+        match tokio::time::timeout(Duration::from_secs(60), stream.read(&mut temp)).await {
+            Ok(Ok(n)) => {
+                if n == 0 {
+                    break;
+                }
+                buf.extend_from_slice(&temp[..n]);
+                if buf.len() > 65536 {
+                    break;
+                }
+            }
+            Ok(Err(e)) => return Err(format!("Socket read error: {}", e)),
+            Err(_) => return Err("Transfer request timed out waiting for recipient approval".to_string()),
+        }
+    }
+
+    let mut res_str = String::from_utf8_lossy(&buf).to_string();
+    let first_line = res_str.lines().next().unwrap_or("").to_string();
+    let mut api_path = "/api/sendkeep/v1/upload".to_string();
+
+    // If 404 Not Found, fallback to LocalSend v2 endpoint
+    if first_line.contains("404") {
+        if let Ok(Ok(mut stream2)) = tokio::time::timeout(Duration::from_secs(5), TcpStream::connect(addr)).await {
+            let req2 = format!(
+                "POST /api/localsend/v2/prepare-upload HTTP/1.1\r\nHost: {}:{}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+                clean_ip, port, body.len(), body
+            );
+            if stream2.write_all(req2.as_bytes()).await.is_ok() {
+                buf.clear();
+                loop {
+                    match tokio::time::timeout(Duration::from_secs(60), stream2.read(&mut temp)).await {
+                        Ok(Ok(n)) => {
+                            if n == 0 {
+                                break;
+                            }
+                            buf.extend_from_slice(&temp[..n]);
+                            if buf.len() > 65536 {
+                                break;
+                            }
+                        }
+                        _ => break,
+                    }
+                }
+                res_str = String::from_utf8_lossy(&buf).to_string();
+                api_path = "/api/localsend/v2/upload".to_string();
+            }
+        }
+    }
+
+    let final_status_line = res_str.lines().next().unwrap_or("").to_string();
+    if final_status_line.contains("403") {
+        return Err("Transfer declined by recipient".to_string());
+    }
+    if final_status_line.contains("401") {
+        return Err("Unauthorized - recipient requires valid PIN".to_string());
+    }
+
+    let body_part = res_str
+        .split("\r\n\r\n")
+        .nth(1)
+        .ok_or_else(|| format!("Invalid HTTP response: {}", final_status_line))?;
+
+    let mut json_resp: serde_json::Value =
+        serde_json::from_str(body_part).map_err(|e| format!("Failed to parse prepare-upload response: {}", e))?;
+
+    if let serde_json::Value::Object(ref mut map) = json_resp {
+        map.insert("uploadApiPath".to_string(), serde_json::Value::String(api_path));
+    }
+
+    Ok(json_resp)
+}
+

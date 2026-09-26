@@ -10,6 +10,10 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.activity.SystemBarStyle
+import androidx.core.view.WindowCompat
+import android.os.Build
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -146,6 +150,26 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(
+                android.graphics.Color.TRANSPARENT
+            ),
+            navigationBarStyle = SystemBarStyle.dark(
+                android.graphics.Color.TRANSPARENT
+            )
+        )
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            window.isNavigationBarContrastEnforced = false
+            window.isStatusBarContrastEnforced = false
+        }
+        window.navigationBarColor = android.graphics.Color.TRANSPARENT
+        window.statusBarColor = android.graphics.Color.TRANSPARENT
+
+        val insetsController = WindowCompat.getInsetsController(window, window.decorView)
+        insetsController.isAppearanceLightStatusBars = false
+        insetsController.isAppearanceLightNavigationBars = false
+
         super.onCreate(savedInstanceState)
         handleIntent(intent)
 
@@ -624,6 +648,7 @@ fun SendKeepDashboard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .statusBarsPadding()
                     .padding(start = 18.dp, end = 18.dp, top = 8.dp, bottom = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -697,39 +722,49 @@ fun SendKeepDashboard(
             }
         },
         bottomBar = {
-            // Grounded Bottom Navigation Bar matching Concept 4
+            // Grounded Bottom Navigation Bar matching Concept 4 & LocalSend edge-to-edge
             Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(64.dp),
-                color = SurfaceDark,
-                border = BorderStroke(1.dp, CardBorder)
+                modifier = Modifier.fillMaxWidth(),
+                color = SurfaceDark
             ) {
-                Row(
+                Column(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceAround,
-                    verticalAlignment = Alignment.CenterVertically
+                        .fillMaxWidth()
+                        .navigationBarsPadding()
                 ) {
-                    BottomNavItem(
-                        label = "Shelf",
-                        icon = Icons.Outlined.GridView,
-                        active = activeTab == 0,
-                        onClick = { activeTab = 0 }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(1.dp)
+                            .background(CardBorder)
                     )
-                    BottomNavItem(
-                        label = "Devices",
-                        icon = Icons.Outlined.Devices,
-                        active = activeTab == 1,
-                        onClick = { activeTab = 1 }
-                    )
-                    BottomNavItem(
-                        label = "Settings",
-                        icon = Icons.Outlined.Tune,
-                        active = activeTab == 2,
-                        onClick = { showSettingsSheet = true }
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(64.dp)
+                            .padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceAround,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        BottomNavItem(
+                            label = "Shelf",
+                            icon = Icons.Outlined.GridView,
+                            active = activeTab == 0,
+                            onClick = { activeTab = 0 }
+                        )
+                        BottomNavItem(
+                            label = "Devices",
+                            icon = Icons.Outlined.Devices,
+                            active = activeTab == 1,
+                            onClick = { activeTab = 1 }
+                        )
+                        BottomNavItem(
+                            label = "Settings",
+                            icon = Icons.Outlined.Tune,
+                            active = activeTab == 2,
+                            onClick = { showSettingsSheet = true }
+                        )
+                    }
                 }
             }
         }
@@ -1387,31 +1422,37 @@ private fun BottomNavItem(
     active: Boolean,
     onClick: () -> Unit
 ) {
-    Box(
+    Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(if (active) VioletDim else Color.Transparent)
+            .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 6.dp),
-        contentAlignment = Alignment.Center
+            .padding(horizontal = 14.dp, vertical = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+        Box(
+            modifier = Modifier
+                .width(54.dp)
+                .height(30.dp)
+                .clip(CircleShape)
+                .background(if (active) VioletDim else Color.Transparent),
+            contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = label,
-                tint = if (active) ElectricLime else TextDim,
+                tint = if (active) ElectricViolet else TextDim,
                 modifier = Modifier.size(20.dp)
             )
-            Text(
-                text = label,
-                fontSize = 10.5.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = if (active) ElectricLime else TextDim
-            )
         }
+        Spacer(modifier = Modifier.height(3.dp))
+        Text(
+            text = label,
+            fontSize = 11.sp,
+            fontWeight = if (active) FontWeight.Bold else FontWeight.Medium,
+            color = if (active) TextMain else TextDim,
+            letterSpacing = (-0.2).sp
+        )
     }
 }
 

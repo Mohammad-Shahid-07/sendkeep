@@ -5,9 +5,24 @@ import { useStore, SendKeepItem, TransferProgress } from '../store/appStore';
 import { playCopy, playPop } from '../lib/soundEffects';
 
 const GRACE_MS = 250;
-const DWELL_MS = 80;
+const DEFAULT_DWELL_MS = 50; // Balanced 50ms dwell response
 const BASE_PANEL_WIDTH = 350;
 const FLYOUT_PANEL_WIDTH = 820;
+
+let cachedIsFullscreen = false;
+let lastFsCheckTime = 0;
+async function isFullscreenActiveCached(): Promise<boolean> {
+  const now = performance.now();
+  if (now - lastFsCheckTime > 1500) {
+    lastFsCheckTime = now;
+    try {
+      cachedIsFullscreen = await invoke<boolean>('check_fullscreen');
+    } catch {
+      cachedIsFullscreen = false;
+    }
+  }
+  return cachedIsFullscreen;
+}
 
 export function useEdgeHover() {
   const dwellTimer = useRef<number | null>(null);
@@ -18,12 +33,43 @@ export function useEdgeHover() {
 
   const previewItemId = useStore((s) => s.previewItemId);
   const isIndicatorStyleFlyoutOpen = useStore((s) => s.isIndicatorStyleFlyoutOpen);
+  const isOpen = useStore((s) => s.isOpen);
+  const isSettingsOpen = useStore((s) => s.isSettingsOpen);
+  const isPairModalOpen = useStore((s) => s.isPairModalOpen);
+  const isWebShareOpen = useStore((s) => s.isWebShareOpen);
+  const activeTransfer = useStore((s) => s.activeTransfer);
 
   // Synchronize OS window width with adjacent flyout state
   useEffect(() => {
     const hasFlyout = Boolean(previewItemId !== null || isIndicatorStyleFlyoutOpen);
     invoke('set_preview_mode', { active: hasFlyout }).catch(() => {});
   }, [previewItemId, isIndicatorStyleFlyoutOpen]);
+
+  // Enforce click-through whenever the shelf, modals, and flyouts are closed
+  useEffect(() => {
+    const shouldBeInteractive = Boolean(
+      isOpen ||
+      isSettingsOpen ||
+      isPairModalOpen ||
+      isWebShareOpen ||
+      previewItemId !== null ||
+      isIndicatorStyleFlyoutOpen ||
+      activeTransfer
+    );
+
+    if (!shouldBeInteractive) {
+      isInteractive.current = false;
+      invoke('set_interactive', { interactive: false }).catch(() => {});
+    }
+  }, [
+    isOpen,
+    isSettingsOpen,
+    isPairModalOpen,
+    isWebShareOpen,
+    previewItemId,
+    isIndicatorStyleFlyoutOpen,
+    activeTransfer,
+  ]);
 
   useEffect(() => {
     // 1. Listen for cursor position from Rust background tracker
@@ -41,6 +87,11 @@ export function useEdgeHover() {
       lastPos.current = { x, y, time: now };
 
       const state = useStore.getState();
+      const isOpen = state.isOpen;
+      const isRight = state.settings.stickPosition === 'right';
+      const screenW = window.innerWidth;
+      const screenH = window.innerHeight;
+
       const isModalActive = Boolean(
         state.isWebShareOpen ||
         state.isSettingsOpen ||
@@ -53,22 +104,18 @@ export function useEdgeHover() {
         state.activeTransfer && y >= window.innerHeight - 160
       );
 
-      if (isModalActive || isOverTransferOverlay) {
+      // Only hold interactive when the shelf is actually open AND a modal/transfer is active
+      if (isOpen && (isModalActive || isOverTransferOverlay)) {
         if (graceTimer.current) {
           clearTimeout(graceTimer.current);
           graceTimer.current = null;
         }
         if (!isInteractive.current) {
-          invoke('set_interactive', { interactive: true });
+          invoke('set_interactive', { interactive: true }).catch(() => {});
           isInteractive.current = true;
         }
         return;
       }
-
-      const isOpen = state.isOpen;
-      const isRight = state.settings.stickPosition === 'right';
-      const screenW = window.innerWidth;
-      const screenH = window.innerHeight;
 
       // Calculate vertical trigger band
       const pFrac = state.settings.panelHeight || 0.65;
@@ -91,9 +138,9 @@ export function useEdgeHover() {
 
       const inVerticalZone = y >= triggerTop && y <= triggerBottom;
       const distFromEdge = isRight ? screenW - x : x;
-      const hotWidth = Math.max(state.settings.hotZoneWidth || 3, 4);
-      const isAtEdge = distFromEdge <= hotWidth && distFromEdge >= -15;
-      const isNearEdge = distFromEdge <= hotWidth + 20 && distFromEdge >= -15;
+      const hotWidth = Math.max(state.settings.hotZoneWidth ?? 4, 3);
+      const isAtEdge = distFromEdge <= hotWidth && distFromEdge >= -12;
+      const isNearEdge = distFromEdge <= hotWidth + 18 && distFromEdge >= -12;
 
       if (!isOpen) {
         openTimestamp.current = 0;
@@ -108,29 +155,29 @@ export function useEdgeHover() {
           useStore.getState().setIsNearEdge(false);
         }
 
-        // Multi-monitor seam intent filter: fast flicks across monitor boundary are ignored
-        const isFastTraverse = speed > 1.8;
+        // Mouse intent filter: rapid mouse movements across or along the edge are ignored.
+        // Opening requires the cursor to decelerate or rest against the screen border.
+        const isFastTraverse = speed > 1.3;
 
         if (isHoverEnabled && isAtEdge && inVerticalZone && !isFastTraverse) {
           if (!dwellTimer.current) {
+            const dwellMs = state.settings.hoverDwellMs ?? DEFAULT_DWELL_MS;
             dwellTimer.current = window.setTimeout(async () => {
               dwellTimer.current = null;
               // Check fullscreen suppression if enabled
               if (state.settings.suppressInFullscreen ?? true) {
-                try {
-                  const isFs = await invoke<boolean>('check_fullscreen');
-                  if (isFs) return;
-                } catch {}
+                const isFs = await isFullscreenActiveCached();
+                if (isFs) return;
               }
 
               if (!isInteractive.current) {
-                invoke('set_interactive', { interactive: true });
+                invoke('set_interactive', { interactive: true }).catch(() => {});
                 isInteractive.current = true;
               }
               openTimestamp.current = performance.now();
               useStore.getState().setOpen(true);
               useStore.getState().setIsNearEdge(false);
-            }, DWELL_MS);
+            }, dwellMs);
           }
         } else {
           if (dwellTimer.current) {
@@ -187,10 +234,9 @@ export function useEdgeHover() {
 
               useStore.getState().setOpen(false);
               useStore.getState().setPreviewItemId(null);
-              if (isInteractive.current) {
-                invoke('set_interactive', { interactive: false });
-                isInteractive.current = false;
-              }
+              useStore.getState().setDeviceMenuOpen(false);
+              invoke('set_interactive', { interactive: false }).catch(() => {});
+              isInteractive.current = false;
               graceTimer.current = null;
             }, GRACE_MS);
           }
@@ -211,9 +257,18 @@ export function useEdgeHover() {
     const unlistenItemPromise = listen<SendKeepItem & { senderIp?: string; sender_ip?: string }>('sendkeep:item-received', (event) => {
       const rawItem = event.payload;
       console.log('[SendKeep UI] Received item:', rawItem);
+      const senderIp = rawItem.sender_ip || rawItem.senderIp;
+      const trusted = useStore.getState().trustedDevices;
+      const matchedDevice = trusted.find(
+        (d) =>
+          (senderIp && d.ip === senderIp) ||
+          (rawItem.sender && d.name.toLowerCase() === rawItem.sender.toLowerCase())
+      );
       const item: SendKeepItem = {
         ...rawItem,
         source: 'device',
+        senderIp,
+        deviceId: matchedDevice?.id || (senderIp ? `dev-${senderIp}` : undefined),
       };
       useStore.getState().addItem(item);
 
@@ -234,16 +289,28 @@ export function useEdgeHover() {
       }
     });
 
-    // 4. Listen for System Tray events
+    // 4. Listen for System Tray & Global Hotkey (Alt+C) events
     const unlistenTogglePromise = listen('sendkeep:toggle-shelf', () => {
       const open = !useStore.getState().isOpen;
+      openTimestamp.current = performance.now();
       useStore.getState().setOpen(open);
       if (!open) {
         useStore.getState().setPreviewItemId(null);
       }
-      invoke('set_interactive', { interactive: open });
+      invoke('set_interactive', { interactive: open }).catch(() => {});
       isInteractive.current = open;
     });
+
+    // 5. Automatic click-away / window blur handling
+    const handleWindowBlur = () => {
+      const state = useStore.getState();
+      if (state.isOpen) {
+        state.setOpen(false);
+        invoke('set_interactive', { interactive: false }).catch(() => {});
+        isInteractive.current = false;
+      }
+    };
+    window.addEventListener('blur', handleWindowBlur);
 
     const unlistenClearPromise = listen('sendkeep:clear-unpinned', () => {
       useStore.getState().clearUnpinned();
@@ -397,6 +464,7 @@ export function useEdgeHover() {
       unlistenProgressPromise.then((fn) => fn());
       unlistenInternalDropPromise.then((fn) => fn());
       unlistenCliPromise.then((fn) => fn());
+      window.removeEventListener('blur', handleWindowBlur);
       if (dwellTimer.current) clearTimeout(dwellTimer.current);
       if (graceTimer.current) clearTimeout(graceTimer.current);
     };

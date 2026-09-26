@@ -1,5 +1,6 @@
 use std::path::{Path, PathBuf};
 use tauri::AppHandle;
+use crate::persistence;
 
 /// Checks whether the application was launched in installer/setup mode.
 pub fn is_installer_mode() -> bool {
@@ -54,10 +55,69 @@ pub fn get_default_install_dir() -> String {
     }
 }
 
+/// Compares two paths to determine if they reference the exact same executable.
+pub fn is_same_file(p1: &Path, p2: &Path) -> bool {
+    if let (Ok(c1), Ok(c2)) = (std::fs::canonicalize(p1), std::fs::canonicalize(p2)) {
+        c1 == c2
+    } else {
+        let s1 = p1.to_string_lossy().replace('/', "\\").to_lowercase();
+        let s2 = p2.to_string_lossy().replace('/', "\\").to_lowercase();
+        let clean1 = s1.trim_start_matches(r"\\?\");
+        let clean2 = s2.trim_start_matches(r"\\?\");
+        clean1 == clean2
+    }
+}
+
+/// Returns the path to the installed executable, if it exists on disk.
+pub fn get_installed_exe_path() -> Option<PathBuf> {
+    // 1. Check default install directory: %LOCALAPPDATA%\Programs\SendKeep\SendKeep.exe
+    let install_dir = get_default_install_dir();
+    let installed_exe = PathBuf::from(&install_dir).join("SendKeep.exe");
+    if installed_exe.exists() {
+        return Some(installed_exe);
+    }
+
+    // 2. Check Windows Registry HKCU Uninstall key
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        let mut cmd = std::process::Command::new("powershell");
+        cmd.args([
+            "-NoProfile",
+            "-Command",
+            "(Get-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\SendKeep' -ErrorAction SilentlyContinue).InstallLocation",
+        ]);
+        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+        if let Ok(output) = cmd.output() {
+            let loc = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            if !loc.is_empty() {
+                let reg_exe = PathBuf::from(loc).join("SendKeep.exe");
+                if reg_exe.exists() {
+                    return Some(reg_exe);
+                }
+            }
+        }
+    }
+
+    None
+}
+
 /// Tauri command to detect installer mode from the frontend.
 #[tauri::command]
 pub fn check_is_installer_mode() -> bool {
     is_installer_mode()
+}
+
+/// Tauri command to check if SendKeep is already installed on the computer.
+#[tauri::command]
+pub fn is_app_already_installed() -> bool {
+    if let Some(installed_exe) = get_installed_exe_path() {
+        if let Ok(current_exe) = std::env::current_exe() {
+            return !is_same_file(&current_exe, &installed_exe);
+        }
+        return true;
+    }
+    false
 }
 
 /// Folder picker for custom install directory selection.
@@ -118,6 +178,21 @@ pub async fn execute_installer(
         .map_err(|e| format!("Failed to resolve current binary path: {}", e))?;
     let target_exe = target_dir.join("SendKeep.exe");
 
+    // Safely terminate any running SendKeep.exe before overwriting to prevent file-lock errors
+    if let Some(curr_name) = current_exe.file_name().and_then(|n| n.to_str()) {
+        if !curr_name.eq_ignore_ascii_case("SendKeep.exe") {
+            #[cfg(windows)]
+            {
+                use std::os::windows::process::CommandExt;
+                let mut cmd = std::process::Command::new("taskkill");
+                cmd.args(["/F", "/IM", "SendKeep.exe"]);
+                cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+                let _ = cmd.output();
+                tokio::time::sleep(std::time::Duration::from_millis(150)).await;
+            }
+        }
+    }
+
     // Copy executable to target location
     tokio::fs::copy(&current_exe, &target_exe)
         .await
@@ -170,7 +245,14 @@ pub async fn execute_installer(
                 target_exe_str
             );
             let _ = run_hidden_powershell(&reg_cmd).await;
+        } else {
+            let reg_cmd = "Remove-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run' -Name 'SendKeep' -ErrorAction SilentlyContinue";
+            let _ = run_hidden_powershell(reg_cmd).await;
         }
+
+        let mut settings = persistence::load_desktop_settings();
+        settings.autostart_enabled = autostart;
+        let _ = persistence::save_desktop_settings_to_disk(&settings);
     }
 
     Ok(())
@@ -178,18 +260,30 @@ pub async fn execute_installer(
 
 /// Spawns the newly installed application process and terminates the installer.
 #[tauri::command]
-pub fn launch_installed_app(install_dir: String, app: AppHandle) -> Result<(), String> {
+pub fn launch_installed_app(install_dir: String, _app: AppHandle) -> Result<(), String> {
     let target_dir = PathBuf::from(install_dir);
     let target_exe = target_dir.join("SendKeep.exe");
 
     if target_exe.exists() {
-        std::process::Command::new(&target_exe)
-            .spawn()
-            .map_err(|e| format!("Failed to spawn installed application: {}", e))?;
+        #[cfg(windows)]
+        {
+            use std::os::windows::process::CommandExt;
+            const DETACHED_PROCESS: u32 = 0x00000008;
+            const CREATE_NEW_PROCESS_GROUP: u32 = 0x00000200;
+            let mut cmd = std::process::Command::new(&target_exe);
+            cmd.creation_flags(DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP);
+            cmd.spawn()
+                .map_err(|e| format!("Failed to spawn installed application: {}", e))?;
+        }
+        #[cfg(not(windows))]
+        {
+            std::process::Command::new(&target_exe)
+                .spawn()
+                .map_err(|e| format!("Failed to spawn installed application: {}", e))?;
+        }
 
-        // Gracefully exit the setup process
-        app.exit(0);
-        Ok(())
+        // Immediately exit the setup process
+        std::process::exit(0);
     } else {
         Err("Installed binary not found at destination".to_string())
     }
@@ -294,7 +388,7 @@ async fn register_windows_uninstall(install_dir: &str, target_exe: &str) -> Resu
         "$regPath = 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\SendKeep'; \
          New-Item -Path $regPath -Force | Out-Null; \
          Set-ItemProperty -Path $regPath -Name 'DisplayName' -Value 'SendKeep'; \
-         Set-ItemProperty -Path $regPath -Name 'DisplayVersion' -Value '1.0.0'; \
+         Set-ItemProperty -Path $regPath -Name 'DisplayVersion' -Value '{ver}'; \
          Set-ItemProperty -Path $regPath -Name 'Publisher' -Value 'SendKeep'; \
          Set-ItemProperty -Path $regPath -Name 'DisplayIcon' -Value '{target},0'; \
          Set-ItemProperty -Path $regPath -Name 'InstallLocation' -Value '{dir}'; \
@@ -303,7 +397,8 @@ async fn register_windows_uninstall(install_dir: &str, target_exe: &str) -> Resu
          Set-ItemProperty -Path $regPath -Name 'NoRepair' -Value 1 -Type DWord; \
          Set-ItemProperty -Path $regPath -Name 'EstimatedSize' -Value 5500 -Type DWord;",
         target = target_exe,
-        dir = install_dir
+        dir = install_dir,
+        ver = env!("CARGO_PKG_VERSION")
     );
     run_hidden_powershell(&script).await
 }

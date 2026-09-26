@@ -1,6 +1,21 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, Eye, EyeOff, Sparkles } from 'lucide-react';
+import {
+  X,
+  ChevronLeft,
+  Eye,
+  EyeOff,
+  Sparkles,
+  Trash2,
+  Smartphone,
+  RefreshCw,
+  CheckCircle2,
+  ArrowUpCircle,
+  ExternalLink,
+  ShieldCheck,
+  Download,
+} from 'lucide-react';
+import { openUrl } from '@tauri-apps/plugin-opener';
 import { useStore } from '../store/appStore';
 import { playPop, playTick, playDialTickSound } from '../lib/soundEffects';
 import { HotkeyRecorder } from './HotkeyRecorder';
@@ -57,6 +72,8 @@ export const SettingsModal: React.FC = () => {
     updateSettings,
     pickSaveDirectory,
     setIndicatorStyleFlyoutOpen,
+    trustedDevices,
+    removeTrustedDevice,
   } = useStore();
 
   const [activeTab, setActiveTab] = useState<'behaviour' | 'position' | 'appearance' | 'transfer' | 'updates'>('behaviour');
@@ -161,6 +178,14 @@ export const SettingsModal: React.FC = () => {
     if (isSettingsOpen) {
       invoke('set_interactive', { interactive: true });
 
+      invoke<boolean>('is_windows_autostart_enabled')
+        .then((enabled) => {
+          if (settings.autostartEnabled !== enabled) {
+            updateSettings({ autostartEnabled: enabled });
+          }
+        })
+        .catch(() => {});
+
       const onKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
           handleClose();
@@ -225,28 +250,42 @@ export const SettingsModal: React.FC = () => {
           </button>
         </div>
 
-        {/* 2. Stationary Fixed Header: 4-Tab Segmented Squircle Bar */}
-        <div className="settings-fixed-header px-3.5 pt-2 pb-1">
-          <div className="settings-tab-bar">
+        {/* 2. Stationary Fixed Header: 5-Tab Segmented Squircle Bar */}
+        <div className="settings-fixed-header px-3.5 pt-2 pb-1.5">
+          <nav className="flex items-center p-1 rounded-xl bg-white/[0.03] border border-white/[0.06] gap-1 overflow-x-auto no-scrollbar">
             {[
-              { id: 'behaviour', label: 'Behaviour' },
+              { id: 'behaviour', label: 'General' },
               { id: 'position', label: 'Position' },
-              { id: 'appearance', label: 'Appearance' },
+              { id: 'appearance', label: 'Style' },
               { id: 'transfer', label: 'Network' },
               { id: 'updates', label: 'Updates' },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  playTick();
-                  setActiveTab(tab.id as any);
-                }}
-                className={`settings-tab-btn capitalize ${activeTab === tab.id ? 'active' : ''}`}
-              >
-                <span className="settings-tab-text">{tab.label}</span>
-              </button>
-            ))}
-          </div>
+            ].map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    playTick();
+                    setActiveTab(tab.id as any);
+                  }}
+                  className={`relative flex-1 min-w-0 py-1.5 px-1 text-center text-[11px] font-medium rounded-lg transition-colors cursor-pointer select-none whitespace-nowrap ${
+                    isActive
+                      ? 'text-white font-semibold'
+                      : 'text-white/40 hover:text-white/70'
+                  }`}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeSettingsTab"
+                      className="absolute inset-0 bg-white/10 rounded-lg shadow-sm"
+                      transition={{ type: 'spring', damping: 30, stiffness: 450 }}
+                    />
+                  )}
+                  <span className="relative z-10">{tab.label}</span>
+                </button>
+              );
+            })}
+          </nav>
         </div>
 
         {/* 3. Settings Content */}
@@ -313,11 +352,13 @@ export const SettingsModal: React.FC = () => {
               </div>
               <div className="setting-divider" />
 
+              <div className="setting-group-label">System & Startup</div>
+
               {/* Launch on Windows Startup */}
               <div className="setting-row">
                 <div className="setting-info">
                   <div className="setting-title">Launch on Windows Startup</div>
-                  <div className="setting-desc">Silently launch SendKeep in your system tray when you sign in.</div>
+                  <div className="setting-desc">Automatically launch SendKeep silently in your system tray on PC startup.</div>
                 </div>
                 <Toggle
                   checked={settings.autostartEnabled ?? true}
@@ -500,6 +541,85 @@ export const SettingsModal: React.FC = () => {
                   onChange={(e) => updateSettings({ hotZoneHeight: parseFloat(e.target.value) })}
                   className="w-full mt-2 accent-indigo-500 cursor-pointer"
                 />
+              </div>
+
+              <div className="setting-divider" />
+
+              {/* Edge Hover Sensitivity / Dwell Time */}
+              <div className="setting-row vertical">
+                <div className="flex items-center justify-between w-full">
+                  <div className="setting-title">Edge Hover Sensitivity</div>
+                  <span className="font-mono text-xs text-indigo-400 font-semibold">
+                    {settings.hoverDwellMs ?? 50}ms
+                  </span>
+                </div>
+                <div className="setting-desc mb-1">
+                  Delay before the shelf opens when resting the cursor against the screen border.
+                </div>
+                <div className="flex items-center p-1 rounded-xl bg-white/[0.03] border border-white/[0.06] gap-1 w-full mt-1.5">
+                  {[
+                    { ms: 35, label: 'Fast (35ms)' },
+                    { ms: 50, label: 'Balanced (50ms)' },
+                    { ms: 80, label: 'Deliberate (80ms)' },
+                    { ms: 120, label: 'Relaxed (120ms)' },
+                  ].map((preset) => (
+                    <button
+                      key={preset.ms}
+                      onClick={() => {
+                        playTick();
+                        updateSettings({ hoverDwellMs: preset.ms });
+                      }}
+                      className={`flex-1 py-1 text-center text-[10.5px] font-medium rounded-lg transition-all cursor-pointer ${
+                        (settings.hoverDwellMs ?? 50) === preset.ms
+                          ? 'bg-white/10 text-white font-semibold shadow-sm'
+                          : 'text-white/40 hover:text-white/70'
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="range"
+                  min="20"
+                  max="180"
+                  step="5"
+                  value={settings.hoverDwellMs ?? 50}
+                  onChange={(e) => updateSettings({ hoverDwellMs: parseInt(e.target.value, 10) })}
+                  className="w-full mt-2 accent-indigo-500 cursor-pointer"
+                />
+              </div>
+
+              <div className="setting-divider" />
+
+              {/* Trigger Border Thickness */}
+              <div className="setting-row vertical">
+                <div className="setting-info mb-1">
+                  <div className="setting-title">Trigger Border Width</div>
+                  <div className="setting-desc">How close to the physical screen border the cursor must be to activate.</div>
+                </div>
+                <div className="flex items-center p-1 rounded-xl bg-white/[0.03] border border-white/[0.06] gap-1 w-full mt-1">
+                  {[
+                    { px: 2, label: '2px (Subtle)' },
+                    { px: 4, label: '4px (Normal)' },
+                    { px: 6, label: '6px (Wide)' },
+                  ].map((w) => (
+                    <button
+                      key={w.px}
+                      onClick={() => {
+                        playTick();
+                        updateSettings({ hotZoneWidth: w.px });
+                      }}
+                      className={`flex-1 py-1 text-center text-xs font-medium rounded-lg transition-all cursor-pointer ${
+                        (settings.hotZoneWidth ?? 4) === w.px
+                          ? 'bg-white/10 text-white font-semibold shadow-sm'
+                          : 'text-white/40 hover:text-white/70'
+                      }`}
+                    >
+                      {w.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="setting-divider" />
@@ -806,6 +926,50 @@ export const SettingsModal: React.FC = () => {
 
               <div className="setting-divider" />
 
+              {/* Paired Devices Section */}
+              <div className="setting-group-label flex items-center justify-between">
+                <span>Paired Devices ({trustedDevices.length})</span>
+              </div>
+              <div className="flex flex-col gap-2 pt-1">
+                {trustedDevices.length === 0 ? (
+                  <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.05] text-center text-xs text-white/40 italic">
+                    No paired devices yet. Devices will appear here once paired.
+                  </div>
+                ) : (
+                  trustedDevices.map((dev) => (
+                    <div
+                      key={dev.id}
+                      className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.05] border border-white/[0.06] transition-colors"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <div className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-emerald-400 shrink-0">
+                          <Smartphone className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-xs font-semibold text-white/90 truncate">{dev.name}</div>
+                          <div className="text-[10px] text-white/40 font-mono truncate mt-0.5">
+                            {dev.model || 'Device'} • {dev.ip}
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          playPop();
+                          removeTrustedDevice(dev.id);
+                        }}
+                        title={`Remove ${dev.name}`}
+                        className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-rose-400/80 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-all cursor-pointer shrink-0 ml-2"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        <span>Remove</span>
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="setting-divider" />
+
               {/* Active Network Adapters */}
               <div className="setting-group-label">Active Network Adapters (Port 53317)</div>
               <div className="flex flex-col gap-1.5 pt-1">
@@ -833,76 +997,137 @@ export const SettingsModal: React.FC = () => {
           {/* ──── UPDATES TAB ──── */}
           {activeTab === 'updates' && (
             <div className="flex flex-col gap-3 py-1">
-              <div className="setting-group-label">Application Updates & Release</div>
-
-              {/* Version & Check Card */}
-              <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] flex flex-col gap-2.5">
-                <div className="flex items-center justify-between">
-                  <div className="flex flex-col">
-                    <span className="text-xs font-semibold text-white/90">Current Version</span>
-                    <span className="text-[11px] text-white/50 font-mono">SendKeep v0.0.1 (Storeless)</span>
-                  </div>
-                  <button
-                    onClick={handleCheckUpdate}
-                    disabled={isCheckingUpdate || isInstallingUpdate}
-                    className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-xs font-semibold text-white transition-all cursor-pointer shadow-[0_0_12px_rgba(99,102,241,0.3)]"
-                  >
-                    {isCheckingUpdate ? 'Checking...' : 'Check for Updates'}
-                  </button>
+              {/* 1. App Identity Hero Card */}
+              <div className="p-3.5 rounded-2xl bg-white/[0.025] border border-white/[0.06] flex items-center gap-3 shadow-sm">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/20 via-indigo-600/15 to-emerald-500/20 border border-white/[0.1] flex items-center justify-center text-white shrink-0 shadow-inner">
+                  <ArrowUpCircle className="w-5 h-5 text-indigo-400" />
                 </div>
-
-                {updateStatus && (
-                  <div className="text-[11px] text-white/70 pt-1 border-t border-white/[0.05]">
-                    {updateStatus}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-white tracking-tight">SendKeep Desktop</span>
+                    <span className="font-mono text-[10px] px-1.5 py-0.2 rounded-md bg-white/[0.06] text-white/70 border border-white/[0.08]">
+                      v0.0.1
+                    </span>
                   </div>
-                )}
+                  <div className="text-[10.5px] text-white/40 mt-0.5 flex items-center gap-1.5">
+                    <span>Windows x64</span>
+                    <span className="text-white/20">•</span>
+                    <span className="text-emerald-400/90 font-medium">Standalone Release</span>
+                  </div>
+                </div>
               </div>
 
-              {/* Update Details Card (Shown when update is available) */}
+              {/* 2. Main Status & Check Card */}
+              <div className="p-3.5 rounded-2xl bg-white/[0.025] border border-white/[0.06] flex flex-col gap-3">
+                <div className="flex items-start gap-2.5 min-w-0">
+                  <div className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center shrink-0 mt-0.5">
+                    {isCheckingUpdate ? (
+                      <RefreshCw className="w-3.5 h-3.5 text-indigo-400 animate-spin" />
+                    ) : updateInfo?.has_update ? (
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                    ) : updateStatus.toLowerCase().includes('up to date') ? (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                    ) : (
+                      <ShieldCheck className="w-3.5 h-3.5 text-white/60" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs font-semibold text-white/95">
+                      {isCheckingUpdate
+                        ? 'Checking for updates...'
+                        : updateInfo?.has_update
+                        ? `Version ${updateInfo.latest_version} available`
+                        : updateStatus.toLowerCase().includes('up to date')
+                        ? "You're on the latest version"
+                        : 'Release Channel Status'}
+                    </div>
+                    <div className="text-[11px] text-white/45 mt-0.5 leading-snug">
+                      {updateStatus || 'Connected directly to GitHub Releases. Updates install with zero Microsoft Store friction.'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Primary Action Button */}
+                <button
+                  onClick={handleCheckUpdate}
+                  disabled={isCheckingUpdate || isInstallingUpdate}
+                  className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] active:bg-white/[0.14] disabled:opacity-50 text-xs font-medium text-white border border-white/[0.08] transition-all cursor-pointer shadow-sm"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 text-indigo-400 ${isCheckingUpdate ? 'animate-spin' : ''}`} />
+                  <span>{isCheckingUpdate ? 'Checking GitHub...' : 'Check for Updates'}</span>
+                </button>
+              </div>
+
+              {/* 3. Update Available Banner (Shown when update is available) */}
               {updateInfo?.has_update && updateInfo.download_url && (
-                <div className="p-3.5 rounded-xl bg-indigo-500/[0.08] border border-indigo-500/30 flex flex-col gap-2.5">
+                <div className="p-3.5 rounded-2xl bg-gradient-to-b from-indigo-500/[0.12] to-emerald-500/[0.06] border border-indigo-500/30 flex flex-col gap-3 shadow-[0_8px_32px_rgba(99,102,241,0.15)]">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-indigo-300">
-                      ⚡ Update v{updateInfo.latest_version} Available
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-indigo-300" />
+                      <span className="text-xs font-bold text-white">
+                        New Release v{updateInfo.latest_version}
+                      </span>
+                    </div>
                     {updateInfo.asset_size && (
-                      <span className="text-[10px] text-white/40 font-mono">
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/[0.08] text-white/70 border border-white/[0.06]">
                         {(updateInfo.asset_size / (1024 * 1024)).toFixed(1)} MB
                       </span>
                     )}
                   </div>
 
                   {updateInfo.release_notes && (
-                    <div className="text-[11px] text-white/80 bg-black/30 p-2.5 rounded-lg max-h-24 overflow-y-auto leading-relaxed border border-white/[0.04]">
+                    <div className="text-[11px] text-white/80 bg-black/40 p-2.5 rounded-xl max-h-24 overflow-y-auto leading-relaxed border border-white/[0.06]">
                       {updateInfo.release_notes}
                     </div>
                   )}
 
                   {isInstallingUpdate ? (
                     <div className="flex flex-col gap-1.5 pt-1">
-                      <div className="w-full bg-white/[0.1] h-1.5 rounded-full overflow-hidden">
+                      <div className="flex items-center justify-between text-[10.5px]">
+                        <span className="text-white/70">Downloading update...</span>
+                        <span className="font-mono text-indigo-300 font-semibold">{downloadProgress.toFixed(0)}%</span>
+                      </div>
+                      <div className="w-full bg-white/[0.08] h-1.5 rounded-full overflow-hidden">
                         <div
-                          className="bg-indigo-500 h-full transition-all duration-150"
+                          className="bg-gradient-to-r from-indigo-500 to-emerald-400 h-full transition-all duration-150"
                           style={{ width: `${downloadProgress}%` }}
                         />
                       </div>
-                      <span className="text-[10px] text-white/50 font-mono">
-                        Downloading installer: {downloadProgress.toFixed(0)}%
-                      </span>
                     </div>
                   ) : (
                     <button
                       onClick={handleInstallUpdate}
-                      className="w-full py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white transition-all cursor-pointer shadow-[0_0_16px_rgba(16,185,129,0.35)]"
+                      className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] text-xs font-semibold text-[#061e13] shadow-[0_2px_16px_rgba(16,185,129,0.35)] transition-all cursor-pointer"
                     >
-                      Install Update
+                      <Download className="w-3.5 h-3.5 stroke-[2.5]" />
+                      <span>Download & Install Update</span>
                     </button>
                   )}
                 </div>
               )}
 
-              <div className="text-[10px] text-white/30 text-center pt-2">
-                SendKeep checks directly with GitHub Releases. No Microsoft Store required.
+              {/* 4. Release Channel & Links Card */}
+              <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex flex-col gap-2">
+                <div className="flex items-center justify-between text-[11px] py-0.5 border-b border-white/[0.04]">
+                  <span className="text-white/40">Release Channel</span>
+                  <span className="text-white/80 font-medium">GitHub Releases (Public)</span>
+                </div>
+                <div className="flex items-center justify-between text-[11px] py-0.5">
+                  <span className="text-white/40">Installer Type</span>
+                  <span className="text-white/80 font-medium">Dual-Mode Custom Native</span>
+                </div>
+                <button
+                  onClick={() => openUrl('https://github.com/Mohammad-Shahid-07/sendkeep/releases').catch(() => {})}
+                  className="flex items-center justify-between pt-1 text-[11px] text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer group"
+                >
+                  <span className="group-hover:underline">View Changelog & Releases</span>
+                  <ExternalLink className="w-3 h-3 text-indigo-400/70 group-hover:text-indigo-300" />
+                </button>
+              </div>
+
+              {/* 5. Minimal footer */}
+              <div className="text-[10px] text-white/30 text-center px-4 leading-normal pt-1">
+                SendKeep binaries are verified directly against official GitHub releases.
               </div>
             </div>
           )}

@@ -8,7 +8,7 @@ use windows::Win32::Graphics::Gdi::{
 use windows::Win32::UI::WindowsAndMessaging::{
     GetCursorPos, GetWindowLongW, SetWindowLongW,
     SetWindowPos, GWL_EXSTYLE, HWND_TOPMOST,
-    SWP_NOMOVE, SWP_NOSIZE, SWP_NOACTIVATE,
+    SWP_NOMOVE, SWP_NOSIZE, SWP_NOACTIVATE, SWP_FRAMECHANGED,
     WS_EX_LAYERED, WS_EX_NOACTIVATE, WS_EX_TRANSPARENT,
 };
 
@@ -28,17 +28,18 @@ pub fn set_window_interactive(hwnd: isize, interactive: bool) {
 
         if ex_style != new_style {
             SetWindowLongW(hwnd_val, GWL_EXSTYLE, new_style);
-            // Always retain HWND_TOPMOST so SendKeep never gets buried behind other windows
-            let _ = SetWindowPos(
-                hwnd_val,
-                HWND_TOPMOST,
-                0,
-                0,
-                0,
-                0,
-                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE,
-            );
         }
+
+        // Always retain HWND_TOPMOST and apply SWP_FRAMECHANGED so Windows immediately updates hit-testing
+        let _ = SetWindowPos(
+            hwnd_val,
+            HWND_TOPMOST,
+            0,
+            0,
+            0,
+            0,
+            SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_FRAMECHANGED,
+        );
     }
 }
 

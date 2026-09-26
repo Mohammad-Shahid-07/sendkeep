@@ -32,6 +32,11 @@ export interface SendKeepItem {
   isStack?: boolean;
   isExpanded?: boolean;
   bundleItems?: SendKeepItem[];
+  deviceId?: string;
+  senderIp?: string;
+  targetDeviceId?: string;
+  targetDeviceName?: string;
+  targetDeviceIp?: string;
 }
 
 export type FilterCategory = 'all' | 'media' | 'files' | 'links' | 'notes';
@@ -96,15 +101,32 @@ function loadTrustedDevicesFromStorage(): TrustedDevice[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    const seen = new Set<string>();
+    const seenIds = new Set<string>();
+    const seenIps = new Set<string>();
+    const seenFingerprints = new Set<string>();
+    const seenNames = new Set<string>();
     const deduped: TrustedDevice[] = [];
+
     for (const d of parsed) {
-      const key = d.fingerprint || d.ip;
-      if (key && !seen.has(key)) {
-        seen.add(key);
-        // On startup, initial state is offline until verified by probe or discovery
+      if (!d || (!d.ip && !d.fingerprint && !d.id && !d.name)) continue;
+      const normName = (d.name || '').trim().toLowerCase();
+      const isDupe =
+        (d.id && seenIds.has(d.id)) ||
+        (d.ip && seenIps.has(d.ip)) ||
+        (d.fingerprint && seenFingerprints.has(d.fingerprint)) ||
+        (normName && seenNames.has(normName));
+
+      if (!isDupe) {
+        if (d.id) seenIds.add(d.id);
+        if (d.ip) seenIps.add(d.ip);
+        if (d.fingerprint) seenFingerprints.add(d.fingerprint);
+        if (normName) seenNames.add(normName);
         deduped.push({ ...d, status: 'offline' });
       }
+    }
+
+    if (deduped.length !== parsed.length) {
+      saveTrustedDevicesToStorage(deduped);
     }
     return deduped;
   } catch {
@@ -247,6 +269,8 @@ interface AppState {
   setIndicatorStyleFlyoutOpen: (open: boolean) => void;
   isSearching: boolean;
   setIsSearching: (isSearching: boolean) => void;
+  isDeviceMenuOpen: boolean;
+  setDeviceMenuOpen: (open: boolean) => void;
   copySubItem: (req: { id: string; paths?: string[]; imageId?: string }) => Promise<void>;
 }
 
@@ -278,6 +302,7 @@ export interface DesktopSettingsState {
   autoDeleteHours?: number; // 0 (Never), 1, 6, 24, 168
   historyLimit?: number; // 100, 250, 500, 1000
   autostartEnabled?: boolean; // default true
+  hoverDwellMs?: number; // 20 - 200 (default 50)
 }
 
 const INITIAL_ITEMS: SendKeepItem[] = [];
@@ -348,6 +373,8 @@ export const useStore = create<AppState>((set, get) => ({
   setIndicatorStyleFlyoutOpen: (open) => set({ isIndicatorStyleFlyoutOpen: open }),
   isSearching: false,
   setIsSearching: (isSearching) => set({ isSearching }),
+  isDeviceMenuOpen: false,
+  setDeviceMenuOpen: (open) => set({ isDeviceMenuOpen: open }),
   copySubItem: async (req) => {
     const item = get().items.find((i) => i.id === req.id);
     if (!item) return;
@@ -373,7 +400,7 @@ export const useStore = create<AppState>((set, get) => ({
     verticalOffset: 0.5,
     triggerAlignment: 'center',
     hotZoneHeight: 0.4,
-    hotZoneWidth: 3,
+    hotZoneWidth: 4,
     panelHeight: 0.65,
     showCopyIndicator: true,
     copyIndicatorStyle: 'logo',
@@ -385,6 +412,7 @@ export const useStore = create<AppState>((set, get) => ({
     autoDeleteHours: 0,
     historyLimit: 500,
     autostartEnabled: true,
+    hoverDwellMs: 50,
   },
   updateSettings: async (partial) => {
     const updated = { ...get().settings, ...partial };
@@ -455,10 +483,22 @@ export const useStore = create<AppState>((set, get) => ({
     autoDeleteHours: 0,
   },
   setOpen: (open) => {
-    set({ isOpen: open });
+    set({
+      isOpen: open,
+      ...(open
+        ? {}
+        : {
+            isSettingsOpen: false,
+            isPairModalOpen: false,
+            isWebShareOpen: false,
+            previewItemId: null,
+            isIndicatorStyleFlyoutOpen: false,
+            isDeviceMenuOpen: false,
+          }),
+    });
     if (open) {
       invoke('set_interactive', { interactive: true }).catch(() => {});
-    } else if (!get().isSettingsOpen && !get().isPairModalOpen && !get().isWebShareOpen) {
+    } else {
       invoke('set_interactive', { interactive: false }).catch(() => {});
     }
   },
@@ -810,16 +850,23 @@ export const useStore = create<AppState>((set, get) => ({
     const state = get();
     const port = device.port || 53317;
     const id = device.fingerprint ? `dev-${device.fingerprint}` : `dev-${device.ip}-${port}`;
-    const existing = state.trustedDevices.find(
-      (d) => (device.fingerprint && d.fingerprint === device.fingerprint) || d.id === id || d.ip === device.ip
-    );
+    const normName = (device.name || '').trim().toLowerCase();
+
+    // Match existing device by fingerprint, ID, IP, or normalized name
+    const existing = state.trustedDevices.find((d) => {
+      if (device.fingerprint && d.fingerprint && d.fingerprint === device.fingerprint) return true;
+      if (d.id === id) return true;
+      if (device.ip && d.ip === device.ip) return true;
+      if (normName && d.name && d.name.trim().toLowerCase() === normName) return true;
+      return false;
+    });
 
     const newDevice: TrustedDevice = {
       id: existing ? existing.id : id,
-      name: device.name,
-      ip: device.ip,
+      name: device.name || existing?.name || 'Device',
+      ip: device.ip || existing?.ip || '',
       port,
-      model: device.model || 'Mobile Device',
+      model: device.model || existing?.model || 'Mobile Device',
       fingerprint: device.fingerprint || existing?.fingerprint,
       status: 'online',
       lastSeen: Date.now(),
@@ -878,32 +925,30 @@ export const useStore = create<AppState>((set, get) => ({
 
   addDiscoveredDevice: (device) => {
     set((state) => {
-      // Deduplicate: remove any existing entry matching fingerprint or IP
+      const normName = (device.name || '').trim().toLowerCase();
+
+      // Deduplicate discoveredDevices: remove any existing entry matching fingerprint, IP, or name
       const existing = state.discoveredDevices.filter((d) => {
         if (device.fingerprint && d.fingerprint && d.fingerprint === device.fingerprint) return false;
         if (d.ip === device.ip) return false;
+        if (normName && d.name && d.name.trim().toLowerCase() === normName) return false;
         return true;
       });
 
-      // Self-healing IP sync: automatically update trusted device if fingerprint or IP matches
+      // Self-healing IP sync: automatically update trusted device if fingerprint, IP, or name matches
       let trustedUpdated = false;
       const updatedTrusted = state.trustedDevices.map((td) => {
-        if (device.fingerprint && td.fingerprint === device.fingerprint) {
+        const isMatch =
+          (device.fingerprint && td.fingerprint && td.fingerprint === device.fingerprint) ||
+          td.ip === device.ip ||
+          (normName && td.name && td.name.trim().toLowerCase() === normName);
+
+        if (isMatch) {
           trustedUpdated = true;
           return {
             ...td,
             ip: device.ip,
             port: device.port || td.port,
-            status: 'online' as const,
-            name: device.name || td.name,
-            model: device.model || td.model,
-            lastSeen: Date.now(),
-          };
-        }
-        if (td.ip === device.ip) {
-          trustedUpdated = true;
-          return {
-            ...td,
             status: 'online' as const,
             name: device.name || td.name,
             model: device.model || td.model,
@@ -924,7 +969,8 @@ export const useStore = create<AppState>((set, get) => ({
           (d) =>
             (device.fingerprint && d.fingerprint === state.connectedDevice?.fingerprint) ||
             d.id === state.connectedDevice?.id ||
-            d.ip === state.connectedDevice?.ip
+            d.ip === state.connectedDevice?.ip ||
+            (normName && d.name && d.name.trim().toLowerCase() === normName)
         );
         if (match) updatedConnected = match;
       }
@@ -962,15 +1008,45 @@ export const useStore = create<AppState>((set, get) => ({
       })
     );
 
-    saveTrustedDevicesToStorage(updated);
+    // Deduplicate any accidental duplicate trusted devices by IP, fingerprint, or name
+    const seenIds = new Set<string>();
+    const seenIps = new Set<string>();
+    const seenFingerprints = new Set<string>();
+    const seenNames = new Set<string>();
+    const dedupedUpdated: TrustedDevice[] = [];
+
+    for (const d of updated) {
+      const normName = (d.name || '').trim().toLowerCase();
+      const isDupe =
+        (d.id && seenIds.has(d.id)) ||
+        (d.ip && seenIps.has(d.ip)) ||
+        (d.fingerprint && seenFingerprints.has(d.fingerprint)) ||
+        (normName && seenNames.has(normName));
+
+      if (!isDupe) {
+        if (d.id) seenIds.add(d.id);
+        if (d.ip) seenIps.add(d.ip);
+        if (d.fingerprint) seenFingerprints.add(d.fingerprint);
+        if (normName) seenNames.add(normName);
+        dedupedUpdated.push(d);
+      }
+    }
+
+    saveTrustedDevicesToStorage(dedupedUpdated);
     let updatedConnected = connectedDevice;
     if (connectedDevice) {
-      const match = updated.find((d) => d.id === connectedDevice.id || d.ip === connectedDevice.ip);
+      const match = dedupedUpdated.find(
+        (d) =>
+          d.id === connectedDevice.id ||
+          d.ip === connectedDevice.ip ||
+          (d.name && connectedDevice.name && d.name.trim().toLowerCase() === connectedDevice.name.trim().toLowerCase())
+      );
       if (match) updatedConnected = match;
+      else if (dedupedUpdated.length > 0) updatedConnected = dedupedUpdated[0];
     }
 
     set({
-      trustedDevices: updated,
+      trustedDevices: dedupedUpdated,
       connectedDevice: updatedConnected,
     });
   },
@@ -1165,40 +1241,61 @@ export const useStore = create<AppState>((set, get) => ({
         files: filesMap,
       };
 
-      // 1. Prepare upload - Try SendKeep v1, then LocalSend v2
-      let prepareUrl = `http://${targetIp}:${port}/api/sendkeep/v1/prepare-upload`;
+      // 1. Prepare upload - Native Rust command first (bypasses browser CORS, Private Network Access, & early 10s aborts)
+      let session: any = null;
       let uploadApiPath = '/api/sendkeep/v1/upload';
 
-      const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 10000);
-      let prepareRes = await fetch(prepareUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        signal: ctrl.signal,
-      }).catch(() => null);
-      clearTimeout(timer);
+      try {
+        const rustResp = await invoke<any>('prepare_upload_peer', {
+          targetIp,
+          port,
+          payload,
+        });
+        if (rustResp && rustResp.sessionId) {
+          session = rustResp;
+          if (rustResp.uploadApiPath) {
+            uploadApiPath = rustResp.uploadApiPath;
+          }
+        }
+      } catch (rustErr) {
+        console.warn('[Beam] Native prepare_upload_peer error, attempting webview fallback:', rustErr);
+      }
 
-      if (!prepareRes || !prepareRes.ok) {
-        prepareUrl = `http://${targetIp}:${port}/api/localsend/v2/prepare-upload`;
-        uploadApiPath = '/api/localsend/v2/upload';
-        const ctrl2 = new AbortController();
-        const timer2 = setTimeout(() => ctrl2.abort(), 10000);
-        prepareRes = await fetch(prepareUrl, {
+      if (!session) {
+        let prepareUrl = `http://${targetIp}:${port}/api/sendkeep/v1/prepare-upload`;
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 45000);
+        let prepareRes = await fetch(prepareUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
-          signal: ctrl2.signal,
+          signal: ctrl.signal,
         }).catch(() => null);
-        clearTimeout(timer2);
+        clearTimeout(timer);
+
+        if (!prepareRes || !prepareRes.ok) {
+          prepareUrl = `http://${targetIp}:${port}/api/localsend/v2/prepare-upload`;
+          uploadApiPath = '/api/localsend/v2/upload';
+          const ctrl2 = new AbortController();
+          const timer2 = setTimeout(() => ctrl2.abort(), 45000);
+          prepareRes = await fetch(prepareUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+            signal: ctrl2.signal,
+          }).catch(() => null);
+          clearTimeout(timer2);
+        }
+
+        if (prepareRes && prepareRes.ok) {
+          session = await prepareRes.json();
+        }
       }
 
-      if (!prepareRes || !prepareRes.ok) {
-        console.warn('[Beam] Prepare-upload failed with HTTP', prepareRes?.status);
+      if (!session || !session.sessionId) {
+        console.warn('[Beam] Prepare-upload failed to establish session with peer');
         return false;
       }
-
-      const session = await prepareRes.json();
 
       // 2. Stream all binary files natively in Rust (zero-copy 64KB chunks directly from disk to network)
       let allSucceeded = true;
@@ -1222,6 +1319,28 @@ export const useStore = create<AppState>((set, get) => ({
           allSucceeded = false;
         }
       }
+
+      if (allSucceeded && target) {
+        set((state) => {
+          const itemExists = state.items.some((i) => i.id === item.id);
+          if (itemExists) {
+            const updated = state.items.map((i) =>
+              i.id === item.id
+                ? {
+                    ...i,
+                    targetDeviceId: target.id,
+                    targetDeviceName: target.name,
+                    targetDeviceIp: target.ip,
+                  }
+                : i
+            );
+            debouncedSave(updated);
+            return { items: updated };
+          }
+          return state;
+        });
+      }
+
       return allSucceeded;
     } catch (err) {
       console.error('[Beam] Failed to beam item:', err);

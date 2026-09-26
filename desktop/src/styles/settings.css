@@ -19,6 +19,14 @@
   display: none;
 }
 
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* ── Segmented Tab Bar (Consistent Squircle Styling) ──────────────────── */
 .settings-tab-bar {
   display: flex;
@@ -27,10 +35,17 @@
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px;
-  padding: 4px;
-  gap: 4px;
+  padding: 3px;
+  gap: 2px;
   flex-shrink: 0;
   box-shadow: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.settings-tab-bar::-webkit-scrollbar {
+  display: none;
 }
 
 .settings-tab-btn {

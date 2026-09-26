@@ -50,6 +50,12 @@ pub struct DesktopSettings {
     pub history_limit: usize,
     #[serde(default = "default_true")]
     pub autostart_enabled: bool,
+    #[serde(default = "default_hover_dwell_ms")]
+    pub hover_dwell_ms: u32,
+}
+
+fn default_hover_dwell_ms() -> u32 {
+    50
 }
 
 fn default_context_menu_enabled() -> bool {
@@ -129,7 +135,7 @@ impl Default for DesktopSettings {
             vertical_offset: 0.5,
             trigger_alignment: "center".to_string(),
             hot_zone_height: 0.4,
-            hot_zone_width: 3.0,
+            hot_zone_width: 4.0,
             panel_height: 0.65,
             show_copy_indicator: true,
             copy_indicator_style: "logo".to_string(),
@@ -141,6 +147,7 @@ impl Default for DesktopSettings {
             auto_delete_hours: 0,
             history_limit: 500,
             autostart_enabled: true,
+            hover_dwell_ms: 50,
         }
     }
 }

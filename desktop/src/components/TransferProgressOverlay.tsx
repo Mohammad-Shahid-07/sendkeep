@@ -91,6 +91,11 @@ export const TransferProgressOverlay: React.FC = () => {
         onMouseEnter={() => {
           invoke('set_interactive', { interactive: true }).catch(() => {});
         }}
+        onMouseLeave={() => {
+          if (!useStore.getState().isOpen) {
+            invoke('set_interactive', { interactive: false }).catch(() => {});
+          }
+        }}
         className="fixed bottom-3 left-3 right-3 z-[9999] pointer-events-auto select-none max-w-[326px] mx-auto"
       >
         <div

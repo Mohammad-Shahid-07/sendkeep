@@ -1,10 +1,49 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useStore, SendKeepItem } from '../store/appStore';
+import { useStore, SendKeepItem, TrustedDevice } from '../store/appStore';
 import { ClipboardItem } from './ClipboardItem';
 import { Pin, ChevronDown, ChevronUp, Smartphone, Clipboard, Plus, Layers, Copy, Check, Trash2, X } from 'lucide-react';
 import { isImagePath } from '../lib/format';
 import { playDialTickSound } from '../lib/soundEffects';
+
+export const isItemForDevice = (item: SendKeepItem, device: TrustedDevice | null): boolean => {
+  if (!device) return false;
+
+  // 1. Direct deviceId match
+  if (item.deviceId && (item.deviceId === device.id || item.deviceId === `dev-${device.ip}`)) {
+    return true;
+  }
+
+  // 2. Target device match (item beamed/dropped to this device)
+  if (item.targetDeviceId && (item.targetDeviceId === device.id || item.targetDeviceId === `dev-${device.ip}`)) {
+    return true;
+  }
+  if (item.targetDeviceName && item.targetDeviceName.toLowerCase().trim() === device.name.toLowerCase().trim()) {
+    return true;
+  }
+  if (device.ip && item.targetDeviceIp === device.ip) {
+    return true;
+  }
+
+  // 3. Sender IP match
+  if (device.ip && item.senderIp === device.ip) {
+    return true;
+  }
+
+  // 4. Sender name / alias match (e.g. Android LocalSend sends alias "SM-M136B" or "G011A")
+  if (item.sender && item.sender !== 'Windows Clipboard' && item.sender !== 'You') {
+    const sender = item.sender.toLowerCase().trim();
+    const devName = device.name.toLowerCase().trim();
+    if (sender === devName || sender.includes(devName) || devName.includes(sender)) {
+      return true;
+    }
+    if (device.model && sender === device.model.toLowerCase().trim()) {
+      return true;
+    }
+  }
+
+  return false;
+};
 
 export const ItemList: React.FC = () => {
   const {
@@ -125,12 +164,16 @@ export const ItemList: React.FC = () => {
   }, []);
 
 
-  // 1. Filter by Active Source (Phone vs Clipboard vs Unified)
+  // 1. Filter by Active Source (Device vs Clipboard vs Unified)
   let sourceFiltered = items;
   if (activeSource === 'device') {
-    sourceFiltered = items.filter(
-      (item) => item.source === 'device' || (!item.source && item.sender !== 'Windows Clipboard')
-    );
+    if (connectedDevice) {
+      sourceFiltered = items.filter((item) => isItemForDevice(item, connectedDevice));
+    } else {
+      sourceFiltered = items.filter(
+        (item) => item.source === 'device' || (!item.source && item.sender !== 'Windows Clipboard')
+      );
+    }
   } else if (activeSource === 'clipboard') {
     sourceFiltered = items.filter(
       (item) => item.source === 'clipboard' || (!item.source && item.sender === 'Windows Clipboard')
@@ -189,14 +232,14 @@ export const ItemList: React.FC = () => {
   );
 
   // Transition key that triggers smooth cascading entrance whenever source, device, filter or query changes
-  const feedTransitionKey = `${activeSource}-${activeFilter}-${connectedDevice?.id || ''}-${searchQuery}`;
+  const feedTransitionKey = `${activeSource}-${activeFilter}-${connectedDevice?.id || connectedDevice?.name || 'none'}-${searchQuery}`;
 
   // Reset scroll position to top when switching category or device
   useEffect(() => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTop = 0;
     }
-  }, [activeFilter, activeSource, connectedDevice?.id]);
+  }, [activeFilter, activeSource, connectedDevice?.id, connectedDevice?.name]);
 
   // Smart auto-scroll to top when a new item is captured if near the top
   const topItemId = items[0]?.id;
@@ -291,15 +334,15 @@ export const ItemList: React.FC = () => {
               </div>
               <div className="text-xs font-semibold text-white/60 mb-1">
                 {activeSource === 'device'
-                  ? isDeviceConnected && connectedDevice
-                    ? `No items from ${connectedDevice.name}`
+                  ? connectedDevice
+                    ? `No items with ${connectedDevice.name}`
                     : 'No Phone Connected'
                   : 'Shelf is empty'}
               </div>
               <div className="text-[11px] text-white/40 max-w-[220px] leading-relaxed mb-3">
                 {activeSource === 'device'
-                  ? isDeviceConnected && connectedDevice
-                    ? `Beam photos or notes from ${connectedDevice.name} over Wi-Fi`
+                  ? connectedDevice
+                    ? `Beam photos, notes, or files with ${connectedDevice.name} over Wi-Fi`
                     : 'Pair your phone using its local Wi-Fi IP to send and receive items'
                   : 'Copy text, photos, or drag files below to beam or stage them'}
               </div>

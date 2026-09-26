@@ -22,6 +22,8 @@ use std::os::windows::process::CommandExt;
 #[tauri::command]
 fn set_interactive(app: AppHandle, interactive: bool) {
     if let Some(window) = app.get_webview_window("main") {
+        let _ = window.set_ignore_cursor_events(!interactive);
+        #[cfg(target_os = "windows")]
         if let Ok(hwnd) = window.hwnd() {
             window_hooks::set_window_interactive(hwnd.0 as isize, interactive);
         }
@@ -262,14 +264,34 @@ async fn set_windows_autostart(enabled: bool) -> Result<bool, String> {
         let lower = exe_str.to_lowercase();
         let is_dev = lower.contains(r"\target\debug") || lower.contains(r"\target\release");
 
-        if enabled && !is_dev {
-            let _ = tokio::process::Command::new("reg")
-                .args(["add", r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run", "/v", "SendKeep", "/t", "REG_SZ", "/d", &format!("\"{}\"", exe_str), "/f"])
+        let target_exe = if !is_dev {
+            exe_str
+        } else {
+            let local_appdata = std::env::var("LOCALAPPDATA").unwrap_or_default();
+            let installed_exe = std::path::PathBuf::from(local_appdata)
+                .join("Programs")
+                .join("SendKeep")
+                .join("SendKeep.exe");
+            if installed_exe.exists() {
+                installed_exe.to_string_lossy().to_string()
+            } else {
+                exe_str
+            }
+        };
+
+        if enabled {
+            let reg_cmd = format!(
+                "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run' -Name 'SendKeep' -Value '\"{}\"'",
+                target_exe
+            );
+            let _ = tokio::process::Command::new("powershell")
+                .args(["-NoProfile", "-WindowStyle", "Hidden", "-Command", &reg_cmd])
                 .creation_flags(0x08000000)
                 .output().await;
-        } else if !enabled || is_dev {
-            let _ = tokio::process::Command::new("reg")
-                .args(["delete", r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run", "/v", "SendKeep", "/f"])
+        } else {
+            let reg_cmd = "Remove-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run' -Name 'SendKeep' -ErrorAction SilentlyContinue";
+            let _ = tokio::process::Command::new("powershell")
+                .args(["-NoProfile", "-WindowStyle", "Hidden", "-Command", reg_cmd])
                 .creation_flags(0x08000000)
                 .output().await;
         }
@@ -296,7 +318,10 @@ async fn is_windows_autostart_enabled() -> Result<bool, String> {
             .output().await;
         match output {
             Ok(out) => Ok(out.status.success()),
-            Err(_) => Ok(false),
+            Err(_) => {
+                let settings = persistence::load_desktop_settings();
+                Ok(settings.autostart_enabled)
+            }
         }
     }
     #[cfg(not(windows))]
@@ -1004,39 +1029,107 @@ async fn stream_file_to_peer(
     Ok(())
 }
 
+#[cfg(windows)]
+extern "system" {
+    fn CreateMutexW(
+        lpMutexAttributes: *const std::ffi::c_void,
+        bInitialOwner: i32,
+        lpName: *const u16,
+    ) -> isize;
+    fn GetLastError() -> u32;
+    fn MessageBoxW(
+        hWnd: isize,
+        lpText: *const u16,
+        lpCaption: *const u16,
+        uType: u32,
+    ) -> i32;
+}
+
+#[cfg(windows)]
+const ERROR_ALREADY_EXISTS: u32 = 183;
+#[cfg(windows)]
+const MB_OK: u32 = 0x00000000;
+#[cfg(windows)]
+const MB_ICONINFORMATION: u32 = 0x00000040;
+
+#[cfg(windows)]
+fn to_wide(s: &str) -> Vec<u16> {
+    s.encode_utf16().chain(std::iter::once(0)).collect()
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    if installer::is_uninstall_mode() {
+        installer::handle_uninstallation();
+        return;
+    }
+
     #[cfg(windows)]
     {
-        let args: Vec<String> = std::env::args().collect();
-        if args.len() > 1 {
-            let target_arg = args[1].clone();
-            let p = std::path::PathBuf::from(&target_arg);
-            if p.exists() {
-                // If a SendKeep instance is already running on port 53317, forward the dropped path and exit immediately
+        let is_installer = installer::is_installer_mode();
+
+        if is_installer {
+            let mutex_name = to_wide("Global\\SendKeep_Installer_Instance_Mutex");
+            let handle = unsafe { CreateMutexW(std::ptr::null(), 1, mutex_name.as_ptr()) };
+            if handle != 0 && unsafe { GetLastError() } == ERROR_ALREADY_EXISTS {
+                let text = to_wide("SendKeep Setup is already running.");
+                let caption = to_wide("SendKeep Setup");
+                unsafe {
+                    MessageBoxW(0, text.as_ptr(), caption.as_ptr(), MB_OK | MB_ICONINFORMATION);
+                }
+                return;
+            }
+            let _ = handle;
+        } else {
+            // Main application mode: prevent duplicate instances
+            let mutex_name = to_wide("Global\\SendKeep_App_Instance_Mutex");
+            let handle = unsafe { CreateMutexW(std::ptr::null(), 1, mutex_name.as_ptr()) };
+            if handle != 0 && unsafe { GetLastError() } == ERROR_ALREADY_EXISTS {
+                let args: Vec<String> = std::env::args().collect();
+                if args.len() > 1 {
+                    let target_arg = args[1].clone();
+                    let p = std::path::PathBuf::from(&target_arg);
+                    if p.exists() {
+                        // Forward file drop to the already running instance
+                        if let Ok(mut stream) = std::net::TcpStream::connect_timeout(
+                            &std::net::SocketAddr::from(([127, 0, 0, 1], 53317)),
+                            std::time::Duration::from_millis(500),
+                        ) {
+                            use std::io::Write;
+                            let payload = serde_json::json!({ "path": target_arg }).to_string();
+                            let http_req = format!(
+                                "POST /api/sendkeep/v1/cli-drop HTTP/1.1\r\nHost: 127.0.0.1:53317\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+                                payload.len(),
+                                payload
+                            );
+                            let _ = stream.write_all(http_req.as_bytes());
+                            let _ = stream.flush();
+                            return;
+                        }
+                    }
+                }
+
+                // If no file argument, notify the running instance to open / reveal its shelf
                 if let Ok(mut stream) = std::net::TcpStream::connect_timeout(
                     &std::net::SocketAddr::from(([127, 0, 0, 1], 53317)),
                     std::time::Duration::from_millis(400),
                 ) {
                     use std::io::Write;
-                    let payload = serde_json::json!({ "path": target_arg }).to_string();
-                    let http_req = format!(
-                        "POST /api/sendkeep/v1/cli-drop HTTP/1.1\r\nHost: 127.0.0.1:53317\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
-                        payload.len(),
-                        payload
-                    );
-                    if stream.write_all(http_req.as_bytes()).is_ok() {
-                        let _ = stream.flush();
-                        return;
-                    }
+                    let http_req = "POST /api/sendkeep/v1/reveal HTTP/1.1\r\nHost: 127.0.0.1:53317\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+                    let _ = stream.write_all(http_req.as_bytes());
+                    let _ = stream.flush();
                 }
-            }
-        }
-    }
 
-    if installer::is_uninstall_mode() {
-        installer::handle_uninstallation();
-        return;
+                // Inform the user that SendKeep is already active
+                let text = to_wide("SendKeep is already running in your background system tray.\n\nMove your cursor to the screen edge or press Alt + C to reveal the shelf.");
+                let caption = to_wide("SendKeep Already Running");
+                unsafe {
+                    MessageBoxW(0, text.as_ptr(), caption.as_ptr(), MB_OK | MB_ICONINFORMATION);
+                }
+                return;
+            }
+            let _ = handle;
+        }
     }
 
 #[tauri::command]
@@ -1049,20 +1142,13 @@ fn show_shelf_window(app: AppHandle) {
 #[tauri::command]
 fn show_installer_window(app: AppHandle) {
     if let Some(window) = app.get_webview_window("main") {
-        let _ = window.set_size(tauri::Size::Logical(tauri::LogicalSize { width: 620.0, height: 440.0 }));
-        let _ = window.center();
         let _ = window.show();
         let _ = window.set_focus();
     }
 }
 
 #[tauri::command]
-fn resize_installer_window(app: AppHandle) {
-    if let Some(window) = app.get_webview_window("main") {
-        let _ = window.set_size(tauri::Size::Logical(tauri::LogicalSize { width: 620.0, height: 440.0 }));
-        let _ = window.center();
-    }
-}
+fn resize_installer_window(_app: AppHandle) {}
 
 #[tauri::command]
 fn minimize_installer_window(app: AppHandle) {
@@ -1111,6 +1197,7 @@ fn start_installer_dragging(app: AppHandle) {
             paste::paste_item_directly,
             discovery::send_pair_request,
             discovery::probe_peer,
+            discovery::prepare_upload_peer,
             stream_file_to_peer,
             cancel_transfer,
             get_web_share_info,
@@ -1125,6 +1212,7 @@ fn start_installer_dragging(app: AppHandle) {
             resize_installer_window,
             installer::get_default_install_dir,
             installer::check_is_installer_mode,
+            installer::is_app_already_installed,
             installer::pick_install_directory,
             installer::execute_installer,
             installer::launch_installed_app,
@@ -1135,10 +1223,28 @@ fn start_installer_dragging(app: AppHandle) {
         .setup(|app| {
             let is_installer = installer::is_installer_mode();
             if is_installer {
+                let is_already_installed = installer::is_app_already_installed();
+                let default_dir = installer::get_default_install_dir();
+                let encoded_dir: String = default_dir
+                    .bytes()
+                    .map(|b| match b {
+                        b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                            (b as char).to_string()
+                        }
+                        _ => format!("%{:02X}", b),
+                    })
+                    .collect();
+
+                let url_path = format!(
+                    "/index.html?mode=installer&installed={}&dir={}",
+                    if is_already_installed { "1" } else { "0" },
+                    encoded_dir
+                );
+
                 let mut builder = tauri::WebviewWindowBuilder::new(
                     app,
                     "main",
-                    tauri::WebviewUrl::App("/index.html?mode=installer".into()),
+                    tauri::WebviewUrl::App(url_path.into()),
                 )
                 .title("SendKeep Setup")
                 .inner_size(620.0, 440.0)
@@ -1164,12 +1270,14 @@ fn start_installer_dragging(app: AppHandle) {
                     window_hooks::set_window_interactive(hwnd.0 as isize, true);
                 }
 
-                // Unconditionally show window after 800ms max to prevent any ghosting or hidden window deadlocks
+                // Fallback: only show window after 800ms if not already shown by frontend
                 let win_clone = window.clone();
                 tauri::async_runtime::spawn(async move {
                     tokio::time::sleep(std::time::Duration::from_millis(800)).await;
-                    let _ = win_clone.show();
-                    let _ = win_clone.set_focus();
+                    if let Ok(false) = win_clone.is_visible() {
+                        let _ = win_clone.show();
+                        let _ = win_clone.set_focus();
+                    }
                 });
 
                 println!("[SendKeep] Running in custom installer setup mode.");
@@ -1271,7 +1379,7 @@ fn start_installer_dragging(app: AppHandle) {
             // 3. Start 16ms Screen Edge Cursor Tracking
             let edge_app = app_handle.clone();
             tauri::async_runtime::spawn(async move {
-                let mut interval = tokio::time::interval(std::time::Duration::from_millis(16));
+                let mut interval = tokio::time::interval(std::time::Duration::from_millis(8));
                 loop {
                     interval.tick().await;
                     if let Some(window) = edge_app.get_webview_window("main") {
@@ -1313,6 +1421,9 @@ fn start_installer_dragging(app: AppHandle) {
                 #[cfg(target_os = "windows")]
                 reposition_window(&window, false);
 
+                let _ = window.set_ignore_cursor_events(true);
+
+                #[cfg(target_os = "windows")]
                 if let Ok(hwnd) = window.hwnd() {
                     window_hooks::set_window_interactive(hwnd.0 as isize, false);
                 }
