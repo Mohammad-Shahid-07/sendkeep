@@ -22,7 +22,7 @@
 
 | Platform | Package | Size | Download |
 | :--- | :--- | :--- | :--- |
-| **Windows 10/11** | **`SendKeep_0.0.1_x64-setup.exe`** | **~3.3 MB** | [⬇️ Download for Windows](https://github.com/Mohammad-Shahid-07/sendkeep/releases/latest/download/SendKeep_0.0.1_x64-setup.exe) |
+| **Windows 10/11** | **`SendKeep-Installer.exe`** | **~7.8 MB** | [⬇️ Download for Windows](https://github.com/Mohammad-Shahid-07/sendkeep/releases/latest/download/SendKeep-Installer.exe) |
 | **Android 8.0+** | **`SendKeep-v0.0.1.apk`** | **~1.9 MB** | [⬇️ Download APK](https://github.com/Mohammad-Shahid-07/sendkeep/releases/latest/download/SendKeep-v0.0.1.apk) |
 
 > 💡 *Or view all assets on the [Official GitHub Releases Page](https://github.com/Mohammad-Shahid-07/sendkeep/releases).*
