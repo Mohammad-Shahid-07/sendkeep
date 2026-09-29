@@ -3,8 +3,12 @@ import { Pen, Send } from 'lucide-react';
 import { useStore } from '../store/appStore';
 import { playBeam, playPop } from '../lib/soundEffects';
 
-export const DropDock: React.FC = () => {
-  const { addItem, activeSource, beamItemToDevice } = useStore();
+interface DropDockProps {
+  onOpenBeamOverlay?: () => void;
+}
+
+export const DropDock: React.FC<DropDockProps> = ({ onOpenBeamOverlay }) => {
+  const { addItem, activeSource, beamItemToDevice, activeDraggingId, items } = useStore();
   const [isDragOver, setIsDragOver] = useState(false);
   const [showNoteDrawer, setShowNoteDrawer] = useState(false);
   const [noteText, setNoteText] = useState('');
@@ -132,14 +136,41 @@ export const DropDock: React.FC = () => {
       {/* The Single Seamless Full-Width Strip */}
       <div
         onClick={() => fileInputRef.current?.click()}
-        onDragOver={(e) => {
+        onDragEnter={(e) => {
           e.preventDefault();
           setIsDragOver(true);
+          const activeId = activeDraggingId || useStore.getState().activeDraggingId;
+          if (activeId && onOpenBeamOverlay) {
+            onOpenBeamOverlay();
+          }
+        }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'copy';
+          setIsDragOver(true);
+          const activeId = activeDraggingId || useStore.getState().activeDraggingId;
+          if (activeId && onOpenBeamOverlay) {
+            onOpenBeamOverlay();
+          }
         }}
         onDragLeave={() => setIsDragOver(false)}
         onDrop={(e) => {
           e.preventDefault();
           setIsDragOver(false);
+          const activeId = activeDraggingId || useStore.getState().activeDraggingId;
+          if (activeId) {
+            const draggedItem = items.find((i) => i.id === activeId);
+            if (draggedItem) {
+              playBeam();
+              const curDev = useStore.getState().connectedDevice;
+              beamItemToDevice(draggedItem, undefined, curDev || undefined).catch((err) => {
+                console.warn('Failed beaming dragged shelf item from dock:', err);
+              });
+            }
+            useStore.getState().setActiveDraggingId(null);
+            return;
+          }
+
           const files = e.dataTransfer.files;
           if (files && files.length > 0) {
             playBeam();

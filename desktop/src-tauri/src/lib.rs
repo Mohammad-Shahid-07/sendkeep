@@ -121,6 +121,13 @@ pub fn reposition_window(window: &tauri::WebviewWindow, preview_mode: bool) {
             };
             let phys_y = rc_monitor.top;
 
+            window_hooks::set_window_bounds(
+                hwnd.0 as isize,
+                phys_x,
+                phys_y,
+                phys_width as i32,
+                phys_height as i32,
+            );
             let _ = window.set_size(tauri::Size::Physical(tauri::PhysicalSize {
                 width: phys_width,
                 height: phys_height,
@@ -668,12 +675,20 @@ fn start_drag(app: AppHandle, paths: Vec<String>, preview_path: Option<String>) 
                 drag::Image::Raw(vec![])
             };
 
+            let win = window.clone();
             let _ = drag::start_drag(
                 &window,
                 item,
                 image,
                 move |_result, pos| {
-                    let _ = handle.emit("sendkeep:internal-drop", (pos.x, pos.y));
+                    let (client_x, client_y) = if let (Ok(win_pos), Ok(scale)) = (win.outer_position(), win.scale_factor()) {
+                        let cx = ((pos.x - win_pos.x) as f64 / scale).round() as i32;
+                        let cy = ((pos.y - win_pos.y) as f64 / scale).round() as i32;
+                        (cx, cy)
+                    } else {
+                        (pos.x, pos.y)
+                    };
+                    let _ = handle.emit("sendkeep:internal-drop", (client_x, client_y));
                 },
                 drag::Options::default(),
             );
@@ -1377,6 +1392,7 @@ fn start_installer_dragging(app: AppHandle) {
             });
 
             // 3. Start 16ms Screen Edge Cursor Tracking
+            // 3. Start 8ms Screen Edge Cursor Tracking (Monitor-anchored)
             let edge_app = app_handle.clone();
             tauri::async_runtime::spawn(async move {
                 let mut interval = tokio::time::interval(std::time::Duration::from_millis(8));
@@ -1384,8 +1400,8 @@ fn start_installer_dragging(app: AppHandle) {
                     interval.tick().await;
                     if let Some(window) = edge_app.get_webview_window("main") {
                         if let Ok(hwnd) = window.hwnd() {
-                            if let Some((cx, cy)) = window_hooks::get_cursor_pos_client(hwnd.0 as isize) {
-                                let _ = edge_app.emit("sendkeep:cursor-pos", (cx, cy));
+                            if let Some(info) = window_hooks::get_cursor_monitor_info(hwnd.0 as isize) {
+                                let _ = edge_app.emit("sendkeep:cursor-pos", info);
                             }
                         }
                     }

@@ -73,24 +73,23 @@ export function useEdgeHover() {
 
   useEffect(() => {
     // 1. Listen for cursor position from Rust background tracker
-    const unlistenCursorPromise = listen<[number, number]>('sendkeep:cursor-pos', async (event) => {
-      const [rawX, rawY] = event.payload;
+    const unlistenCursorPromise = listen<[number, number, number, number]>('sendkeep:cursor-pos', async (event) => {
+      const [distR, distL, rawY, rawMonH] = event.payload;
       const dpr = window.devicePixelRatio || 1;
-      const x = rawX / dpr;
+      const state = useStore.getState();
+      const isRight = state.settings.stickPosition === 'right';
+      const distFromEdge = (isRight ? distR : distL) / dpr;
       const y = rawY / dpr;
+      const screenH = rawMonH && rawMonH > 0 ? rawMonH / dpr : window.innerHeight;
 
       const now = performance.now();
       const dt = now - lastPos.current.time;
-      const dx = Math.abs(x - lastPos.current.x);
+      const dx = Math.abs(distFromEdge - lastPos.current.x);
       const dy = Math.abs(y - lastPos.current.y);
       const speed = dt > 0 ? Math.hypot(dx, dy) / dt : 0; // px/ms
-      lastPos.current = { x, y, time: now };
+      lastPos.current = { x: distFromEdge, y, time: now };
 
-      const state = useStore.getState();
       const isOpen = state.isOpen;
-      const isRight = state.settings.stickPosition === 'right';
-      const screenW = window.innerWidth;
-      const screenH = window.innerHeight;
 
       const isModalActive = Boolean(
         state.isWebShareOpen ||
@@ -137,10 +136,9 @@ export function useEdgeHover() {
       }
 
       const inVerticalZone = y >= triggerTop && y <= triggerBottom;
-      const distFromEdge = isRight ? screenW - x : x;
       const hotWidth = Math.max(state.settings.hotZoneWidth ?? 4, 3);
-      const isAtEdge = distFromEdge <= hotWidth && distFromEdge >= -12;
-      const isNearEdge = distFromEdge <= hotWidth + 18 && distFromEdge >= -12;
+      const isAtEdge = distFromEdge <= hotWidth && distFromEdge >= -4;
+      const isNearEdge = distFromEdge <= hotWidth + 18 && distFromEdge >= -4;
 
       if (!isOpen) {
         openTimestamp.current = 0;
@@ -202,14 +200,13 @@ export function useEdgeHover() {
         const hasFlyout = Boolean(state.previewItemId !== null || state.isIndicatorStyleFlyoutOpen);
         const activeWidth = hasFlyout ? FLYOUT_PANEL_WIDTH : BASE_PANEL_WIDTH;
         const keepOpenPx = activeWidth;
-        const startClosePx = activeWidth + 20;
+        const startClosePx = activeWidth + 24;
 
-        const currentDist = isRight ? screenW - x : x;
-        const isClearlyInside = currentDist <= keepOpenPx && currentDist >= -20;
-        const isClearlyOutside = currentDist > startClosePx || currentDist < -50;
+        const isClearlyInside = distFromEdge <= keepOpenPx && distFromEdge >= -20;
+        const isClearlyOutside = distFromEdge > startClosePx || distFromEdge < -60;
 
-        // Prevent premature closing during initial opening animation
-        if (performance.now() - openTimestamp.current < 320) {
+        // Prevent premature closing during initial opening animation or hotkey open
+        if (performance.now() - openTimestamp.current < 450) {
           if (graceTimer.current) {
             clearTimeout(graceTimer.current);
             graceTimer.current = null;
@@ -291,14 +288,18 @@ export function useEdgeHover() {
 
     // 4. Listen for System Tray & Global Hotkey (Alt+C) events
     const unlistenTogglePromise = listen('sendkeep:toggle-shelf', () => {
-      const open = !useStore.getState().isOpen;
+      const nextOpen = !useStore.getState().isOpen;
       openTimestamp.current = performance.now();
-      useStore.getState().setOpen(open);
-      if (!open) {
+      useStore.getState().setOpen(nextOpen);
+      if (!nextOpen) {
         useStore.getState().setPreviewItemId(null);
+        invoke('set_interactive', { interactive: false }).catch(() => {});
+        isInteractive.current = false;
+      } else {
+        invoke('set_interactive', { interactive: true }).catch(() => {});
+        invoke('focus_window').catch(() => {});
+        isInteractive.current = true;
       }
-      invoke('set_interactive', { interactive: open }).catch(() => {});
-      isInteractive.current = open;
     });
 
     // 5. Automatic click-away / window blur handling
@@ -306,6 +307,7 @@ export function useEdgeHover() {
       const state = useStore.getState();
       if (state.isOpen) {
         state.setOpen(false);
+        state.setPreviewItemId(null);
         invoke('set_interactive', { interactive: false }).catch(() => {});
         isInteractive.current = false;
       }
@@ -366,12 +368,15 @@ export function useEdgeHover() {
       if (!activeId) return;
       const el = document.elementFromPoint(x, y);
       const targetCard = el?.closest('[data-item-id]');
-      const targetId = targetCard?.getAttribute('data-item-id');
+      const targetId =
+        targetCard?.getAttribute('data-item-id') ||
+        useStore.getState().hoveredMergeTargetId;
       if (targetId && targetId !== activeId) {
         playPop();
         useStore.getState().mergeItems(activeId, targetId);
       }
       useStore.getState().setActiveDraggingId(null);
+      useStore.getState().setHoveredMergeTargetId(null);
     });
 
     // 8. Listen for CLI argument / Windows Explorer right-click "Send with SendKeep"

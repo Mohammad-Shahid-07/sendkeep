@@ -8,6 +8,7 @@ import { ItemList } from './ItemList';
 import { DropDock } from './DropDock';
 import { CopyIndicatorCurve } from './CopyIndicatorCurve';
 import { PreviewFlyout } from './PreviewFlyout';
+import { ErrorBoundary } from './ErrorBoundary';
 import { IndicatorStyleFlyout } from './IndicatorStyleFlyout';
 import { PairRequestToast } from './PairRequestToast';
 import { SettingsModal } from './SettingsModal';
@@ -26,14 +27,37 @@ export const Panel: React.FC = () => {
   const activeSource = useStore((s) => s.activeSource);
   const addItem = useStore((s) => s.addItem);
   const beamItemToDevice = useStore((s) => s.beamItemToDevice);
+  const previewItemId = useStore((s) => s.previewItemId);
+  const activeDraggingId = useStore((s) => s.activeDraggingId);
 
   const [isWindowDragOver, setIsWindowDragOver] = useState(false);
   const isWindowDragOverRef = useRef(false);
   isWindowDragOverRef.current = isWindowDragOver;
+  const [isInternalBeamOpen, setIsInternalBeamOpen] = useState(false);
   const [activeDropZone, setActiveDropZone] = useState<string | null>(null);
   const activeDropZoneRef = useRef<string | null>(null);
   activeDropZoneRef.current = activeDropZone;
   const dragCounterRef = useRef(0);
+
+  useEffect(() => {
+    if (!activeDraggingId) {
+      setIsInternalBeamOpen(false);
+    }
+  }, [activeDraggingId]);
+
+  const handleOpenBeamOverlayFromDock = () => {
+    const state = useStore.getState();
+    const curDev = state.connectedDevice;
+    const targetZoneId =
+      curDev?.status === 'online'
+        ? `device-${curDev.id}`
+        : state.trustedDevices.find((d) => d.status === 'online')
+        ? `device-${state.trustedDevices.find((d) => d.status === 'online')?.id}`
+        : 'device-none';
+    setActiveDropZone(targetZoneId);
+    activeDropZoneRef.current = targetZoneId;
+    setIsInternalBeamOpen(true);
+  };
 
   // Handle native OS files dropped via Tauri onDragDropEvent
   const handleNativePathsDrop = async (paths: string[], targetZone: string | null) => {
@@ -295,6 +319,10 @@ export const Panel: React.FC = () => {
     try {
       getCurrentWebview().onDragDropEvent((event) => {
         const payload = event.payload;
+        if (useStore.getState().activeDraggingId) {
+          // Internal card drag: ignore OS window drop overlay!
+          return;
+        }
         if (payload.type === 'enter') {
           useStore.getState().setOpen(true);
           invoke('set_interactive', { interactive: true }).catch(() => {});
@@ -372,8 +400,26 @@ export const Panel: React.FC = () => {
   }, [isOpen]);
 
 
+  // Safety listener to ensure activeDraggingId is always cleaned up on drag end/drop
+  useEffect(() => {
+    const handleGlobalDragEnd = () => {
+      if (useStore.getState().activeDraggingId) {
+        useStore.getState().setActiveDraggingId(null);
+      }
+    };
+    window.addEventListener('dragend', handleGlobalDragEnd);
+    window.addEventListener('drop', handleGlobalDragEnd);
+    return () => {
+      window.removeEventListener('dragend', handleGlobalDragEnd);
+      window.removeEventListener('drop', handleGlobalDragEnd);
+    };
+  }, []);
+
   const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
+    if (useStore.getState().activeDraggingId || e.dataTransfer.types.includes('text/sendkeep-item-id')) {
+      return;
+    }
     dragCounterRef.current += 1;
     if (dragCounterRef.current === 1) {
       setIsWindowDragOver(true);
@@ -382,12 +428,16 @@ export const Panel: React.FC = () => {
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
+    if (useStore.getState().activeDraggingId || e.dataTransfer.types.includes('text/sendkeep-item-id')) {
+      return;
+    }
     e.dataTransfer.dropEffect = 'copy';
     if (!isWindowDragOver) setIsWindowDragOver(true);
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
+    if (useStore.getState().activeDraggingId) return;
     if (!e.currentTarget.contains(e.relatedTarget as Node)) {
       dragCounterRef.current = 0;
       setIsWindowDragOver(false);
@@ -400,6 +450,7 @@ export const Panel: React.FC = () => {
   };
 
   const handleDrop = async (e: React.DragEvent) => {
+    if (useStore.getState().activeDraggingId) return;
     e.preventDefault();
     e.stopPropagation();
     dragCounterRef.current = 0;
@@ -609,13 +660,14 @@ export const Panel: React.FC = () => {
       >
         {/* Full-Sidebar Droppable Target Zones Overlay */}
         <AnimatePresence>
-          {isWindowDragOver && (
+          {((isWindowDragOver && !activeDraggingId) || isInternalBeamOpen) && (
             <SidebarDropOverlay
               activeZone={activeDropZone}
               setActiveZone={setActiveDropZone}
               onClose={() => {
                 dragCounterRef.current = 0;
                 setIsWindowDragOver(false);
+                setIsInternalBeamOpen(false);
                 setActiveDropZone(null);
               }}
             />
@@ -632,7 +684,7 @@ export const Panel: React.FC = () => {
         <ItemList />
 
         {/* 3. Receptive Drop Dock & Quick Note Composer */}
-        <DropDock />
+        <DropDock onOpenBeamOverlay={handleOpenBeamOverlayFromDock} />
 
         {/* 4. In-Shelf Slide-Over Modals */}
         <SettingsModal />
@@ -644,7 +696,9 @@ export const Panel: React.FC = () => {
       </motion.aside>
 
       {/* 5. Floating Adjacent Flyouts (Rendered outside aside to prevent overflow clipping) */}
-      <PreviewFlyout isRight={isRight} />
+      <ErrorBoundary key={previewItemId || 'closed'} name="PreviewFlyout">
+        <PreviewFlyout isRight={isRight} />
+      </ErrorBoundary>
       <IndicatorStyleFlyout isRight={isRight} />
     </div>
   );

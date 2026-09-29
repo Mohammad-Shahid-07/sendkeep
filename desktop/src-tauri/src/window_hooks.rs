@@ -44,6 +44,25 @@ pub fn set_window_interactive(hwnd: isize, interactive: bool) {
 }
 
 #[cfg(target_os = "windows")]
+pub fn set_window_bounds(hwnd: isize, x: i32, y: i32, width: i32, height: i32) {
+    unsafe {
+        let hwnd_val = HWND(hwnd as *mut std::ffi::c_void);
+        let _ = SetWindowPos(
+            hwnd_val,
+            HWND_TOPMOST,
+            x,
+            y,
+            width,
+            height,
+            SWP_NOACTIVATE,
+        );
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+pub fn set_window_bounds(_hwnd: isize, _x: i32, _y: i32, _width: i32, _height: i32) {}
+
+#[cfg(target_os = "windows")]
 pub fn get_monitor_and_work_rect(hwnd: isize) -> Option<(RECT, RECT)> {
     unsafe {
         let hwnd_val = HWND(hwnd as *mut std::ffi::c_void);
@@ -69,6 +88,7 @@ pub fn get_monitor_and_work_rect(_hwnd: isize) -> Option<()> {
 pub fn set_window_interactive(_hwnd: isize, _interactive: bool) {}
 
 #[cfg(target_os = "windows")]
+#[allow(dead_code)]
 pub fn get_cursor_position() -> Option<(i32, i32)> {
     unsafe {
         let mut pt = POINT::default();
@@ -81,6 +101,7 @@ pub fn get_cursor_position() -> Option<(i32, i32)> {
 }
 
 #[cfg(target_os = "windows")]
+#[allow(dead_code)]
 pub fn get_cursor_pos_client(hwnd: isize) -> Option<(i32, i32)> {
     unsafe {
         let hwnd_val = HWND(hwnd as *mut std::ffi::c_void);
@@ -94,6 +115,37 @@ pub fn get_cursor_pos_client(hwnd: isize) -> Option<(i32, i32)> {
     }
 }
 
+#[cfg(target_os = "windows")]
+pub fn get_cursor_monitor_info(hwnd: isize) -> Option<(i32, i32, i32, i32)> {
+    unsafe {
+        let hwnd_val = HWND(hwnd as *mut std::ffi::c_void);
+        let hmon = MonitorFromWindow(hwnd_val, MONITOR_DEFAULTTOPRIMARY);
+        let mut mi = MONITORINFO {
+            cbSize: std::mem::size_of::<MONITORINFO>() as u32,
+            ..Default::default()
+        };
+        if GetMonitorInfoW(hmon, &mut mi).as_bool() {
+            let mut pt = POINT::default();
+            if GetCursorPos(&mut pt).is_ok() {
+                let dist_from_right = mi.rcMonitor.right - pt.x;
+                let dist_from_left = pt.x - mi.rcMonitor.left;
+                let rel_y = pt.y - mi.rcMonitor.top;
+                let mon_h = mi.rcMonitor.bottom - mi.rcMonitor.top;
+                Some((dist_from_right, dist_from_left, rel_y, mon_h))
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+pub fn get_cursor_monitor_info(_hwnd: isize) -> Option<(i32, i32, i32, i32)> {
+    None
+}
+
 #[cfg(not(target_os = "windows"))]
 pub fn get_cursor_pos_client(_hwnd: isize) -> Option<(i32, i32)> {
     None
@@ -103,3 +155,4 @@ pub fn get_cursor_pos_client(_hwnd: isize) -> Option<(i32, i32)> {
 pub fn get_cursor_position() -> Option<(i32, i32)> {
     None
 }
+

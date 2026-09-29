@@ -1070,7 +1070,7 @@
         <!-- ITEM 2: RICH LINK PREVIEW CARD (LinkPreviewCard.tsx) -->
         <article 
           data-cat="links"
-          onclick="copyItem('https://dribbble.com/tags/clean-ui')"
+          onclick="copyItem('https://github.com/Mohammad-Shahid-07/sendkeep.git')"
           class="item group relative rounded-2xl bg-[#161619] hover:bg-[#1a1a1f] border border-white/[0.06] hover:border-white/[0.12] transition-all overflow-hidden"
         >
           <div class="item-main w-full flex flex-col cursor-pointer select-none">
@@ -1079,14 +1079,14 @@
                 <div class="link-card">
                   <div class="link-card-top">
                     <!-- Favicon or SVG globe -->
-                    <img src="https://www.google.com/s2/favicons?domain=dribbble.com&sz=64" alt="" class="w-3.5 h-3.5 rounded-sm object-contain shrink-0" onerror="this.style.display='none'">
-                    <span class="link-card-domain">dribbble.com</span>
+                    <img src="https://www.google.com/s2/favicons?domain=github.com&sz=64" alt="" class="w-3.5 h-3.5 rounded-sm object-contain shrink-0" onerror="this.style.display='none'">
+                    <span class="link-card-domain">github.com</span>
                   </div>
-                  <div class="link-card-body" title="https://dribbble.com/tags/clean-ui">
-                    Clean UI Designs, Themes, Templates and Downloadable Assets
+                  <div class="link-card-body" title="https://github.com/Mohammad-Shahid-07/sendkeep.git">
+                    Mohammad-Shahid-07/sendkeep
                   </div>
-                  <div class="link-card-url" title="https://dribbble.com/tags/clean-ui">
-                    dribbble.com/tags/clean-ui
+                  <div class="link-card-url" title="https://github.com/Mohammad-Shahid-07/sendkeep.git">
+                    github.com/Mohammad-Shahid-07/sendkeep...
                   </div>
                 </div>
               </div>
@@ -1094,8 +1094,9 @@
               <div class="item-footer flex items-center justify-between pt-2 mt-1 text-[11px] text-white/40 select-none">
                 <div class="meta flex items-center gap-1.5">
                   <span class="px-1.5 py-0.5 rounded-md bg-white/[0.05] border border-white/[0.06] text-[10px] font-medium text-white/70">link</span>
+                  <span>• ×2</span>
                 </div>
-                <span class="meta-time text-[10px] text-white/40">2h ago</span>
+                <span class="meta-time text-[10px] text-white/40">12m ago</span>
               </div>
             </div>
 
@@ -1107,10 +1108,10 @@
               <button class="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Beam to Galaxy M13" onclick="toast('⚡ Beamed link to Galaxy M13')">
                 <svg class="w-3.5 h-3.5 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
               </button>
-              <button class="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Open in browser" onclick="window.open('https://dribbble.com/tags/clean-ui', '_blank')">
-                <svg class="w-3.5 h-3.5 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              <button class="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Inspect" onclick="openFlyout('Mohammad-Shahid-07 / sendkeep', 'link', 'https://github.com/Mohammad-Shahid-07/sendkeep.git', 'github.com')">
+                <svg class="w-3.5 h-3.5 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
               </button>
-              <button class="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Copy" onclick="copyItem('https://dribbble.com/tags/clean-ui')">
+              <button class="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Copy" onclick="copyItem('https://github.com/Mohammad-Shahid-07/sendkeep.git')">
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
               </button>
               <button class="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Pin" onclick="togglePinCard(this)">
@@ -1382,59 +1383,6 @@
       </div>
     </div>
 
-    <!-- =======================================================================
-         4. IN-SHELF PREVIEW FLYOUT (desktop/src/components/PreviewFlyout.tsx)
-         ======================================================================= -->
-    <div 
-      id="previewFlyout"
-      class="hidden absolute inset-0 z-50 flex-col bg-[#0c0d14] pointer-events-auto select-none"
-    >
-      <!-- Header Bar -->
-      <div class="h-14 px-3.5 border-b border-white/[0.08] bg-white/[0.02] flex items-center justify-between shrink-0">
-        <button onclick="closeFlyout()" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/80 hover:text-white transition-all text-xs font-medium cursor-pointer" title="Return to Shelf (Esc)">
-          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
-          <span>Back</span>
-        </button>
-
-        <div class="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/[0.04] border border-white/[0.06] text-[11px] text-white/70" id="flyoutBadge">
-          <span class="font-medium text-pink-300">Image</span>
-        </div>
-
-        <button onclick="closeFlyout()" class="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors cursor-pointer" title="Close Preview (Esc)">
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-        </button>
-      </div>
-
-      <!-- Body Content -->
-      <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-3.5 custom-scrollbar select-text">
-        <div class="flex flex-col gap-1 select-none">
-          <h3 class="text-sm font-semibold text-white/95 leading-snug break-words" id="flyoutTitle">
-            Clean UI Snapshot
-          </h3>
-          <div class="flex items-center gap-2 text-[11px] text-white/40">
-            <span id="flyoutSender">From Windows Clipboard</span>
-            <span>•</span>
-            <span id="flyoutTime">Just now</span>
-          </div>
-        </div>
-
-        <div id="flyoutContentArea" class="flex flex-col items-center gap-3 select-none">
-          <!-- Dynamically populated -->
-        </div>
-      </div>
-
-      <!-- Bottom Dock Action Bar -->
-      <div class="p-3 border-t border-white/[0.08] bg-white/[0.02] flex items-center gap-2 shrink-0 select-none">
-        <button onclick="toast('Pasted directly from inspector')" class="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white/[0.08] hover:bg-white/[0.12] border border-white/[0.12] text-white/90 text-xs font-semibold transition-all cursor-pointer shadow-sm">
-          <svg class="w-3.5 h-3.5 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg>
-          <span>Paste (Ctrl+V)</span>
-        </button>
-        <button onclick="toast('Copied from inspector')" class="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-white/80 hover:text-white text-xs font-semibold transition-all cursor-pointer shadow-sm">
-          <svg class="w-3.5 h-3.5 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-          <span>Copy</span>
-        </button>
-      </div>
-    </div>
 
     <!-- =======================================================================
          5. CLEAN IN-SHELF SETTINGS VIEW (Edge-Drop Architecture)
@@ -2054,6 +2002,56 @@
   </aside>
 
   <!-- =========================================================================
+       4. FLOATING ADJACENT PREVIEW FLYOUT (desktop/src/components/PreviewFlyout.tsx)
+       Ultra-clean, adaptive height, glassmorphic floating inspector
+       ========================================================================= -->
+  <!-- =========================================================================
+       4. FLOATING ADJACENT PREVIEW FLYOUT (desktop/src/components/PreviewFlyout.tsx)
+       Matches SendKeep's clean, minimalist, dark acrylic design system.
+       ========================================================================= -->
+  <div 
+    id="previewFlyout"
+    class="fixed top-8 left-[364px] z-50 w-[420px] h-fit max-h-[calc(100vh-64px)] flex flex-col bg-[#141416]/98 border border-white/[0.08] rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.85),0_4px_16px_rgba(0,0,0,0.5)] backdrop-blur-2xl overflow-hidden select-none pointer-events-auto transition-all duration-200"
+  >
+    <!-- Clean Header Bar (Identical to SendKeep header / modal bars) -->
+    <div class="h-[46px] px-3.5 bg-transparent border-b border-white/[0.06] flex items-center justify-between shrink-0">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div id="flyoutHeaderIcon" class="w-6 h-6 rounded-lg bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-white/70 shrink-0">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+        </div>
+        <div class="flex items-center gap-2 min-w-0">
+          <span id="flyoutHeaderTitle" class="text-xs font-semibold text-white truncate max-w-[210px]">
+            Web Link
+          </span>
+          <span id="flyoutHeaderSub" class="text-[11px] text-white/40 truncate font-mono">
+            github.com
+          </span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-0.5 shrink-0">
+        <!-- Quick copy -->
+        <button onclick="handleFlyoutCopy()" class="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer" title="Copy to Clipboard (Ctrl+C)">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+        </button>
+        <!-- Direct paste / Open -->
+        <button onclick="handleFlyoutPaste()" class="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer" title="Direct Paste / Open (↵)">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg>
+        </button>
+        <!-- Close -->
+        <button onclick="closeFlyout()" class="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer" title="Close Preview (Esc)">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Scrollable Body Content -->
+    <div id="flyoutContentArea" class="flex-1 overflow-y-auto p-3.5 flex flex-col gap-3 custom-scrollbar text-xs">
+      <!-- Injected dynamically via openFlyout() -->
+    </div>
+  </div>
+
+  <!-- =========================================================================
        TRANSFER PROGRESS OVERLAY (desktop/src/components/TransferProgressOverlay.tsx)
        ========================================================================= -->
   <div 
@@ -2167,6 +2165,25 @@
           <svg class="w-4 h-4 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
           <span id="dockSideLabel">Right Edge</span>
         </button>
+
+        <!-- Direct Expanded Flyout Test Triggers -->
+        <div class="col-span-2 sm:col-span-4 flex flex-wrap items-center justify-between p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.08] gap-2 mt-1">
+          <span class="text-[11px] font-semibold text-white/50 uppercase tracking-wider pl-1">Inspect Card:</span>
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <button onclick="openFlyout('Mohammad-Shahid-07 / sendkeep', 'link', 'https://github.com/Mohammad-Shahid-07/sendkeep.git', 'github.com')" class="px-2.5 py-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] text-white/80 hover:text-white text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+              <span>GitHub Link</span>
+            </button>
+            <button onclick="openFlyout('Clean UI Snapshot', 'image', 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80', '926.4 KB')" class="px-2.5 py-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] text-white/80 hover:text-white text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+              <span>Image</span>
+            </button>
+            <button onclick="openFlyout('beamToDevice.ts', 'code', 'const beam = async (item) => {\n  await invoke(\'send_file\', { path: item.path });\n};', '3 lines')" class="px-2.5 py-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] text-white/80 hover:text-white text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <span>Code</span>
+            </button>
+          </div>
+        </div>
         <div 
           draggable="true" 
           ondragstart="event.dataTransfer.setData('text/plain', 'Design_Roadmap_Q4.pdf'); event.dataTransfer.effectAllowed = 'copy';"
@@ -2437,51 +2454,280 @@
       }
     }
 
-    /* In-Shelf Preview Flyout (desktop/src/components/PreviewFlyout.tsx) */
+    /* Floating Adjacent Preview Flyout (desktop/src/components/PreviewFlyout.tsx) */
+    let currentFlyoutItem = { title: '', kind: '', content: '', meta: '' };
+
+    function copyFlyoutText(text) {
+      if (!text) text = currentFlyoutItem.content || currentFlyoutItem.title;
+      navigator.clipboard.writeText(text).catch(() => {});
+      toast('Copied to clipboard');
+    }
+
+    function handleFlyoutCopy() {
+      copyFlyoutText(currentFlyoutItem.content || currentFlyoutItem.title);
+    }
+
+    function handleFlyoutPaste() {
+      copyFlyoutText(currentFlyoutItem.content || currentFlyoutItem.title);
+      toast('Directly pasted into active window (Ctrl+V)');
+    }
+
     function openFlyout(title, kind, content, meta) {
-      document.getElementById('flyoutTitle').textContent = title;
-      const badge = document.getElementById('flyoutBadge');
+      currentFlyoutItem = { title, kind, content, meta };
+      const flyout = document.getElementById('previewFlyout');
+      const headerTitle = document.getElementById('flyoutHeaderTitle');
+      const headerSub = document.getElementById('flyoutHeaderSub');
+      const headerIcon = document.getElementById('flyoutHeaderIcon');
       const area = document.getElementById('flyoutContentArea');
 
-      if (kind === 'image') {
-        badge.innerHTML = `<span class="font-medium text-white/80">Image</span>`;
+      if (isDockedRight) {
+        flyout.style.left = 'auto';
+        flyout.style.right = '364px';
+      } else {
+        flyout.style.right = 'auto';
+        flyout.style.left = '364px';
+      }
+
+      if (kind === 'link') {
+        const urlStr = content;
+        let domain = 'website.com';
+
+        try {
+          const parsed = new URL(urlStr);
+          domain = parsed.hostname.replace(/^www\./, '');
+        } catch {}
+
+        headerTitle.textContent = 'Web Link';
+        headerSub.textContent = domain;
+        headerIcon.className = 'w-6 h-6 rounded-lg bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-white/70 shrink-0';
+        headerIcon.innerHTML = '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>';
+
         area.innerHTML = `
-          <div class="relative rounded-xl overflow-hidden border border-white/[0.1] bg-black/50 flex items-center justify-center max-h-[46vh] w-full shadow-lg">
-            <img src="${content}" alt="${title}" class="max-h-[46vh] max-w-full object-contain rounded-lg" />
+          <!-- SendKeep Link Card (Identical to shelf card) -->
+          <div class="rounded-xl bg-[#161619] border border-white/[0.06] p-3.5 flex flex-col gap-2.5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2 min-w-0">
+                <img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64" alt="" class="w-4 h-4 rounded-sm object-contain shrink-0" onerror="this.style.display='none'">
+                <span class="text-xs text-white/60 font-medium">${domain}</span>
+              </div>
+              <span class="px-1.5 py-0.2 rounded bg-white/[0.06] text-[10px] text-white/60 font-medium">link</span>
+            </div>
+
+            <div class="text-[13.5px] font-semibold text-white leading-snug break-words">
+              ${escapeHtml(title || domain)}
+            </div>
+
+            <!-- Clickable URL bar -->
+            <div 
+              onclick="copyFlyoutText('${escapeHtml(urlStr)}')" 
+              class="flex items-center justify-between gap-2 p-2 rounded-lg bg-black/30 hover:bg-black/50 border border-white/[0.06] text-xs font-mono text-white/60 hover:text-white transition-colors cursor-pointer"
+              title="Click to copy URL"
+            >
+              <span class="truncate">${escapeHtml(urlStr)}</span>
+              <svg class="w-3.5 h-3.5 text-white/40 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+            </div>
           </div>
-          <div class="flex items-center gap-2.5 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.06] text-[11px] font-mono text-white/60">
-            <span>Size: ${meta}</span>
+
+          <!-- SendKeep Monochromatic Action Row -->
+          <div class="grid grid-cols-3 gap-2">
+            <button onclick="window.open('${escapeHtml(urlStr)}', '_blank')" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] active:scale-[0.98] border border-white/[0.08] text-white text-xs font-medium transition-colors cursor-pointer">
+              <svg class="w-3.5 h-3.5 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              <span>Open</span>
+            </button>
+            <button onclick="toast('⚡ Beamed link to Galaxy M13')" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] active:scale-[0.98] border border-white/[0.08] text-white text-xs font-medium transition-colors cursor-pointer">
+              <svg class="w-3.5 h-3.5 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+              <span>Beam</span>
+            </button>
+            <button onclick="copyFlyoutText('${escapeHtml(urlStr)}')" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] active:scale-[0.98] border border-white/[0.08] text-white text-xs font-medium transition-colors cursor-pointer">
+              <svg class="w-3.5 h-3.5 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+              <span>Copy</span>
+            </button>
+          </div>
+
+          <!-- Breathable Metadata Rows (Matching SendKeep settings architecture) -->
+          <div class="flex flex-col border-t border-white/[0.06] pt-1.5 mt-0.5">
+            <div class="flex items-center justify-between py-1.5 text-xs">
+              <span class="text-white/40">Domain</span>
+              <span class="text-white/80 font-mono text-[11.5px]">${domain}</span>
+            </div>
+            <div class="h-px bg-white/[0.04]"></div>
+            <div class="flex items-center justify-between py-1.5 text-xs">
+              <span class="text-white/40">Security</span>
+              <span class="text-white/80 font-mono text-[11.5px]">HTTPS</span>
+            </div>
+            <div class="h-px bg-white/[0.04]"></div>
+            <div class="flex items-center justify-between py-1.5 text-xs">
+              <span class="text-white/40">Source</span>
+              <span class="text-white/80 font-mono text-[11.5px]">Windows Clipboard</span>
+            </div>
+          </div>
+        `;
+      } else if (kind === 'image') {
+        headerTitle.textContent = title;
+        headerSub.textContent = meta;
+        headerIcon.className = 'w-6 h-6 rounded-lg bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-white/70 shrink-0';
+        headerIcon.innerHTML = '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>';
+
+        area.innerHTML = `
+          <!-- Full Image Viewport -->
+          <div class="rounded-xl overflow-hidden bg-black/60 border border-white/[0.06] flex items-center justify-center p-1">
+            <img src="${content}" alt="${title}" class="max-h-[380px] w-full object-contain rounded-lg" />
+          </div>
+
+          <!-- SendKeep Monochromatic Action Row -->
+          <div class="grid grid-cols-3 gap-2">
+            <button onclick="toast('Copied image to clipboard')" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] active:scale-[0.98] border border-white/[0.08] text-white text-xs font-medium transition-colors cursor-pointer">
+              <svg class="w-3.5 h-3.5 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+              <span>Copy</span>
+            </button>
+            <button onclick="toast('⚡ Beamed image to Galaxy M13')" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] active:scale-[0.98] border border-white/[0.08] text-white text-xs font-medium transition-colors cursor-pointer">
+              <svg class="w-3.5 h-3.5 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+              <span>Beam</span>
+            </button>
+            <button onclick="toast('Revealed in File Explorer')" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] active:scale-[0.98] border border-white/[0.08] text-white text-xs font-medium transition-colors cursor-pointer">
+              <svg class="w-3.5 h-3.5 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 14 1.45-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.55 6a2 2 0 0 1-1.94 1.5H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H18a2 2 0 0 1 2 2v2"/></svg>
+              <span>Show in Folder</span>
+            </button>
+          </div>
+
+          <!-- Breathable Metadata Rows (No nested boxes) -->
+          <div class="flex flex-col border-t border-white/[0.06] pt-1.5 mt-0.5">
+            <div class="flex items-center justify-between py-1.5 text-xs">
+              <span class="text-white/40">Dimensions</span>
+              <span class="text-white/80 font-mono text-[11.5px]">1920 × 1080 px</span>
+            </div>
+            <div class="h-px bg-white/[0.04]"></div>
+            <div class="flex items-center justify-between py-1.5 text-xs">
+              <span class="text-white/40">File Size</span>
+              <span class="text-white/80 font-mono text-[11.5px]">${meta}</span>
+            </div>
+            <div class="h-px bg-white/[0.04]"></div>
+            <div class="flex items-center justify-between py-1.5 text-xs">
+              <span class="text-white/40">Color Profile</span>
+              <span class="text-white/80 font-mono text-[11.5px]">sRGB 8-bit</span>
+            </div>
           </div>
         `;
       } else if (kind === 'code') {
-        badge.innerHTML = `<span class="font-medium text-white/80">Code</span>`;
+        headerTitle.textContent = title;
+        headerSub.textContent = meta;
+        headerIcon.className = 'w-6 h-6 rounded-lg bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-white/70 shrink-0';
+        headerIcon.innerHTML = '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>';
+
         area.innerHTML = `
-          <div class="w-full flex flex-col gap-2 p-3 rounded-xl bg-black/40 border border-white/[0.08] font-mono text-xs text-zinc-300 select-text">
-            <pre class="overflow-x-auto whitespace-pre">${escapeHtml(content)}</pre>
+          <!-- Code Card -->
+          <div class="rounded-xl bg-[#0e0f14] border border-white/[0.06] p-3 flex flex-col gap-2 font-mono text-xs">
+            <div class="flex items-center justify-between text-[11px] text-white/40 pb-1 border-b border-white/[0.04]">
+              <span>${escapeHtml(title)}</span>
+              <span>${escapeHtml(meta)}</span>
+            </div>
+            <pre class="overflow-x-auto text-zinc-200 leading-relaxed font-mono whitespace-pre text-[11.5px]">${escapeHtml(content)}</pre>
           </div>
-          <div class="text-[11px] text-white/40">${meta}</div>
+
+          <!-- Actions -->
+          <div class="grid grid-cols-3 gap-2">
+            <button onclick="copyFlyoutText()" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] active:scale-[0.98] border border-white/[0.08] text-white text-xs font-medium transition-colors cursor-pointer">
+              <svg class="w-3.5 h-3.5 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+              <span>Copy</span>
+            </button>
+            <button onclick="handleFlyoutPaste()" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] active:scale-[0.98] border border-white/[0.08] text-white text-xs font-medium transition-colors cursor-pointer">
+              <svg class="w-3.5 h-3.5 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg>
+              <span>Direct Paste</span>
+            </button>
+            <button onclick="toast('⚡ Beamed snippet to Galaxy M13')" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] active:scale-[0.98] border border-white/[0.08] text-white text-xs font-medium transition-colors cursor-pointer">
+              <svg class="w-3.5 h-3.5 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+              <span>Beam</span>
+            </button>
+          </div>
+
+          <!-- Metadata Rows -->
+          <div class="flex flex-col border-t border-white/[0.06] pt-1.5 mt-0.5">
+            <div class="flex items-center justify-between py-1.5 text-xs">
+              <span class="text-white/40">Syntax</span>
+              <span class="text-white/80 font-mono text-[11.5px]">TypeScript</span>
+            </div>
+            <div class="h-px bg-white/[0.04]"></div>
+            <div class="flex items-center justify-between py-1.5 text-xs">
+              <span class="text-white/40">Lines</span>
+              <span class="text-white/80 font-mono text-[11.5px]">${meta}</span>
+            </div>
+          </div>
         `;
       } else {
-        badge.innerHTML = `<span class="font-medium text-white/80">File</span>`;
+        headerTitle.textContent = title;
+        headerSub.textContent = meta;
+        headerIcon.className = 'w-6 h-6 rounded-lg bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-white/70 shrink-0';
+        headerIcon.innerHTML = '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>';
+
         area.innerHTML = `
-          <div class="w-full flex flex-col gap-2 p-4 rounded-xl bg-white/[0.03] border border-white/[0.08] text-xs">
-            <div class="font-semibold text-white/90 text-sm">${title}</div>
-            <div class="font-mono text-[11px] text-white/60 bg-black/40 p-2.5 rounded-lg border border-white/5 truncate">
-              C:\\Users\\Tofik\\Documents\\${title}
+          <!-- File Card -->
+          <div class="rounded-xl bg-[#161619] border border-white/[0.06] p-3 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-white/70 shrink-0">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>
             </div>
-            <div class="text-[11px] text-white/40">File Size: ${meta}</div>
+            <div class="flex flex-col min-w-0 flex-1">
+              <span class="text-xs font-semibold text-white truncate">${title}</span>
+              <span class="text-[11px] text-white/40 font-mono">${meta}</span>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="grid grid-cols-3 gap-2">
+            <button onclick="toast('Opened ${title}')" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] active:scale-[0.98] border border-white/[0.08] text-white text-xs font-medium transition-colors cursor-pointer">
+              <svg class="w-3.5 h-3.5 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              <span>Open File</span>
+            </button>
+            <button onclick="toast('⚡ Beamed file to Galaxy M13')" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] active:scale-[0.98] border border-white/[0.08] text-white text-xs font-medium transition-colors cursor-pointer">
+              <svg class="w-3.5 h-3.5 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+              <span>Beam</span>
+            </button>
+            <button onclick="toast('Revealed in File Explorer')" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] active:scale-[0.98] border border-white/[0.08] text-white text-xs font-medium transition-colors cursor-pointer">
+              <svg class="w-3.5 h-3.5 text-white/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 14 1.45-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.55 6a2 2 0 0 1-1.94 1.5H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H18a2 2 0 0 1 2 2v2"/></svg>
+              <span>Explorer</span>
+            </button>
+          </div>
+
+          <!-- Metadata Rows -->
+          <div class="flex flex-col border-t border-white/[0.06] pt-1.5 mt-0.5">
+            <div class="flex items-center justify-between py-1.5 text-xs">
+              <span class="text-white/40">File Size</span>
+              <span class="text-white/80 font-mono text-[11.5px]">${meta}</span>
+            </div>
+            <div class="h-px bg-white/[0.04]"></div>
+            <div class="flex items-center justify-between py-1.5 text-xs">
+              <span class="text-white/40">Disk Path</span>
+              <span class="text-white/80 font-mono text-[11px] truncate max-w-[280px]">${content}</span>
+            </div>
           </div>
         `;
       }
 
-      previewFlyout.classList.remove('hidden');
-      previewFlyout.classList.add('flex');
+      flyout.classList.remove('hidden');
+      flyout.classList.add('flex');
     }
 
     function closeFlyout() {
-      previewFlyout.classList.add('hidden');
-      previewFlyout.classList.remove('flex');
+      const flyout = document.getElementById('previewFlyout');
+      if (flyout) {
+        flyout.classList.add('hidden');
+        flyout.classList.remove('flex');
+      }
     }
+
+    // Keyboard shortcut (Escape) to close flyout
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeFlyout();
+    });
+
+    // Click outside flyout to dismiss
+    document.addEventListener('pointerdown', (e) => {
+      const flyout = document.getElementById('previewFlyout');
+      if (flyout && !flyout.classList.contains('hidden')) {
+        if (!flyout.contains(e.target) && !e.target.closest('[title="Inspect"]') && !e.target.closest('[data-inspect-btn]')) {
+          closeFlyout();
+        }
+      }
+    });
 
     /* Scroll Feed */
     function handleScroll() {
@@ -2959,6 +3205,14 @@
         clearMenuDropdown.classList.add('hidden');
       }
     });
+
+    // Auto-open expanded inspector with GitHub Link sample on load for instant preview
+    window.addEventListener('DOMContentLoaded', () => {
+      openFlyout('Mohammad-Shahid-07 / sendkeep', 'link', 'https://github.com/Mohammad-Shahid-07/sendkeep.git', 'github.com');
+    });
+    setTimeout(() => {
+      openFlyout('Mohammad-Shahid-07 / sendkeep', 'link', 'https://github.com/Mohammad-Shahid-07/sendkeep.git', 'github.com');
+    }, 150);
   </script>
 </body>
 </html>

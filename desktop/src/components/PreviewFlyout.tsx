@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -20,6 +20,7 @@ import { extOf } from '../lib/fileType';
 import { CustomFileIcon } from './CustomFileIcon';
 import { playButtonClickSound, playToggleSound, playCopy } from '../lib/soundEffects';
 import { invoke, convertFileSrc } from '@tauri-apps/api/core';
+import { openUrl } from '@tauri-apps/plugin-opener';
 
 const COLOR_HEX_RE = /^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
 
@@ -193,11 +194,14 @@ export const PreviewFlyout: React.FC<{ isRight?: boolean }> = ({ isRight: isRigh
     };
 
     const handlePointerDown = (e: MouseEvent) => {
+      const target = e.target as Element | null;
       if (
         flyoutRef.current &&
-        !flyoutRef.current.contains(e.target as Node) &&
-        !(e.target as Element).closest('.item-card') &&
-        !(e.target as Element).closest('[data-preview-trigger]')
+        !flyoutRef.current.contains(target as Node) &&
+        !target?.closest('.item') &&
+        !target?.closest('.item-card') &&
+        !target?.closest('[data-preview-trigger]') &&
+        !target?.closest('.actions')
       ) {
         setPreviewItemId(null);
       }
@@ -228,10 +232,9 @@ export const PreviewFlyout: React.FC<{ isRight?: boolean }> = ({ isRight: isRigh
 
   const isBundle = Boolean(item.isStack && item.bundleItems && item.bundleItems.length > 0);
 
-  const totalBundleSize = useMemo(() => {
-    if (!item.bundleItems) return item.size;
-    return item.bundleItems.reduce((acc, curr) => acc + (curr.size || 0), 0);
-  }, [item.bundleItems, item.size]);
+  const totalBundleSize = item.bundleItems
+    ? item.bundleItems.reduce((acc, curr) => acc + (curr.size || 0), 0)
+    : item.size;
 
   const handleCopy = (text?: string, subId?: string) => {
     playCopy();
@@ -450,7 +453,11 @@ export const PreviewFlyout: React.FC<{ isRight?: boolean }> = ({ isRight: isRigh
                         <span className="text-white/60 text-xs">{info.domain}</span>
                       </div>
                       <button
-                        onClick={() => window.open(item.content, '_blank')}
+                        onClick={() => {
+                          if (item.content) {
+                            openUrl(item.content).catch(() => window.open(item.content, '_blank'));
+                          }
+                        }}
                         title="Open in Browser"
                         className="p-1.5 rounded-md text-white/50 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                       >
@@ -458,7 +465,11 @@ export const PreviewFlyout: React.FC<{ isRight?: boolean }> = ({ isRight: isRigh
                       </button>
                     </div>
                     <div
-                      onClick={() => window.open(item.content, '_blank')}
+                      onClick={() => {
+                        if (item.content) {
+                          openUrl(item.content).catch(() => window.open(item.content, '_blank'));
+                        }
+                      }}
                       className="text-blue-400 hover:text-blue-300 transition-colors break-all underline cursor-pointer leading-relaxed text-xs bg-black/30 p-2.5 rounded-lg border border-white/[0.04]"
                     >
                       {item.content}

@@ -208,6 +208,8 @@ interface AppState {
   };
   activeDraggingId: string | null;
   setActiveDraggingId: (id: string | null) => void;
+  hoveredMergeTargetId: string | null;
+  setHoveredMergeTargetId: (id: string | null) => void;
   activeTransfer: TransferProgress | null;
   setActiveTransfer: (transfer: TransferProgress | null) => void;
   cancelTransfer: (sessionId?: string) => Promise<void>;
@@ -672,7 +674,7 @@ export const useStore = create<AppState>((set, get) => ({
       isSelectMode: false,
     }),
   bundleSelectedItems: () => {
-    const { items, selectedItemIds } = get();
+    const { items, selectedItemIds, activeSource } = get();
     if (selectedItemIds.length < 2) return;
 
     const selected = items.filter((i) => selectedItemIds.includes(i.id));
@@ -688,17 +690,34 @@ export const useStore = create<AppState>((set, get) => ({
     }
 
     const totalSize = flattened.reduce((acc, it) => acc + (it.size || 0), 0);
+    const inheritedSource =
+      selected.find((i) => i.source)?.source ||
+      (activeSource === 'device' ? 'device' : 'clipboard');
+    const inheritedSender =
+      selected.find((i) => i.sender && i.sender !== 'Bundle')?.sender ||
+      (inheritedSource === 'clipboard' ? 'Windows Clipboard' : 'You');
+    const inheritedDeviceId = selected.find((i) => i.deviceId)?.deviceId;
+    const inheritedSenderIp = selected.find((i) => i.senderIp)?.senderIp;
+    const inheritedTargetDeviceId = selected.find((i) => i.targetDeviceId)?.targetDeviceId;
+    const inheritedTargetDeviceName = selected.find((i) => i.targetDeviceName)?.targetDeviceName;
+    const inheritedTargetDeviceIp = selected.find((i) => i.targetDeviceIp)?.targetDeviceIp;
+
     const bundleCard: SendKeepItem = {
       id: `bundle-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       name: `Files Bundle (${flattened.length} items)`,
       path: flattened[0]?.path || '',
       size: totalSize,
       fileType: 'bundle/stack',
-      sender: 'Bundle',
-      source: 'device',
+      sender: inheritedSender,
+      source: inheritedSource,
+      deviceId: inheritedDeviceId,
+      senderIp: inheritedSenderIp,
+      targetDeviceId: inheritedTargetDeviceId,
+      targetDeviceName: inheritedTargetDeviceName,
+      targetDeviceIp: inheritedTargetDeviceIp,
       timestamp: Date.now(),
       isStack: true,
-      isExpanded: true,
+      isExpanded: false,
       bundleItems: flattened,
       pinned: selected.some((i) => i.pinned),
     };
@@ -799,10 +818,15 @@ export const useStore = create<AppState>((set, get) => ({
         id: targetItem.id,
         name: `Stack (${mergedBundle.length} items)`,
         path: targetItem.path || sourceItem.path,
-        size: targetItem.size + sourceItem.size,
+        size: (targetItem.size || 0) + (sourceItem.size || 0),
         fileType: 'bundle/stack',
-        sender: targetItem.sender,
-        source: targetItem.source,
+        sender: targetItem.sender || sourceItem.sender || 'Bundle',
+        source: targetItem.source || sourceItem.source || 'clipboard',
+        deviceId: targetItem.deviceId || sourceItem.deviceId,
+        senderIp: targetItem.senderIp || sourceItem.senderIp,
+        targetDeviceId: targetItem.targetDeviceId || sourceItem.targetDeviceId,
+        targetDeviceName: targetItem.targetDeviceName || sourceItem.targetDeviceName,
+        targetDeviceIp: targetItem.targetDeviceIp || sourceItem.targetDeviceIp,
         timestamp: Date.now(),
         isStack: true,
         isExpanded: false,
@@ -810,10 +834,16 @@ export const useStore = create<AppState>((set, get) => ({
         pinned: targetItem.pinned || sourceItem.pinned,
       };
 
+      const targetIndex = state.items.findIndex((i) => i.id === targetId);
       const remaining = state.items.filter((i) => i.id !== sourceId && i.id !== targetId);
-      const updated = [stackedCard, ...remaining];
+      const insertIndex = Math.min(targetIndex >= 0 ? targetIndex : 0, remaining.length);
+      const updated = [
+        ...remaining.slice(0, insertIndex),
+        stackedCard,
+        ...remaining.slice(insertIndex),
+      ];
       debouncedSave(updated);
-      return { items: updated };
+      return { items: updated, hoveredMergeTargetId: null };
     }),
 
   clearAll: () =>
@@ -1083,6 +1113,8 @@ export const useStore = create<AppState>((set, get) => ({
 
   activeDraggingId: null,
   setActiveDraggingId: (id) => set({ activeDraggingId: id }),
+  hoveredMergeTargetId: null,
+  setHoveredMergeTargetId: (id) => set({ hoveredMergeTargetId: id }),
 
   beamItemToDevice: async (item, _rawBytes, specificTarget) => {
     const { connectedDevice, trustedDevices, discoveredDevices } = get();

@@ -628,20 +628,33 @@ export const ClipboardItem: React.FC<Props> = ({ item }) => {
   );
 
   const handleCardDragOver = (e: React.DragEvent) => {
-    const draggingId = activeDraggingId || e.dataTransfer.getData('text/sendkeep-item-id');
+    const draggingId = activeDraggingId || useStore.getState().activeDraggingId;
     if (draggingId && draggingId !== item.id) {
       e.preventDefault();
-      setIsMergeTarget(true);
+      e.dataTransfer.dropEffect = 'copy';
+      useStore.getState().setHoveredMergeTargetId(item.id);
+      if (!isMergeTarget) {
+        setIsMergeTarget(true);
+      }
     }
   };
 
-  const handleCardDragLeave = () => {
-    setIsMergeTarget(false);
+  const handleCardDragLeave = (e: React.DragEvent) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsMergeTarget(false);
+      if (useStore.getState().hoveredMergeTargetId === item.id) {
+        useStore.getState().setHoveredMergeTargetId(null);
+      }
+    }
   };
 
   const handleCardDrop = (e: React.DragEvent) => {
     setIsMergeTarget(false);
-    const draggedId = activeDraggingId || e.dataTransfer.getData('text/sendkeep-item-id');
+    useStore.getState().setHoveredMergeTargetId(null);
+    const draggedId =
+      activeDraggingId ||
+      useStore.getState().activeDraggingId ||
+      e.dataTransfer.getData('text/sendkeep-item-id');
     if (draggedId && draggedId !== item.id) {
       e.preventDefault();
       e.stopPropagation();
@@ -651,10 +664,23 @@ export const ClipboardItem: React.FC<Props> = ({ item }) => {
     }
   };
 
+  const handleDragEnd = () => {
+    setIsMergeTarget(false);
+    setActiveDraggingId(null);
+    useStore.getState().setHoveredMergeTargetId(null);
+  };
+
   return (
-    <motion.article
+    <article
       data-item-id={item.id}
-      className={`item group relative rounded-[16px] bg-[#161619] hover:bg-[#1a1a1f] border border-white/[0.04] hover:border-white/[0.08] transition-all overflow-hidden ${
+      draggable={!isBundle || !item.isExpanded}
+      onDragStart={handleDragStart}
+      onDragOver={handleCardDragOver}
+      onDragLeave={handleCardDragLeave}
+      onDrop={handleCardDrop}
+      onDragEnd={handleDragEnd}
+      onContextMenu={(e) => e.preventDefault()}
+      className={`item item-card group relative rounded-[16px] bg-[#161619] hover:bg-[#1a1a1f] border border-white/[0.04] hover:border-white/[0.08] transition-all overflow-hidden ${
         isSelected
           ? 'ring-2 ring-indigo-500 !border-indigo-500/60 !bg-indigo-500/[0.06]'
           : item.pinned
@@ -668,10 +694,6 @@ export const ClipboardItem: React.FC<Props> = ({ item }) => {
           : ''
       }`}
       onClick={handleCardClick}
-      onDragOver={handleCardDragOver}
-      onDragLeave={handleCardDragLeave}
-      onDrop={handleCardDrop}
-      onDragEnd={() => setActiveDraggingId(null)}
     >
       {/* Multi-Select Checkbox Circle */}
       <div
@@ -693,8 +715,6 @@ export const ClipboardItem: React.FC<Props> = ({ item }) => {
       </div>
       <div
         className="item-main w-full flex flex-col cursor-pointer select-none"
-        draggable={!isBundle || !item.isExpanded}
-        onDragStart={handleDragStart}
       >
         <div className="body w-full flex flex-col p-3.5 pb-2.5">
           <div className="item-content w-full">
@@ -986,7 +1006,7 @@ export const ClipboardItem: React.FC<Props> = ({ item }) => {
             {/* 4. TEXT / NOTE / SNIPPET (Clean EdgeDrop Typography) */}
             {!isBundle && !isImage && !isLink && isNote && (
               <div
-                className="preview select-text text-[13px] text-zinc-200 leading-[1.45] font-normal line-clamp-3 break-words whitespace-pre-wrap"
+                className="preview select-none text-[13px] text-zinc-200 leading-[1.45] font-normal line-clamp-3 break-words whitespace-pre-wrap"
                 style={{
                   fontFamily:
                     effectiveText.includes('{') ||
@@ -1081,6 +1101,7 @@ export const ClipboardItem: React.FC<Props> = ({ item }) => {
 
           {/* Enlarge / Detailed Inspector */}
           <button
+            data-preview-trigger="true"
             className="p-1 rounded-full text-white/65 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
             title="Inspect in detail"
             onClick={(e) => {
@@ -1132,6 +1153,6 @@ export const ClipboardItem: React.FC<Props> = ({ item }) => {
           </button>
         </div>
       </div>
-    </motion.article>
+    </article>
   );
 };

@@ -4,10 +4,17 @@ import { useStore, SendKeepItem, TrustedDevice } from '../store/appStore';
 import { ClipboardItem } from './ClipboardItem';
 import { Pin, ChevronDown, ChevronUp, Smartphone, Clipboard, Plus, Layers, Copy, Check, Trash2, X } from 'lucide-react';
 import { isImagePath } from '../lib/format';
-import { playDialTickSound } from '../lib/soundEffects';
+import { playDialTickSound, playPop } from '../lib/soundEffects';
 
 export const isItemForDevice = (item: SendKeepItem, device: TrustedDevice | null): boolean => {
   if (!device) return false;
+
+  // Check stack sub-items if item is a stack
+  if (item.isStack && item.bundleItems && item.bundleItems.length > 0) {
+    if (item.bundleItems.some((sub) => isItemForDevice(sub, device))) {
+      return true;
+    }
+  }
 
   // 1. Direct deviceId match
   if (item.deviceId && (item.deviceId === device.id || item.deviceId === `dev-${device.ip}`)) {
@@ -84,84 +91,7 @@ export const ItemList: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedItemIds, clearSelection]);
 
-  // Buttery-smooth physics-based momentum wheel scrolling
-  useEffect(() => {
-    const el = scrollContainerRef.current;
-    if (!el) return;
 
-    let target = el.scrollTop;
-    let current = el.scrollTop;
-    let isRunning = false;
-    let rafId: number | null = null;
-
-    const onScroll = () => {
-      // Keep target synchronized when dragging scrollbar or using keyboard
-      if (!isRunning) {
-        target = el.scrollTop;
-        current = el.scrollTop;
-      }
-    };
-
-    const step = () => {
-      const diff = target - current;
-      if (Math.abs(diff) < 0.4) {
-        current = target;
-        el.scrollTop = current;
-        isRunning = false;
-        rafId = null;
-        return;
-      }
-
-      // Smooth exponential ease-out glide
-      current += diff * 0.16;
-      el.scrollTop = current;
-      rafId = requestAnimationFrame(step);
-    };
-
-    const onWheel = (e: WheelEvent) => {
-      if (e.ctrlKey) return;
-
-      // Allow nested scrollable areas (e.g. inside expanded stack lists) to scroll natively
-      let targetEl = e.target as HTMLElement | null;
-      let isNested = false;
-      while (targetEl && targetEl !== el) {
-        if (
-          targetEl.scrollHeight > targetEl.clientHeight &&
-          (getComputedStyle(targetEl).overflowY === 'auto' || getComputedStyle(targetEl).overflowY === 'scroll')
-        ) {
-          isNested = true;
-          break;
-        }
-        targetEl = targetEl.parentElement;
-      }
-      if (isNested) return;
-
-      const maxScroll = el.scrollHeight - el.clientHeight;
-      if (maxScroll <= 0) return;
-
-      e.preventDefault();
-
-      const lineMultiplier = e.deltaMode === 1 ? 32 : 1;
-      const delta = e.deltaY * lineMultiplier;
-
-      target = Math.max(0, Math.min(maxScroll, target + delta));
-
-      if (!isRunning) {
-        isRunning = true;
-        current = el.scrollTop;
-        rafId = requestAnimationFrame(step);
-      }
-    };
-
-    el.addEventListener('wheel', onWheel, { passive: false });
-    el.addEventListener('scroll', onScroll, { passive: true });
-
-    return () => {
-      el.removeEventListener('wheel', onWheel);
-      el.removeEventListener('scroll', onScroll);
-      if (rafId !== null) cancelAnimationFrame(rafId);
-    };
-  }, []);
 
 
   // 1. Filter by Active Source (Device vs Clipboard vs Unified)
@@ -171,18 +101,28 @@ export const ItemList: React.FC = () => {
       sourceFiltered = items.filter((item) => isItemForDevice(item, connectedDevice));
     } else {
       sourceFiltered = items.filter(
-        (item) => item.source === 'device' || (!item.source && item.sender !== 'Windows Clipboard')
+        (item) =>
+          item.source === 'device' ||
+          (!item.source && item.sender !== 'Windows Clipboard') ||
+          Boolean(item.isStack && item.bundleItems?.some((sub) => sub.source === 'device' || (!sub.source && sub.sender !== 'Windows Clipboard')))
       );
     }
   } else if (activeSource === 'clipboard') {
     sourceFiltered = items.filter(
-      (item) => item.source === 'clipboard' || (!item.source && item.sender === 'Windows Clipboard')
+      (item) =>
+        item.source === 'clipboard' ||
+        (!item.source && item.sender === 'Windows Clipboard') ||
+        Boolean(item.isStack && item.bundleItems?.some((sub) => sub.source === 'clipboard' || (!sub.source && sub.sender === 'Windows Clipboard')))
     );
   }
 
-  // 2. Filter by Category Tab
-  let categoryFiltered = sourceFiltered.filter((item) => {
-    if (activeFilter === 'all') return true;
+  // Helper to check if item or its subitems match category
+  const matchesCategory = (item: SendKeepItem, filter: string): boolean => {
+    if (filter === 'all') return true;
+
+    if (item.isStack && item.bundleItems && item.bundleItems.length > 0) {
+      return item.bundleItems.some((sub) => matchesCategory(sub, filter));
+    }
 
     const isImage =
       item.fileType?.toLowerCase().includes('image') ||
@@ -201,13 +141,16 @@ export const ItemList: React.FC = () => {
 
     const isNote = Boolean(item.content && !isLink && !isImage && !item.path);
 
-    if (activeFilter === 'media') return isImage;
-    if (activeFilter === 'links') return isLink;
-    if (activeFilter === 'notes') return isNote || isTxt;
-    if (activeFilter === 'files') return !isImage && !isLink && (!isNote || Boolean(item.path));
+    if (filter === 'media') return isImage;
+    if (filter === 'links') return isLink;
+    if (filter === 'notes') return isNote || isTxt;
+    if (filter === 'files') return !isImage && !isLink && (!isNote || Boolean(item.path));
 
     return true;
-  });
+  };
+
+  // 2. Filter by Category Tab
+  let categoryFiltered = sourceFiltered.filter((item) => matchesCategory(item, activeFilter));
 
   // 3. Filter by Search Query
   if (searchQuery.trim()) {
@@ -216,7 +159,16 @@ export const ItemList: React.FC = () => {
       (item) =>
         item.name.toLowerCase().includes(q) ||
         (item.content && item.content.toLowerCase().includes(q)) ||
-        item.sender.toLowerCase().includes(q)
+        item.sender.toLowerCase().includes(q) ||
+        Boolean(
+          item.isStack &&
+            item.bundleItems?.some(
+              (sub) =>
+                sub.name.toLowerCase().includes(q) ||
+                (sub.content && sub.content.toLowerCase().includes(q)) ||
+                sub.sender.toLowerCase().includes(q)
+            )
+        )
     );
   }
 
@@ -241,13 +193,7 @@ export const ItemList: React.FC = () => {
     }
   }, [activeFilter, activeSource, connectedDevice?.id, connectedDevice?.name]);
 
-  // Smart auto-scroll to top when a new item is captured if near the top
-  const topItemId = items[0]?.id;
-  useEffect(() => {
-    if (scrollContainerRef.current && scrollContainerRef.current.scrollTop < 120) {
-      scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }, [topItemId]);
+
 
   const feedContainerVariants = {
     hidden: { opacity: 0 },
@@ -260,22 +206,7 @@ export const ItemList: React.FC = () => {
     },
   };
 
-  const cardItemVariants = {
-    hidden: {
-      opacity: 0,
-      y: 12,
-      scale: 0.98,
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: {
-        duration: 0.22,
-        ease: [0.16, 1, 0.3, 1],
-      },
-    },
-  };
+
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[#090a0e] overflow-hidden relative">
@@ -391,13 +322,15 @@ export const ItemList: React.FC = () => {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="flex flex-col gap-2 overflow-hidden"
+                        className="flex flex-col gap-2"
                       >
                         {pinnedItems.map((item: SendKeepItem) => (
                           <motion.div
-                            key={item.id}
-                            variants={cardItemVariants}
+                            key={`pinned-${item.id}`}
+                            initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
+                            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                           >
                             <ClipboardItem item={item} />
                           </motion.div>
@@ -420,9 +353,11 @@ export const ItemList: React.FC = () => {
                   <AnimatePresence>
                     {recentItems.map((item: SendKeepItem) => (
                       <motion.div
-                        key={item.id}
-                        variants={cardItemVariants}
+                        key={`recent-${item.id}`}
+                        initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
+                        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                       >
                         <ClipboardItem item={item} />
                       </motion.div>
@@ -459,7 +394,10 @@ export const ItemList: React.FC = () => {
               {/* Bundle / Stack Button (if >= 2 items selected) */}
               {selectedItemIds.length >= 2 && (
                 <button
-                  onClick={bundleSelectedItems}
+                  onClick={() => {
+                    playPop();
+                    bundleSelectedItems();
+                  }}
                   title="Stack into single 3D bundle"
                   className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400 hover:text-indigo-300 border border-indigo-500/30 text-xs font-medium transition-colors cursor-pointer"
                 >
